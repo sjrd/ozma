@@ -9,8 +9,11 @@ Ozma does not compile towards the JVM nor the MSIL. Instead, it compiles towards
 the Mozart programming system. This runtime provides built-in support for
 declarative concurrency.
 
-Software requirements
----------------------
+
+Usage
+-----
+
+### Software requirements
 
 In order to build the Ozma compiler and library, you need the following software
 installed on your computer:
@@ -18,15 +21,13 @@ installed on your computer:
 *   Scala >= 2.9.0 (currently in RC)
 *   Ant >= 1.6 (as required by Scala)
 
-Build instructions
-------------------
+### Build instructions
 
 The entire Ozma compiler and library can be built with Ant:
 
     $ ant
 
-Run the compiler
-----------------
+### Run the compiler
 
 After you have built Ozma, you can run the compiler using:
 
@@ -35,10 +36,23 @@ After you have built Ozma, you can run the compiler using:
 All the options applicable to `scalac` (see `man scalac`) are also applicable to
 `ozmac`.
 
+
+Development
+-----------
+
+Ozma is developed using Eclipse, with the Scala plugin for Eclipse. You will
+need to define the variable `SCALA_HOME` to point to your actual Scala
+installation.
+
+This can be set up in the preferences, under Java > Build path > Classpath
+Variables.
+
+
 Author
 ------
 
 Sébastien Doeraene
+
 
 About Scala and Mozart
 ----------------------
