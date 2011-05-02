@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Finding the root folder for this Ozma distribution
+SOURCE=$0;
+SCRIPT=`basename "$SOURCE"`;
+while [ -h "$SOURCE" ]; do
+    SCRIPT=`basename "$SOURCE"`;
+    LOOKUP=`ls -ld "$SOURCE"`;
+    TARGET=`expr "$LOOKUP" : '.*-> \(.*\)$'`;
+    if expr "${TARGET:-.}/" : '/.*/$' > /dev/null; then
+        SOURCE=${TARGET:-.};
+    else
+        SOURCE=`dirname "$SOURCE"`/${TARGET:-.};
+    fi;
+done;
+
+# see #2092 from Scala
+OZMA_HOME=`dirname "$SOURCE"`
+OZMA_HOME=`cd "$OZMA_HOME"; pwd -P`
+OZMA_HOME=`cd "$OZMA_HOME"/..; pwd`
+
+# build tool classpath
+TOOLCP=$OZMA_HOME/build/classes/library/:$OZMA_HOME/build/classes/compiler/
+
+# run the compiler
+scala -toolcp "$TOOLCP" scala.tools.nsc.ozma.Main "$@"
