@@ -109,6 +109,7 @@ trait ASTs { self: OzCodes =>
 
     // Categories
     trait RecordArgument extends Node
+    trait ExportItemArg extends Node
     trait Pattern extends Node
     trait OptElse extends Node
     trait OptCatch extends Node
@@ -254,7 +255,7 @@ trait ASTs { self: OzCodes =>
     }
 
     case class Variable(name: String) extends EscapableVariable
-        with Feature with MethodArgName {
+        with Feature with MethodArgName with ExportItemArg {
       override val astLabel = "fVar"
 
       def syntax(indent: String) = name
@@ -480,6 +481,34 @@ trait ASTs { self: OzCodes =>
 
       def syntax(indent: String) = {
         " at " + url.syntax(indent + "    ")
+      }
+    }
+
+    case class Export(exportItems: List[ExportItem]) extends FunctorDescriptor {
+      def syntax(indent: String) = {
+        val subIndent = indent + "   "
+        exportItems.foldLeft("export") {
+          _ + "\n" + subIndent + _.syntax(subIndent)
+        }
+      }
+    }
+
+    case class ExportItem(item: ExportItemArg) extends Node {
+      override val hasCoord = false
+
+      def syntax(indent: String) = item.syntax(indent)
+    }
+
+    // The 'colon' record argument
+    case class ExportItemColon(feature: FeatureNoVar,
+        variable: Variable) extends ExportItemArg {
+      override val astLabel = "fColon"
+
+      override val hasCoord = false
+
+      def syntax(indent: String) = {
+        val prefix = feature.syntax(indent) + ":"
+        prefix + variable.syntax(indent + " "*prefix.length)
       }
     }
 

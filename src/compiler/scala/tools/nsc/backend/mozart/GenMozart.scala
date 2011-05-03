@@ -96,8 +96,9 @@ abstract class GenMozart extends OzmaSubComponent {
 
     def makeFunctor(name: String, classes: List[ClassDef]) = {
       val imports = makeImports(name, classes)
+      val exports = makeExports(name, classes)
       val define = Define(And(classes:_*))
-      val descriptors = List(imports, define)
+      val descriptors = List(imports, exports, define)
       ast.Functor(ast.Atom(name), descriptors)
     }
 
@@ -141,6 +142,16 @@ abstract class GenMozart extends OzmaSubComponent {
       val fileName = "./" + functorName.replace('.', '/') + ".ozf"
       val importAt = ImportAt(Atom(fileName))
       ImportItem(Variable("`"+functorName+"`"), importItems, importAt)
+    }
+
+    def makeExports(name: String, classes: List[ClassDef]) = {
+      val exportItems = for (clazz <- classes) yield {
+        val Variable(varName) = clazz.name
+        val atomName = stripQuotes(varName)
+        ExportItem(ExportItemColon(Atom(atomName), Variable(varName)))
+      }
+
+      Export(exportItems)
     }
 
     /////////////////// Write to files ///////////////////////
