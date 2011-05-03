@@ -6,7 +6,7 @@
 package scala.tools.nsc
 package backend.mozart
 
-import scala.collection.mutable.{ HashMap, ListBuffer }
+import scala.collection.mutable.{ HashMap, ListBuffer, Set, HashSet }
 
 import ozma._
 
@@ -73,8 +73,12 @@ abstract class GenMozart extends OzmaSubComponent {
       groups mapValues { _.toList }
     }
 
-    def groupNameFor(clazz: ClassDef) = {
+    def groupNameFor(clazz: ClassDef): String = {
       val Variable(varName) = clazz.name
+      groupNameFor(varName)
+    }
+
+    def groupNameFor(varName: String) = {
       val fullName = stripQuotes(varName).stripPrefix("type:")
       val dollar = fullName.indexOf('$')
 
@@ -91,7 +95,52 @@ abstract class GenMozart extends OzmaSubComponent {
         varName
 
     def makeFunctor(name: String, classes: List[ClassDef]) = {
-      ast.Functor(ast.Atom(name), List(ast.Define(ast.And(classes:_*))))
+      val imports = makeImports(name, classes)
+      val define = Define(And(classes:_*))
+      val descriptors = List(imports, define)
+      ast.Functor(ast.Atom(name), descriptors)
+    }
+
+    def makeImports(name: String, classes: List[ClassDef]) = {
+      val importsByGroup = new HashMap[String, Set[String]]
+
+      def importClass(varName: String) {
+        val groupName = groupNameFor(varName)
+        if (groupName == name)
+          return // do not import classes defined in this functor
+
+        val group = importsByGroup.get(groupName) match {
+          case Some(group) => group
+          case None =>
+            val group = new HashSet[String]
+            importsByGroup += (groupName -> group)
+            group
+        }
+
+        group += varName
+      }
+
+      for (clazz <- classes) {
+        clazz walk {
+          case Variable(varName) if (varName.startsWith("`type:")) =>
+            importClass(varName)
+          case _ => ()
+        }
+      }
+
+      val importDecls = for ((name, varNames) <- importsByGroup)
+        yield makeImportDecl(name, varNames)
+
+      ast.Import(importDecls.toList)
+    }
+
+    def makeImportDecl(functorName: String, classVarNames: Set[String]) = {
+      val importItems = for (varName <- classVarNames.toList)
+        yield AliasedFeature(Variable(varName), Atom(stripQuotes(varName)))
+
+      val fileName = "./" + functorName.replace('.', '/') + ".ozf"
+      val importAt = ImportAt(Atom(fileName))
+      ImportItem(Variable("`"+functorName+"`"), importItems, importAt)
     }
 
     /////////////////// Write to files ///////////////////////

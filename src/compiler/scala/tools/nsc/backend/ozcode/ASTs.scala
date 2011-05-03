@@ -86,6 +86,20 @@ trait ASTs { self: OzCodes =>
     def makeCoord() = {
       ast.Atom("unit")
     }
+
+    def walk[U](handler: Node => U) {
+      handler(this)
+
+      def inner(element: Any) {
+        element match {
+          case node:Node => node.walk(handler)
+          case seq:Seq[_] => seq foreach inner
+          case _ => ()
+        }
+      }
+
+      productIterator foreach inner
+    }
   }
 
   private case class ASTNode(node: ast.Phrase)
@@ -411,6 +425,61 @@ trait ASTs { self: OzCodes =>
         descriptors.foldLeft(firstLine) {
           _ + indent + _.syntax(indent) + "\n\n"
         } + indent + "end"
+      }
+    }
+
+    case class Import(importItems: List[ImportItem]) extends FunctorDescriptor {
+      def syntax(indent: String) = {
+        val subIndent = indent + "   "
+        importItems.foldLeft("import") {
+          _ + "\n" + subIndent + _.syntax(subIndent)
+        }
+      }
+    }
+
+    case class ImportItem(functor: Variable,
+        aliasedFeatures: List[AliasedFeature],
+        importAt: ImportAt) extends Node {
+      override val hasCoord = false
+
+      def syntax(indent: String) = {
+        val withoutAt = aliasedFeatures.toList match {
+          case Nil => functor.syntax(indent)
+
+          case firstFeature :: otherFeatures => {
+            val prefix = functor.syntax(indent) + "("
+            val subIndent = indent + " " * prefix.length
+
+            val firstLine = prefix + firstFeature.syntax(subIndent)
+
+            otherFeatures.foldLeft(firstLine) {
+              _ + "\n" + subIndent + _.syntax(subIndent)
+            } + ")"
+          }
+        }
+
+        withoutAt + importAt.syntax(indent)
+      }
+    }
+
+    case class AliasedFeature(variable: Variable,
+        feature: FeatureNoVar) extends Node {
+      override val astLabel = "#"
+
+      override val hasCoord = false
+
+      def syntax(indent: String) = {
+        val prefix = feature.syntax(indent) + ":"
+        val subIndent = indent + " "*prefix.length
+        prefix + variable.syntax(subIndent)
+      }
+    }
+
+    case class ImportAt(url: Atom) extends Node {
+      override val hasCoord = false
+
+      def syntax(indent: String) = {
+        " at " + url.syntax(indent + "    ")
       }
     }
 
