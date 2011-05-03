@@ -261,6 +261,20 @@ trait ASTs { self: OzCodes =>
       def syntax(indent: String) = name
     }
 
+    object QuotedVar {
+      val QUOTE = '`'
+
+      def apply(name: String) = Variable(QUOTE + name + QUOTE)
+
+      def unapply(variable: Variable) = {
+        val name = variable.name
+        if (name.charAt(0) == QUOTE && name.charAt(name.length-1) == QUOTE)
+          Some(name.substring(1, name.length-1))
+        else
+          None
+      }
+    }
+
     case class Escape(variable: Variable) extends EscapableVariable {
       def syntax(indent: String) = "!" + variable.syntax(indent+" ")
     }

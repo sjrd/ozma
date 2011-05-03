@@ -74,12 +74,12 @@ abstract class GenMozart extends OzmaSubComponent {
     }
 
     def groupNameFor(clazz: ClassDef): String = {
-      val Variable(varName) = clazz.name
+      val QuotedVar(varName) = clazz.name
       groupNameFor(varName)
     }
 
     def groupNameFor(varName: String) = {
-      val fullName = stripQuotes(varName).stripPrefix("type:")
+      val fullName = varName.stripPrefix("type:")
       val dollar = fullName.indexOf('$')
 
       if (dollar < 0)
@@ -87,12 +87,6 @@ abstract class GenMozart extends OzmaSubComponent {
       else
         fullName.substring(0, dollar)
     }
-
-    def stripQuotes(varName: String) =
-      if (varName.charAt(0) == '`')
-        varName.substring(1, varName.length-1)
-      else
-        varName
 
     def makeFunctor(name: String, classes: List[ClassDef]) = {
       val imports = makeImports(name, classes)
@@ -123,7 +117,7 @@ abstract class GenMozart extends OzmaSubComponent {
 
       for (clazz <- classes) {
         clazz walk {
-          case Variable(varName) if (varName.startsWith("`type:")) =>
+          case QuotedVar(varName) if (varName.startsWith("type:")) =>
             importClass(varName)
           case _ => ()
         }
@@ -137,7 +131,7 @@ abstract class GenMozart extends OzmaSubComponent {
 
     def makeImportDecl(functorName: String, classVarNames: Set[String]) = {
       val importItems = for (varName <- classVarNames.toList)
-        yield AliasedFeature(Variable(varName), Atom(stripQuotes(varName)))
+        yield AliasedFeature(QuotedVar(varName), Atom(varName))
 
       val fileName = "./" + functorName.replace('.', '/') + ".ozf"
       val importAt = ImportAt(Atom(fileName))
@@ -146,9 +140,8 @@ abstract class GenMozart extends OzmaSubComponent {
 
     def makeExports(name: String, classes: List[ClassDef]) = {
       val exportItems = for (clazz <- classes) yield {
-        val Variable(varName) = clazz.name
-        val atomName = stripQuotes(varName)
-        ExportItem(ExportItemColon(Atom(atomName), Variable(varName)))
+        val QuotedVar(varName) = clazz.name
+        ExportItem(ExportItemColon(Atom(varName), QuotedVar(varName)))
       }
 
       Export(exportItems)

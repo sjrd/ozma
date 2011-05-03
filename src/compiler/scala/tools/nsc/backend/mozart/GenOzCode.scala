@@ -647,7 +647,7 @@ abstract class GenOzCode extends OzmaSubComponent {
         "type:" + sym.fullName
       else
         sym.name.toString
-      ast.Variable("`" + name + "`")
+      ast.QuotedVar(name)
     }
 
     def atomForSymbol(sym: Symbol) =
