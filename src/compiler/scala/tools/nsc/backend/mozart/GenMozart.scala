@@ -75,7 +75,7 @@ abstract class GenMozart extends OzmaSubComponent {
 
     def groupNameFor(clazz: ClassDef) = {
       val Variable(varName) = clazz.name
-      val fullName = stripQuotes(varName)
+      val fullName = stripQuotes(varName).stripPrefix("type:")
       val dollar = fullName.indexOf('$')
 
       if (dollar < 0)

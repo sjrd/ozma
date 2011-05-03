@@ -642,8 +642,13 @@ abstract class GenOzCode extends OzmaSubComponent {
 
     /* Symbol encoding */
 
-    def varForSymbol(sym: Symbol) =
-      ast.Variable("`" + sym.name.toString + "`")
+    def varForSymbol(sym: Symbol) = {
+      val name = if (sym.name.isTypeName)
+        "type:" + sym.fullName
+      else
+        sym.name.toString
+      ast.Variable("`" + name + "`")
+    }
 
     def atomForSymbol(sym: Symbol) =
       ast.Atom(sym.name.toString)
