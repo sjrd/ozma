@@ -44,7 +44,7 @@ abstract class GenOzCode extends OzmaSubComponent {
       unitClasses.clear
       gen(unit.body)
 
-      unit.body = OzCodeClasses(makeClasses())
+      unit.body = OzCodeClasses(makeClasses(), makeModules())
       this.unit = null
     }
 
@@ -647,14 +647,50 @@ abstract class GenOzCode extends OzmaSubComponent {
       ast.MethodDef(name, args, actualBody)
     }
 
+    /////////////////// Module assembly ///////////////////////
+
+    def makeModules(): List[ast.Eq] = {
+      for (clazz <- unitClasses.toList if (clazz.symbol.isModuleClass))
+        yield makeModule(clazz)
+    }
+
+    def makeModule(clazz: OzClass) = {
+      val module = clazz.symbol.companionModule
+      val moduleVar = varForSymbol(module)
+      val tempVar = ast.Variable("X")
+
+      val waitNeeded = genBuiltinApply("WaitNeeded", tempVar)
+      val newCall = genBuiltinApply("New",
+          varForSymbol(clazz.symbol),
+          ast.Tuple(ast.Atom("<init>"), ast.Dollar()))
+
+      val threadContents = ast.And(waitNeeded,
+          ast.Eq(tempVar, newCall))
+      val thread = ast.Thread(threadContents)
+
+      val localStats = ast.And(thread, tempVar)
+      val local = ast.LocalDef(tempVar, localStats)
+
+      ast.Eq(moduleVar, local)
+    }
+
     /* Symbol encoding */
 
     def varForSymbol(sym: Symbol) = {
       val name = if (sym.name.isTypeName)
         "type:" + sym.fullName
+      else if (sym.isModule)
+        "module:" + sym.fullName
       else
         sym.name.toString
-      ast.QuotedVar(name)
+
+      val suffix = if (sym.hasModuleFlag && !sym.isMethod &&
+          !sym.isImplClass && !sym.isJavaDefined)
+        "$"
+      else
+        ""
+
+      ast.QuotedVar(name + suffix)
     }
 
     def atomForSymbol(sym: Symbol) =

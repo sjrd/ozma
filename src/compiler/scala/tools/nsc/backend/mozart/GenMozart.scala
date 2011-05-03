@@ -35,8 +35,8 @@ abstract class GenMozart extends OzmaSubComponent {
     override def apply(unit: CompilationUnit): Unit = {
       this.unit = unit
       informProgress("Generating Mozart module for " + unit)
-      val OzCodeClasses(classes) = unit.body
-      val functors = makeFunctors(classes)
+      val OzCodeClasses(classes, modules) = unit.body
+      val functors = makeFunctors(classes, modules)
       for (functor <- functors)
         writeFunctor(functor)
       this.unit = null
@@ -44,33 +44,37 @@ abstract class GenMozart extends OzmaSubComponent {
 
     /////////////////// Functor assembly ///////////////////////
 
-    def makeFunctors(classes: List[ClassDef]): List[Functor] = {
-      val groups = gatherClasses(classes)
+    def makeFunctors(classes: List[ClassDef],
+        modules: List[Eq]): List[Functor] = {
+      val groups = gatherClasses(classes, modules)
 
-      val functors = for ((groupName, groupClasses) <- groups)
-        yield makeFunctor(groupName, groupClasses)
+      val functors = for ((groupName, (groupClasses, groupModules)) <- groups)
+        yield makeFunctor(groupName, groupClasses, groupModules)
 
       functors.toList
     }
 
-    def gatherClasses(classes: List[ClassDef]) = {
-      val groups = new HashMap[String, ListBuffer[ClassDef]]
+    def gatherClasses(classes: List[ClassDef],
+        modules: List[Eq]) = {
+      val groups = new HashMap[String, (ListBuffer[ClassDef], ListBuffer[Eq])]
+
+      def groupFor(groupName: String) =
+        groups.getOrElseUpdate(groupName,
+          (new ListBuffer[ClassDef], new ListBuffer[Eq]))
 
       for (clazz <- classes) {
         val groupName = groupNameFor(clazz)
-
-        val group = groups.get(groupName) match {
-          case Some(group) => group
-          case None =>
-            val group = new ListBuffer[ClassDef]
-            groups += (groupName -> group)
-            group
-        }
-
-        group += clazz
+        groupFor(groupName)._1 += clazz
       }
 
-      groups mapValues { _.toList }
+      for (module <- modules) {
+        val groupName = groupNameFor(module)
+        groupFor(groupName)._2 += module
+      }
+
+      groups mapValues {
+        case Pair(classes, modules) => (classes.toList, modules.toList)
+      }
     }
 
     def groupNameFor(clazz: ClassDef): String = {
@@ -78,8 +82,13 @@ abstract class GenMozart extends OzmaSubComponent {
       groupNameFor(varName)
     }
 
+    def groupNameFor(module: Eq): String = {
+      val Eq(QuotedVar(varName), _) = module
+      groupNameFor(varName)
+    }
+
     def groupNameFor(varName: String) = {
-      val fullName = varName.stripPrefix("type:")
+      val fullName = varName.stripPrefix("type:").stripPrefix("module:")
       val dollar = fullName.indexOf('$')
 
       if (dollar < 0)
@@ -88,10 +97,11 @@ abstract class GenMozart extends OzmaSubComponent {
         fullName.substring(0, dollar)
     }
 
-    def makeFunctor(name: String, classes: List[ClassDef]) = {
+    def makeFunctor(name: String, classes: List[ClassDef],
+        modules: List[Eq]) = {
       val imports = makeImports(name, classes)
-      val exports = makeExports(name, classes)
-      val define = Define(And(classes:_*))
+      val exports = makeExports(name, classes, modules)
+      val define = Define(And((classes ::: modules):_*))
       val descriptors = List(imports, exports, define)
       ast.Functor(ast.Atom(name), descriptors)
     }
@@ -117,7 +127,7 @@ abstract class GenMozart extends OzmaSubComponent {
 
       for (clazz <- classes) {
         clazz walk {
-          case QuotedVar(varName) if (varName.startsWith("type:")) =>
+          case QuotedVar(varName) if (isClassOrModule(varName)) =>
             importClass(varName)
           case _ => ()
         }
@@ -129,6 +139,9 @@ abstract class GenMozart extends OzmaSubComponent {
       ast.Import(importDecls.toList)
     }
 
+    def isClassOrModule(varName: String) =
+      varName.startsWith("type:") || varName.startsWith("module:")
+
     def makeImportDecl(functorName: String, classVarNames: Set[String]) = {
       val importItems = for (varName <- classVarNames.toList)
         yield AliasedFeature(QuotedVar(varName), Atom(varName))
@@ -138,13 +151,19 @@ abstract class GenMozart extends OzmaSubComponent {
       ImportItem(Variable("`"+functorName+"`"), importItems, importAt)
     }
 
-    def makeExports(name: String, classes: List[ClassDef]) = {
-      val exportItems = for (clazz <- classes) yield {
+    def makeExports(name: String, classes: List[ClassDef],
+        modules: List[Eq]) = {
+      val exportedClasses = for (clazz <- classes) yield {
         val QuotedVar(varName) = clazz.name
         ExportItem(ExportItemColon(Atom(varName), QuotedVar(varName)))
       }
 
-      Export(exportItems)
+      val exportedModules = for (module <- modules) yield {
+        val Eq(QuotedVar(varName), _) = module
+        ExportItem(ExportItemColon(Atom(varName), QuotedVar(varName)))
+      }
+
+      Export(exportedClasses ::: exportedModules)
     }
 
     /////////////////// Write to files ///////////////////////
