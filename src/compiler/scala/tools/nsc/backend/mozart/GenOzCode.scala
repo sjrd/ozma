@@ -602,7 +602,7 @@ abstract class GenOzCode extends OzmaSubComponent {
     }
 
     def makeClassDescriptors(clazz: OzClass): List[ast.ClassDescriptor] = {
-      if (clazz.fields.isEmpty)
+      val withAttrs = if (clazz.fields.isEmpty)
         Nil
       else {
         val attrs = ast.Attr(clazz.fields.map {
@@ -611,6 +611,13 @@ abstract class GenOzCode extends OzmaSubComponent {
 
         List(attrs)
       }
+
+      val sym = clazz.symbol
+      val bases = for (mixin <- sym.superClass :: sym.mixinClasses)
+        yield varForSymbol(mixin)
+      val withFrom = ast.From(bases) :: withAttrs
+
+      withFrom
     }
 
     def makeClassMethods(clazz: OzClass): List[ast.MethodDef] = {
