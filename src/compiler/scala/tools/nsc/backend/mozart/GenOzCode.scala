@@ -277,19 +277,6 @@ abstract class GenOzCode extends OzmaSubComponent {
 
           genBuiltinApply("New", classVar, message)
 
-        case Apply(fun @ _, List(expr)) if (definitions.isBox(fun.symbol)) =>
-          if (settings.debug.value)
-            log("BOX : " + fun.symbol.fullName)
-
-          // I think boxing is never needed in Oz
-          genExpression(expr, ctx)
-
-        case Apply(fun @ _, List(expr)) if (definitions.isUnbox(fun.symbol)) =>
-          if (settings.debug.value)
-            log("UNBOX : " + fun.symbol.fullName)
-
-          genExpression(expr, ctx)
-
         case app @ Apply(fun, args) =>
           val sym = fun.symbol
 
