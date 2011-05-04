@@ -251,7 +251,7 @@ abstract class GenOzCode extends OzmaSubComponent {
           else
             genCast(from, to, source, cast)
 
-        // 'super' call: Note: since constructors are supposed to 
+        // 'super' call: Note: since constructors are supposed to
         // return an instance of what they construct, we have to take
         // special care. On JVM they are 'void', and Scala forbids (syntactically)
         // to call super constructors explicitly and/or use their 'returned' value.

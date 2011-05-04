@@ -67,7 +67,7 @@ object Main extends AnyRef with EvalLoop {
         case _          => new RefinedBuildManager(settings)
       }
       buildManager.addSourceFiles(fileSet(command.files))
- 
+
       // enter resident mode
       loop { line =>
         val args = line.split(' ').toList

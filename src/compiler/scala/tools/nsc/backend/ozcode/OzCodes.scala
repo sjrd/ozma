@@ -23,13 +23,13 @@ abstract class OzCodes extends AnyRef with Members with ASTs with TypeKinds {
 
   /** The OzCode representation of classes */
   val classes = new mutable.HashMap[global.Symbol, OzClass]
-  
-  /** Debugging flag */  
+
+  /** Debugging flag */
   def shouldCheckOzCode = settings.check contains global.ozcode.phaseName
   def checkerDebug(msg: String) =
     if (shouldCheckOzCode && global.opt.debug)
       println(msg)
-  
+
   /** Print all classes and basic blocks. Used for debugging. */
   def dump {
     classes.values foreach (_.dump)

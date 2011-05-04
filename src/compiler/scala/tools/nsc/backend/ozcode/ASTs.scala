@@ -23,7 +23,7 @@ trait ASTs { self: OzCodes =>
    *  Each case subclass will represent a specific operation.
    */
   abstract class Node extends Product with Cloneable {
-    
+
     /** The corresponding position in the source file */
     private var _pos: Position = NoPosition
 

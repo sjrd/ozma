@@ -186,7 +186,7 @@ abstract class GenMozart extends OzmaSubComponent {
 
     def writeSyntax(node: Node, outfile: AbstractFile) {
       val outstream = new OutputStreamWriter(outfile.bufferedOutput, "US-ASCII")
-      
+
       outstream.write(node.syntax())
       outstream.write("\n")
       outstream.close()

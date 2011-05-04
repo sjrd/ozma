@@ -20,12 +20,12 @@ trait ReferenceEquality {
 
 trait Members { self: OzCodes =>
   import global._
-  
+
   /** Common interface for OzClass/OzField/OzMethod. */
   trait OzMember extends Ordered[OzMember] {
     def symbol: Symbol
 
-    def compare(other: OzMember) = 
+    def compare(other: OzMember) =
       if (symbol eq other.symbol) 0
       else if (symbol isLess other.symbol) -1
       else 1
@@ -62,7 +62,7 @@ trait Members { self: OzCodes =>
     /* returns this methods static constructor if it has one. */
     def lookupStaticCtor: Option[OzMethod] =
       methods find (_.symbol.isStaticConstructor)
-    
+
     def dump() {
       methods foreach (_.dump)
     }
@@ -71,7 +71,7 @@ trait Members { self: OzCodes =>
   /** Represent a field in OzCode */
   class OzField(val symbol: Symbol) extends OzMember { }
 
-  /** 
+  /**
    * Represents a method in OzCode.
    */
   class OzMethod(val symbol: Symbol) extends OzMember {
@@ -126,7 +126,7 @@ trait Members { self: OzCodes =>
       Console.println(this)
       Console.println(code)
       Console.println()
-    }    
+    }
   }
 
   /** Represent local variables and parameters */
