@@ -37,6 +37,11 @@ abstract class GenOzCode extends OzmaSubComponent {
     var unit: CompilationUnit = _
     val unitClasses: LinkedHashSet[OzClass] = new LinkedHashSet
 
+    override def run {
+      scalaPrimitives.init
+      super.run
+    }
+
     override def apply(unit: CompilationUnit): Unit = {
       this.unit = unit
       informProgress("Generating Oz code for " + unit)
@@ -282,6 +287,9 @@ abstract class GenOzCode extends OzmaSubComponent {
 
           if (sym.isLabel) {  // jump to a label
             abort("Cannot jump to a label in Oz")
+          } else if (isPrimitive(sym)) {
+            // primitive operation
+            genPrimitiveOp(app, ctx)
           } else {  // normal method call
             if (settings.debug.value)
               log("Gen CALL_METHOD with sym: " + sym + " isStaticSymbol: " + sym.isStaticMember);
@@ -439,6 +447,106 @@ abstract class GenOzCode extends OzmaSubComponent {
 
     private def genStatement(tree: Tree, ctx: Context): ast.Phrase = {
       blackholeReturnedValue(genExpression(tree, ctx))
+    }
+
+    private def isPrimitive(sym: Symbol) =
+      scalaPrimitives.isPrimitive(sym) && (sym ne definitions.String_+)
+
+    private def genPrimitiveOp(tree: Apply, ctx: Context): ast.Phrase = {
+      import scalaPrimitives._
+
+      val sym = tree.symbol
+      val Apply(fun @ Select(receiver, _), args) = tree
+      val code = scalaPrimitives.getPrimitive(sym, receiver.tpe)
+
+      if (isArithmeticOp(code) || isLogicalOp(code) || isComparisonOp(code))
+        genSimpleOp(tree, receiver :: args, ctx, code)
+      else if (code == HASH)
+        genScalaHash(receiver, ctx)
+      else if (isCoercion(code))
+        genCoercion(receiver, ctx, code)
+      else
+        abort("Primitive operation not handled yet: " + sym.fullName + "(" +
+            fun.symbol.simpleName + ") " + " at: " + (tree.pos))
+    }
+
+    private def genSimpleOp(tree: Apply, args: List[Tree], ctx: Context,
+        code: Int): ast.Phrase = {
+      import scalaPrimitives._
+
+      val sources = args map (arg => genExpression(arg, ctx))
+
+      sources match {
+        // Unary operation
+        case List(source) =>
+          code match {
+            case POS =>
+              source // nothing to do
+            case NEG =>
+              ast.UnaryOpApply(ast.Atom("~"), source)
+            case NOT =>
+              genBuiltinApply("BinNot", source)
+            case ZNOT =>
+              genBuiltinApply("Not", source)
+            case _ =>
+              abort("Unknown unary operation code: " + code)
+          }
+
+        // Binary operation
+        case List(lsrc, rsrc) =>
+          code match {
+            case ADD => ast.BinaryOpApply(ast.Atom("+"), lsrc, rsrc)
+            case SUB => ast.BinaryOpApply(ast.Atom("-"), lsrc, rsrc)
+            case MUL => ast.BinaryOpApply(ast.Atom("*"), lsrc, rsrc)
+            case DIV => ast.BinaryOpApply(ast.Atom("/"), lsrc, rsrc) // TODO div
+            case MOD => ast.BinaryOpApply(ast.Atom("mod"), lsrc, rsrc)
+            case OR => genBuiltinApply("BinOr", lsrc, rsrc)
+            case XOR => genBuiltinApply("BinXor", lsrc, rsrc)
+            case AND => genBuiltinApply("BinAnd", lsrc, rsrc)
+            case LSL => genBuiltinApply("LSL", lsrc, rsrc)
+            case LSR => genBuiltinApply("LSR", lsrc, rsrc)
+            case ASR => genBuiltinApply("ASR", lsrc, rsrc)
+            case LT => ast.BinaryOpApply(ast.Atom("<"), lsrc, rsrc)
+            case LE => ast.BinaryOpApply(ast.Atom("=<"), lsrc, rsrc)
+            case GT => ast.BinaryOpApply(ast.Atom(">"), lsrc, rsrc)
+            case GE => ast.BinaryOpApply(ast.Atom(">="), lsrc, rsrc)
+            case ID | EQ => ast.BinaryOpApply(ast.Atom("=="), lsrc, rsrc)
+            case NI | NE => ast.BinaryOpApply(ast.Atom("\\="), lsrc, rsrc)
+            case ZOR => ast.OrElse(lsrc, rsrc)
+            case ZAND => ast.AndThen(lsrc, rsrc)
+            case _ =>
+              abort("Unknown binary operation code: " + code)
+          }
+
+        case _ =>
+          abort("Too many arguments for primitive function: " + tree)
+      }
+    }
+
+    private def genScalaHash(receiver: Tree, ctx: Context): ast.Phrase = {
+      val instance = varForSymbol(ScalaRunTimeModule)
+      val arguments = List(genExpression(receiver, ctx), ast.Dollar())
+      val sym = getMember(ScalaRunTimeModule, "hash")
+      val message = ast.Tuple(atomForSymbol(sym), arguments:_*)
+
+      ast.Apply(instance, List(message))
+    }
+
+    private def genCoercion(receiver: Tree, ctx: Context,
+        code: Int): ast.Phrase = {
+      import scalaPrimitives._
+
+      val source = genExpression(receiver, ctx)
+
+      (code: @scala.annotation.switch) match {
+        case B2F | B2D | S2F | S2D | C2F | C2D | I2F | I2D | L2F | L2D =>
+          genBuiltinApply("IntToFloat", source)
+
+        case F2B | F2S | F2C | F2I | F2L | D2B | D2S | D2C | D2I | D2L =>
+          genBuiltinApply("FloatToInt", source)
+
+        case _ => source
+      }
     }
 
     private def blackholeReturnedValue(expr: ast.Phrase): ast.Phrase = {
