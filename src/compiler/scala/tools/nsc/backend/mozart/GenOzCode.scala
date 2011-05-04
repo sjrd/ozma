@@ -236,7 +236,7 @@ abstract class GenOzCode extends OzmaSubComponent {
             val result = if (cast) {
               ast.Raise(genBuiltinApply("New",
                   varForSymbol(definitions.ClassCastExceptionClass),
-                  ast.Tuple(ast.Atom("<init>"), ast.Dollar())))
+                  ast.Tuple(ast.Atom("<init>"), ast.Wildcard())))
             } else
               ast.False()
             ast.And(blackhole, result)
@@ -251,12 +251,7 @@ abstract class GenOzCode extends OzmaSubComponent {
           else
             genCast(from, to, source, cast)
 
-        // 'super' call: Note: since constructors are supposed to
-        // return an instance of what they construct, we have to take
-        // special care. On JVM they are 'void', and Scala forbids (syntactically)
-        // to call super constructors explicitly and/or use their 'returned' value.
-        // therefore, we can ignore this fact, and generate code that leaves nothing
-        // on the stack (contrary to what the type in the AST says).
+        // 'super' call
         case Apply(fun @ Select(sup @ Super(_, mix), _), args) =>
           if (settings.debug.value)
             log("Call to super: " + tree)
@@ -268,10 +263,7 @@ abstract class GenOzCode extends OzmaSubComponent {
 
           ast.ObjApply(superClass, message)
 
-        // 'new' constructor call: Note: since constructors are
-        // thought to return an instance of what they construct,
-        // we have to 'simulate' it by DUPlicating the freshly created
-        // instance (on JVM, <init> methods return VOID).
+        // 'new' constructor call
         case Apply(fun @ Select(New(tpt), nme.CONSTRUCTOR), args) =>
           val ctor = fun.symbol
           if (settings.debug.value)
@@ -280,10 +272,10 @@ abstract class GenOzCode extends OzmaSubComponent {
 
           val classVar = varForSymbol(tpt.symbol)
           val arguments0 = args map { genExpression(_, ctx) }
-          val arguments = arguments0 ++ List(ast.Dollar())
+          val arguments = arguments0 ++ List(ast.Wildcard())
           val message = ast.Tuple(atomForSymbol(fun.symbol), arguments:_*)
 
-          ast.Apply(ast.Variable("New"), List(classVar, message))
+          genBuiltinApply("New", classVar, message)
 
         case Apply(fun @ _, List(expr)) if (definitions.isBox(fun.symbol)) =>
           if (settings.debug.value)
@@ -662,7 +654,7 @@ abstract class GenOzCode extends OzmaSubComponent {
       val waitNeeded = genBuiltinApply("WaitNeeded", tempVar)
       val newCall = genBuiltinApply("New",
           varForSymbol(clazz.symbol),
-          ast.Tuple(ast.Atom("<init>"), ast.Dollar()))
+          ast.Tuple(ast.Atom("<init>"), ast.Wildcard()))
 
       val threadContents = ast.And(waitNeeded,
           ast.Eq(tempVar, newCall))
