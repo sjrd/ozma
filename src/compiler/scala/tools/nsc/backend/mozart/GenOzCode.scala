@@ -261,7 +261,7 @@ abstract class GenOzCode extends OzmaSubComponent {
           if (settings.debug.value)
             log("Call to super: " + tree)
 
-          val superClass = varForSymbol(sup.symbol) // TODO not correct
+          val superClass = varForSymbol(sup.symbol.superClass)
           val arguments0 = args map { genExpression(_, ctx) }
           val arguments = arguments0 ++ List(ast.Dollar())
           val message = ast.Tuple(atomForSymbol(fun.symbol), arguments:_*)
