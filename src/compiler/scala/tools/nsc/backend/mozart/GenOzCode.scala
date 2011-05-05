@@ -743,22 +743,17 @@ abstract class GenOzCode extends OzmaSubComponent {
 
     def makeModule(clazz: OzClass) = {
       val module = clazz.symbol.companionModule
-      val moduleVar = varForSymbol(module)
-      val tempVar = ast.Variable("X")
 
-      val waitNeeded = genBuiltinApply("WaitNeeded", tempVar)
-      val newCall = genBuiltinApply("New",
+      val value = genBuiltinApply("New",
           varForSymbol(clazz.symbol),
           ast.Tuple(ast.Atom("<init>"), ast.Wildcard()))
 
-      val threadContents = ast.And(waitNeeded,
-          ast.Eq(tempVar, newCall))
-      val thread = ast.Thread(threadContents)
+      ast.Eq(varForSymbol(module), makeByNeed(value))
+    }
 
-      val localStats = ast.And(thread, tempVar)
-      val local = ast.LocalDef(tempVar, localStats)
-
-      ast.Eq(moduleVar, local)
+    def makeByNeed(value: ast.Phrase) = {
+      val fun = ast.Fun(ast.Dollar(), Nil, value)
+      genBuiltinApply("ByNeed", fun)
     }
 
     /* Symbol encoding */
