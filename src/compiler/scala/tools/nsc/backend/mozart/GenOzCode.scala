@@ -780,7 +780,36 @@ abstract class GenOzCode extends OzmaSubComponent {
       ast.QuotedVar(name + suffix)
     }
 
-    def atomForSymbol(sym: Symbol) =
-      ast.Atom(sym.name.toString)
+    def atomForSymbol(sym: Symbol) = {
+      val name = sym.name.toString
+
+      val encodedName = if (sym.isMethod)
+        name + "#" + paramsHash(sym)
+      else
+        name
+
+      ast.Atom(encodedName)
+    }
+
+    /** In order to support method overloading on the Mozart platform, we give
+     *  every method a hash code that is appended to its name on the back-end.
+     *  <p>This method computes the hash of a method.
+     *  <p>Two methods should have the same hash if and only if they would
+     *  <i>match</i> (as defined by the Scala reference, definition 5.1.4)
+     *  if they had the same name. This ensures that proper overriding applies
+     *  when running on Mozart.
+     *  <p>As currently implemented, we only guarantee that two matching methods
+     *  will have the same hash. We do not guarantee that two non-matching
+     *  methods will have different hashes, though we try to achieve this on a
+     *  best-effort basis.
+     */
+    private def paramsHash(sym: Symbol) = sym.tpe match {
+      case MethodType(params, _) =>
+        params.foldLeft(0) { _ ^ _.fullName.## }
+
+      case NullaryMethodType(_) => 0
+
+      case _ => abort("Expected a method type for " + sym)
+    }
   }
 }
