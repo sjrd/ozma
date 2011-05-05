@@ -447,9 +447,10 @@ abstract class GenOzCode extends OzmaSubComponent {
 
     private def genNew(clazz: Symbol, arguments: List[ast.Phrase] = Nil,
         label: ast.Atom = ast.Atom("<init>")) = {
-      val classVar = varForSymbol(clazz)
+      val typeVar = varForSymbol(clazz)
+      val classVar = varForClass(clazz)
       val message= buildMessage(label, arguments, ast.Wildcard())
-      genBuiltinApply("New", classVar, message)
+      genBuiltinApply("NewObject", typeVar, classVar, message)
     }
 
     private def isPrimitive(sym: Symbol) =
@@ -611,7 +612,7 @@ abstract class GenOzCode extends OzmaSubComponent {
 
     def genCast(from: Type, to: Type, value: ast.Phrase, cast: Boolean) = {
       genBuiltinApply(if (cast) "AsInstance" else "IsInstance",
-          value, varForSymbol(to.typeSymbol))
+          value, varForClass(to.typeSymbol))
     }
 
     def genBuiltinApply(funName: String, args: ast.Phrase*) =
@@ -740,8 +741,15 @@ abstract class GenOzCode extends OzmaSubComponent {
     /////////////////// Module assembly ///////////////////////
 
     def makeModules(): List[ast.Eq] = {
-      for (clazz <- unitClasses.toList if (clazz.symbol.isModuleClass))
+      val classes = unitClasses.toList
+
+      val modules = for (clazz <- classes if (clazz.symbol.isModuleClass))
         yield makeModule(clazz)
+
+      val classConstants = for (clazz <- classes)
+        yield makeClassConstant(clazz)
+
+      modules ::: classConstants
     }
 
     def makeModule(clazz: OzClass) = {
@@ -749,6 +757,20 @@ abstract class GenOzCode extends OzmaSubComponent {
       val value = genNew(clazz.symbol)
 
       ast.Eq(varForSymbol(module), makeByNeed(value))
+    }
+
+    def makeClassConstant(clazz: OzClass) = {
+      val sym = clazz.symbol
+
+      val fullName = ast.StringLiteral(sym.fullName)
+      val superClass = varForClass(sym.superClass)
+      val mixins = ast.ListLiteral((sym.mixinClasses map varForClass):_*)
+      val ancestors = ast.ListLiteral((sym.ancestors map varForClass):_*)
+
+      val arguments = List(fullName, superClass, mixins, ancestors)
+      val value = genNew(definitions.ClassClass, arguments)
+
+      ast.Eq(varForClass(clazz.symbol), makeByNeed(value))
     }
 
     def makeByNeed(value: ast.Phrase) = {
@@ -766,13 +788,20 @@ abstract class GenOzCode extends OzmaSubComponent {
       else
         sym.name.toString
 
-      val suffix = if (sym.hasModuleFlag && !sym.isMethod &&
+      ast.QuotedVar(name + suffixFor(sym))
+    }
+
+    def varForClass(sym: Symbol) = {
+      val name = "class:" + sym.fullName
+      ast.QuotedVar(name + suffixFor(sym))
+    }
+
+    private def suffixFor(sym: Symbol) = {
+      if (sym.hasModuleFlag && !sym.isMethod &&
           !sym.isImplClass && !sym.isJavaDefined)
         "$"
       else
         ""
-
-      ast.QuotedVar(name + suffix)
     }
 
     def atomForSymbol(sym: Symbol) = {

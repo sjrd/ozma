@@ -88,7 +88,9 @@ abstract class GenMozart extends OzmaSubComponent {
     }
 
     def groupNameFor(varName: String) = {
-      val fullName = varName.stripPrefix("type:").stripPrefix("module:")
+      val fullName = varName.stripPrefix("type:")
+                            .stripPrefix("module:")
+                            .stripPrefix("class:")
       val dollar = fullName.indexOf('$')
 
       val baseName = if (dollar < 0)
@@ -101,14 +103,15 @@ abstract class GenMozart extends OzmaSubComponent {
 
     def makeFunctor(name: String, classes: List[ClassDef],
         modules: List[Eq]) = {
-      val imports = makeImports(name, classes)
+      val definitions = And((classes ::: modules):_*)
+      val imports = makeImports(name, definitions)
       val exports = makeExports(name, classes, modules)
-      val define = Define(And((classes ::: modules):_*))
+      val define = Define(definitions)
       val descriptors = List(imports, exports, define)
       ast.Functor(ast.Atom(name), descriptors)
     }
 
-    def makeImports(name: String, classes: List[ClassDef]) = {
+    def makeImports(name: String, definitions: Node) = {
       val importsByGroup = new HashMap[String, Set[String]]
 
       def importClass(varName: String) {
@@ -127,12 +130,10 @@ abstract class GenMozart extends OzmaSubComponent {
         group += varName
       }
 
-      for (clazz <- classes) {
-        clazz walk {
-          case QuotedVar(varName) if (isClassOrModule(varName)) =>
-            importClass(varName)
-          case _ => ()
-        }
+      definitions walk {
+        case QuotedVar(varName) if (isClassOrModule(varName)) =>
+          importClass(varName)
+        case _ => ()
       }
 
       val importDecls = for ((name, varNames) <- importsByGroup)
@@ -142,7 +143,8 @@ abstract class GenMozart extends OzmaSubComponent {
     }
 
     def isClassOrModule(varName: String) =
-      varName.startsWith("type:") || varName.startsWith("module:")
+      (varName.startsWith("type:") || varName.startsWith("module:") ||
+          varName.startsWith("class:"))
 
     def makeImportDecl(functorName: String, classVarNames: Set[String]) = {
       val importItems = for (varName <- classVarNames.toList)
