@@ -91,10 +91,12 @@ abstract class GenMozart extends OzmaSubComponent {
       val fullName = varName.stripPrefix("type:").stripPrefix("module:")
       val dollar = fullName.indexOf('$')
 
-      if (dollar < 0)
+      val baseName = if (dollar < 0)
         fullName
       else
         fullName.substring(0, dollar)
+
+      baseName.stripSuffix(".")
     }
 
     def makeFunctor(name: String, classes: List[ClassDef],
