@@ -239,9 +239,7 @@ abstract class GenOzCode extends OzmaSubComponent {
           else if (l.isValueType) {
             val blackhole = blackholeReturnedValue(source)
             val result = if (cast) {
-              ast.Raise(genBuiltinApply("New",
-                  varForSymbol(definitions.ClassCastExceptionClass),
-                  ast.Tuple(ast.Atom("<init>"), ast.Wildcard())))
+              ast.Raise(genNew(definitions.ClassCastExceptionClass))
             } else
               ast.False()
             ast.And(blackhole, result)
@@ -262,9 +260,8 @@ abstract class GenOzCode extends OzmaSubComponent {
             log("Call to super: " + tree)
 
           val superClass = varForSymbol(sup.symbol.superClass)
-          val arguments0 = args map { genExpression(_, ctx) }
-          val arguments = arguments0 ++ List(ast.Dollar())
-          val message = ast.Tuple(atomForSymbol(fun.symbol), arguments:_*)
+          val arguments = args map { genExpression(_, ctx) }
+          val message = buildMessage(atomForSymbol(fun.symbol), arguments)
 
           ast.ObjApply(superClass, message)
 
@@ -275,12 +272,8 @@ abstract class GenOzCode extends OzmaSubComponent {
             assert(ctor.isClassConstructor,
                    "'new' call to non-constructor: " + ctor.name)
 
-          val classVar = varForSymbol(tpt.symbol)
-          val arguments0 = args map { genExpression(_, ctx) }
-          val arguments = arguments0 ++ List(ast.Wildcard())
-          val message = ast.Tuple(atomForSymbol(fun.symbol), arguments:_*)
-
-          genBuiltinApply("New", classVar, message)
+          val arguments = args map { genExpression(_, ctx) }
+          genNew(tpt.symbol, arguments, atomForSymbol(fun.symbol))
 
         case app @ Apply(fun, args) =>
           val sym = fun.symbol
@@ -298,9 +291,8 @@ abstract class GenOzCode extends OzmaSubComponent {
               ctx.method.recursive = true
 
             val instance = genQualifier(fun, ctx)
-            val arguments0 = args map { genExpression(_, ctx) }
-            val arguments = arguments0 ++ List(ast.Dollar())
-            val message = ast.Tuple(atomForSymbol(fun.symbol), arguments:_*)
+            val arguments = args map { genExpression(_, ctx) }
+            val message = buildMessage(atomForSymbol(fun.symbol), arguments)
 
             ast.Apply(instance, List(message))
           }
@@ -447,6 +439,17 @@ abstract class GenOzCode extends OzmaSubComponent {
 
     private def genStatement(tree: Tree, ctx: Context): ast.Phrase = {
       blackholeReturnedValue(genExpression(tree, ctx))
+    }
+
+    private def buildMessage(label: ast.Atom, arguments: List[ast.Phrase],
+        additionalArg: ast.Phrase = ast.Dollar()) =
+      ast.Tuple(label, (arguments ++ List(additionalArg):_*))
+
+    private def genNew(clazz: Symbol, arguments: List[ast.Phrase] = Nil,
+        label: ast.Atom = ast.Atom("<init>")) = {
+      val classVar = varForSymbol(clazz)
+      val message= buildMessage(label, arguments, ast.Wildcard())
+      genBuiltinApply("New", classVar, message)
     }
 
     private def isPrimitive(sym: Symbol) =
@@ -743,10 +746,7 @@ abstract class GenOzCode extends OzmaSubComponent {
 
     def makeModule(clazz: OzClass) = {
       val module = clazz.symbol.companionModule
-
-      val value = genBuiltinApply("New",
-          varForSymbol(clazz.symbol),
-          ast.Tuple(ast.Atom("<init>"), ast.Wildcard()))
+      val value = genNew(clazz.symbol)
 
       ast.Eq(varForSymbol(module), makeByNeed(value))
     }
