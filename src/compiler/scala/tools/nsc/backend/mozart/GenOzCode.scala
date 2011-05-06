@@ -706,7 +706,12 @@ abstract class GenOzCode extends OzmaSubComponent {
       }
 
       val sym = clazz.symbol
-      val bases = for (mixin <- sym.superClass :: sym.mixinClasses)
+      val superClass = if (sym.superClass == NoSymbol)
+        ObjectClass
+      else
+        sym.superClass
+
+      val bases = for (mixin <- superClass :: sym.mixinClasses)
         yield varForSymbol(mixin)
       val withFrom = ast.From(bases) :: withAttrs
 
