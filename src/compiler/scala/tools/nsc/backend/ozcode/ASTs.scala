@@ -34,6 +34,12 @@ trait ASTs { self: OzCodes =>
       this
     }
 
+    def setDefaultPos(p: Position): this.type = {
+      if (!pos.isDefined)
+        setPos(p)
+      this
+    }
+
     def syntax(indent: String = ""): String
 
     override def toString = syntax()
@@ -84,7 +90,11 @@ trait ASTs { self: OzCodes =>
     }
 
     def makeCoord() = {
-      ast.UnitVal()
+      if (!pos.isDefined)
+        ast.UnitVal()
+      else
+        ast.Tuple(ast.Atom("pos"), ast.Atom(pos.source.file.toString),
+          ast.IntLiteral(pos.line), ast.IntLiteral(pos.column-1))
     }
 
     def walk[U](handler: Node => U) {
@@ -105,6 +115,8 @@ trait ASTs { self: OzCodes =>
   private case class ASTNode(node: ast.Phrase)
 
   object ast {
+    var _nextID = 0
+    def nextID() = { _nextID += 1; _nextID }
     // See the Mozart document at Syntax Tree Format
 
     // Categories
@@ -160,6 +172,11 @@ trait ASTs { self: OzCodes =>
     }
 
     case class And(phrases: Phrase*) extends Phrase {
+      override def setPos(p: Position) = {
+        phrases foreach (_ setDefaultPos p)
+        super.setPos(p)
+      }
+
       def syntax(indent: String) = {
         val head :: tail = phrases.toList
         tail.foldLeft(head.syntax(indent)) {
@@ -235,6 +252,13 @@ trait ASTs { self: OzCodes =>
     }
 
     case class At(cell: Phrase) extends Phrase {
+      setPos(cell.pos)
+
+      override def setPos(p: Position) = {
+        cell setDefaultPos p
+        super.setPos(p)
+      }
+
       def syntax(indent: String) = "@" + cell.syntax(indent+" ")
     }
 
@@ -328,6 +352,8 @@ trait ASTs { self: OzCodes =>
 
     case class Record(val label: RecordLabel,
         val features: RecordArgument*) extends Phrase {
+
+      setPos(label.pos)
 
       override val hasCoord = false
 

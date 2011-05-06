@@ -163,39 +163,39 @@ abstract class GenOzCode extends OzmaSubComponent {
       if (settings.debug.value)
         log("at line: " + (if (tree.pos.isDefined) tree.pos.line else tree.pos))
 
-      tree match {
+      (tree match {
         case LabelDef(name, params, rhs) =>
           abort("Labels should not reach the GenOzCode back-end")
 
         case ValDef(_, nme.THIS, _, _) =>
           if (settings.debug.value)
             log("skipping trivial assign to _$this: " + tree)
-          ast.Atom("unit")
+          ast.UnitVal()
 
         case ValDef(_, _, _, rhs) =>
           val sym = tree.symbol
           val local = ctx.method.addLocal(new Local(sym, false))
 
           val value = if (sym.hasAnnotation(SingleAssignmentClass)) {
-            ast.Wildcard()
+            ast.Wildcard() setPos rhs.pos
           } else if (rhs == EmptyTree) {
             if (settings.debug.value)
               log("Uninitialized variable " + tree + " at: " + (tree.pos));
-            ast.Wildcard()
+            ast.Wildcard() setPos tree.pos
           } else {
             genExpression(rhs, ctx)
           }
 
-          val rightOfEqual = if (hasSingleAssignSemantics(sym)) {
+          val rightOfEqual = if (hasSingleAssignSemantics(sym))
             value
-          } else {
-            ast.Apply(ast.Variable("NewCell"), List(value))
-          }
+          else
+            genBuiltinApply("NewCell", value)
 
           rightOfEqual match {
             case _: ast.Wildcard => ast.UnitVal()
             case _ =>
-              ast.And(ast.Eq(varForSymbol(sym), rightOfEqual), ast.UnitVal())
+              ast.And(ast.Eq(varForSymbol(sym) setPos tree.pos, rightOfEqual),
+                  ast.UnitVal())
           }
 
         case t @ If(cond, thenp, elsep) =>
@@ -259,9 +259,10 @@ abstract class GenOzCode extends OzmaSubComponent {
           if (settings.debug.value)
             log("Call to super: " + tree)
 
-          val superClass = varForSymbol(sup.symbol.superClass)
+          val superClass = varForSymbol(sup.symbol.superClass) setPos sup.pos
           val arguments = args map { genExpression(_, ctx) }
-          val message = buildMessage(atomForSymbol(fun.symbol), arguments)
+          val message = buildMessage(atomForSymbol(fun.symbol) setPos fun.pos,
+              arguments)
 
           ast.ObjApply(superClass, message)
 
@@ -273,7 +274,8 @@ abstract class GenOzCode extends OzmaSubComponent {
                    "'new' call to non-constructor: " + ctor.name)
 
           val arguments = args map { genExpression(_, ctx) }
-          genNew(tpt.symbol, arguments, atomForSymbol(fun.symbol))
+          genNew(tpt.symbol, arguments,
+              atomForSymbol(fun.symbol) setPos fun.pos)
 
         case app @ Apply(fun, args) =>
           val sym = fun.symbol
@@ -292,7 +294,8 @@ abstract class GenOzCode extends OzmaSubComponent {
 
             val instance = genQualifier(fun, ctx)
             val arguments = args map { genExpression(_, ctx) }
-            val message = buildMessage(atomForSymbol(fun.symbol), arguments)
+            val message = buildMessage(atomForSymbol(fun.symbol) setPos fun.pos,
+                arguments)
 
             ast.Apply(instance, List(message))
           }
@@ -382,16 +385,17 @@ abstract class GenOzCode extends OzmaSubComponent {
           genExpression(expr, ctx)
 
         case Assign(lhs @ Select(_, _), rhs) =>
-          val assignment = ast.Assign(varForSymbol(lhs.symbol),
+          val assignment = ast.Assign(varForSymbol(lhs.symbol) setPos lhs.pos,
               genExpression(rhs, ctx))
           ast.And(assignment, ast.UnitVal())
 
         case Assign(lhs, rhs) =>
           val sym = lhs.symbol
           val assignment = if (hasSingleAssignSemantics(sym))
-            ast.Eq(varForSymbol(sym), genExpression(rhs, ctx))
+            ast.Eq(varForSymbol(sym) setPos lhs.pos, genExpression(rhs, ctx))
           else
-            ast.Assign(varForSymbol(sym), genExpression(rhs, ctx))
+            ast.Assign(varForSymbol(sym) setPos lhs.pos,
+                genExpression(rhs, ctx))
           ast.And(assignment, ast.UnitVal())
 
         case ArrayValue(tpt @ TypeTree(), _elems) =>
@@ -404,7 +408,7 @@ abstract class GenOzCode extends OzmaSubComponent {
           val expr = genExpression(selector, ctx)
 
           var clauses: List[ast.CaseClause] = Nil
-          var elseClause: ast.OptElse = ast.NoElse()
+          var elseClause: ast.OptElse = ast.NoElse() setPos tree.pos
 
           for (caze @ CaseDef(pat, guard, body) <- cases) {
             assert(guard == EmptyTree)
@@ -426,12 +430,12 @@ abstract class GenOzCode extends OzmaSubComponent {
           ast.Case(expr, clauses.reverse, elseClause)
 
         case EmptyTree =>
-          ast.Atom("unit")
+          ast.UnitVal()
 
         case _ =>
           abort("Unexpected tree in genLoad: " + tree + "/" + tree.getClass +
               " at: " + tree.pos)
-      }
+      }) setDefaultPos tree.pos
     }
 
     private def genStatement(tree: Tree, ctx: Context): ast.Phrase = {
@@ -446,7 +450,7 @@ abstract class GenOzCode extends OzmaSubComponent {
         label: ast.Atom = ast.Atom("<init>")) = {
       val typeVar = varForSymbol(clazz)
       val classVar = varForClass(clazz)
-      val message= buildMessage(label, arguments, ast.Wildcard())
+      val message = buildMessage(label, arguments, ast.Wildcard())
       genBuiltinApply("NewObject", typeVar, classVar, message)
     }
 
@@ -463,9 +467,9 @@ abstract class GenOzCode extends OzmaSubComponent {
       if (isArithmeticOp(code) || isLogicalOp(code) || isComparisonOp(code))
         genSimpleOp(tree, receiver :: args, ctx, code)
       else if (code == HASH)
-        genScalaHash(receiver, ctx)
+        genScalaHash(tree, receiver, ctx)
       else if (isCoercion(code))
-        genCoercion(receiver, ctx, code)
+        genCoercion(tree, receiver, ctx, code)
       else
         abort("Primitive operation not handled yet: " + sym.fullName + "(" +
             fun.symbol.simpleName + ") " + " at: " + (tree.pos))
@@ -480,7 +484,7 @@ abstract class GenOzCode extends OzmaSubComponent {
       sources match {
         // Unary operation
         case List(source) =>
-          code match {
+          (code match {
             case POS =>
               source // nothing to do
             case NEG =>
@@ -491,7 +495,7 @@ abstract class GenOzCode extends OzmaSubComponent {
               genBuiltinApply("Not", source)
             case _ =>
               abort("Unknown unary operation code: " + code)
-          }
+          }) setPos tree.pos
 
         // Binary operation
         case List(lsrc, rsrc) =>
@@ -500,7 +504,7 @@ abstract class GenOzCode extends OzmaSubComponent {
             case FLOAT => "/"
           }
 
-          code match {
+          (code match {
             case ADD => ast.BinaryOpApply("+", lsrc, rsrc)
             case SUB => ast.BinaryOpApply("-", lsrc, rsrc)
             case MUL => ast.BinaryOpApply("*", lsrc, rsrc)
@@ -522,23 +526,26 @@ abstract class GenOzCode extends OzmaSubComponent {
             case ZAND => ast.AndThen(lsrc, rsrc)
             case _ =>
               abort("Unknown binary operation code: " + code)
-          }
+          }) setPos tree.pos
 
         case _ =>
           abort("Too many arguments for primitive function: " + tree)
       }
     }
 
-    private def genScalaHash(receiver: Tree, ctx: Context): ast.Phrase = {
-      val instance = varForSymbol(ScalaRunTimeModule)
-      val arguments = List(genExpression(receiver, ctx), ast.Dollar())
+    private def genScalaHash(tree: Apply, receiver: Tree,
+        ctx: Context): ast.Phrase = {
+      val instance = varForSymbol(ScalaRunTimeModule) setPos tree.pos
+      val arguments = List(genExpression(receiver, ctx),
+          ast.Dollar() setPos tree.pos)
       val sym = getMember(ScalaRunTimeModule, "hash")
-      val message = ast.Tuple(atomForSymbol(sym), arguments:_*)
+      val message = ast.Tuple(atomForSymbol(sym) setPos tree.pos,
+          arguments:_*)
 
-      ast.Apply(instance, List(message))
+      ast.Apply(instance, List(message)) setPos tree.pos
     }
 
-    private def genCoercion(receiver: Tree, ctx: Context,
+    private def genCoercion(tree: Apply, receiver: Tree, ctx: Context,
         code: Int): ast.Phrase = {
       import scalaPrimitives._
 
@@ -546,10 +553,10 @@ abstract class GenOzCode extends OzmaSubComponent {
 
       (code: @scala.annotation.switch) match {
         case B2F | B2D | S2F | S2D | C2F | C2D | I2F | I2D | L2F | L2D =>
-          genBuiltinApply("IntToFloat", source)
+          genBuiltinApply("IntToFloat", source) setPos tree.pos
 
         case F2B | F2S | F2C | F2I | F2L | D2B | D2S | D2C | D2I | D2L =>
-          genBuiltinApply("FloatToInt", source)
+          genBuiltinApply("FloatToInt", source) setPos tree.pos
 
         case _ => source
       }
@@ -557,7 +564,7 @@ abstract class GenOzCode extends OzmaSubComponent {
 
     private def blackholeReturnedValue(expr: ast.Phrase): ast.Phrase = {
       expr match {
-        case ast.Atom(_) => ast.Skip()
+        case ast.Atom(_) => ast.Skip() setPos expr.pos
 
         case ast.And(statement, _:ast.RecordLabel) => statement
 
@@ -592,10 +599,10 @@ abstract class GenOzCode extends OzmaSubComponent {
       varForSymbol(sym) setPos pos
 
     def genConversion(from: TypeKind, to: TypeKind, value: ast.Phrase) = {
-      def int0 = ast.IntLiteral(0)
-      def int1 = ast.IntLiteral(1)
-      def float0 = ast.FloatLiteral(0.0)
-      def float1 = ast.FloatLiteral(1.0)
+      def int0 = ast.IntLiteral(0) setPos value.pos
+      def int1 = ast.IntLiteral(1) setPos value.pos
+      def float0 = ast.FloatLiteral(0.0) setPos value.pos
+      def float1 = ast.FloatLiteral(1.0) setPos value.pos
 
       (from, to) match {
         case _ if from eq to => value
@@ -613,11 +620,13 @@ abstract class GenOzCode extends OzmaSubComponent {
 
     def genCast(from: Type, to: Type, value: ast.Phrase, cast: Boolean) = {
       genBuiltinApply(if (cast) "AsInstance" else "IsInstance",
-          value, varForClass(to.typeSymbol))
+          value, varForClass(to.typeSymbol) setPos value.pos)
     }
 
-    def genBuiltinApply(funName: String, args: ast.Phrase*) =
-      ast.Apply(ast.Variable(funName), args.toList)
+    def genBuiltinApply(funName: String, args: ast.Phrase*) = {
+      val pos = if (args.isEmpty) NoPosition else args(0).pos
+      ast.Apply(ast.Variable(funName) setPos pos, args.toList) setPos pos
+    }
 
     /////////////////// Context ///////////////////////
 
@@ -689,8 +698,8 @@ abstract class GenOzCode extends OzmaSubComponent {
     }
 
     def makeClass(clazz: OzClass) = {
-      ast.ClassDef(varForSymbol(clazz.symbol), makeClassDescriptors(clazz),
-          makeClassMethods(clazz))
+      ast.ClassDef(varForSymbol(clazz.symbol) setPos clazz.symbol.pos,
+          makeClassDescriptors(clazz), makeClassMethods(clazz))
     }
 
     def makeClassDescriptors(clazz: OzClass): List[ast.ClassDescriptor] = {
@@ -698,7 +707,7 @@ abstract class GenOzCode extends OzmaSubComponent {
         Nil
       else {
         val attrs = ast.Attr(clazz.fields.map {
-          field => varForSymbol(field.symbol)
+          field => varForSymbol(field.symbol) setPos field.symbol.pos
         })
 
         List(attrs)
@@ -711,8 +720,8 @@ abstract class GenOzCode extends OzmaSubComponent {
         sym.superClass
 
       val bases = for (mixin <- superClass :: sym.mixinClasses)
-        yield varForSymbol(mixin)
-      val withFrom = ast.From(bases) :: withAttrs
+        yield varForSymbol(mixin) setPos clazz.symbol.pos
+      val withFrom = (ast.From(bases) setPos clazz.symbol.pos) :: withAttrs
 
       withFrom
     }
@@ -723,9 +732,10 @@ abstract class GenOzCode extends OzmaSubComponent {
     }
 
     def makeMethodDef(method: OzMethod): ast.MethodDef = {
-      val name = atomForSymbol(method.symbol)
+      val name = atomForSymbol(method.symbol) setPos method.symbol.pos
       val args0 = method.params.map {
-        local => ast.MethodArg(None, varForSymbol(local.sym), None)
+        local => ast.MethodArg(None,
+            varForSymbol(local.sym) setPos local.sym.pos, None)
       }
       val args = args0 ++ List(ast.MethodArg(None, ast.Dollar(), None))
       val body = method.code.asInstanceOf[ast.Phrase]
@@ -737,11 +747,13 @@ abstract class GenOzCode extends OzmaSubComponent {
       val actualBody = if (locals.isEmpty)
         body
       else {
-        val localVars = locals map { local => varForSymbol(local.sym) }
-        ast.LocalDef(ast.And(localVars:_*), body)
+        val localVars = locals map { local =>
+          varForSymbol(local.sym) setPos local.sym.pos
+        }
+        ast.LocalDef(ast.And(localVars:_*), body) setPos method.symbol.pos
       }
 
-      ast.MethodDef(name, args, actualBody)
+      ast.MethodDef(name, args, actualBody) setPos method.symbol.pos
     }
 
     /////////////////// Module assembly ///////////////////////

@@ -34,11 +34,17 @@ abstract class GenMozart extends OzmaSubComponent {
 
     override def apply(unit: CompilationUnit): Unit = {
       this.unit = unit
+      val dummyPos = new util.OffsetPosition(unit.source, 0)
       informProgress("Generating Mozart module for " + unit)
+
       val OzCodeClasses(classes, modules) = unit.body
       val functors = makeFunctors(classes, modules)
-      for (functor <- functors)
+
+      for (functor <- functors) {
+        functor walk (_ setDefaultPos dummyPos)
         writeFunctor(functor)
+      }
+
       this.unit = null
     }
 
