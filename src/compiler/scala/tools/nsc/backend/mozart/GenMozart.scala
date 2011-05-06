@@ -111,28 +111,32 @@ abstract class GenMozart extends OzmaSubComponent {
       ast.Functor(ast.Atom(name), descriptors)
     }
 
+    private val isOzmaRuntimeBuiltin = List(
+        "NewObject", "AsInstance", "IsIstance",
+        "BinNot", "BinAnd", "BinOr", "BinXor", "LSL", "LSR", "ASR") toSet
+
     def makeImports(name: String, definitions: Node) = {
       val importsByGroup = new HashMap[String, Set[String]]
+
+      def groupFor(groupName: String) =
+        importsByGroup.getOrElseUpdate(groupName, new HashSet[String])
+
+      val builtinGroup = groupFor("scala.ozma.OzmaRuntime")
 
       def importClass(varName: String) {
         val groupName = groupNameFor(varName)
         if (groupName == name)
           return // do not import classes defined in this functor
 
-        val group = importsByGroup.get(groupName) match {
-          case Some(group) => group
-          case None =>
-            val group = new HashSet[String]
-            importsByGroup += (groupName -> group)
-            group
-        }
-
+        val group = groupFor(groupName)
         group += varName
       }
 
       definitions walk {
         case QuotedVar(varName) if (isClassOrModule(varName)) =>
           importClass(varName)
+        case Variable(varName) if (isOzmaRuntimeBuiltin(varName)) =>
+          builtinGroup += varName
         case _ => ()
       }
 
