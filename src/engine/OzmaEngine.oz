@@ -11,8 +11,8 @@ import
 prepare
 
    OptSpecs = record(
-		 %help(char:[&h &?] type:bool default:false)
-		 classpath(single char:"p" type:string default:"."))
+                 %help(char:[&h &?] type:bool default:false)
+                 classpath(single char:"p" type:string default:"."))
 
    Usage =
    'Usage:\n'#
@@ -57,7 +57,7 @@ define
       Args = {Application.getArgs OptSpecs}
    in
       %if Args.help then
-	 %{ShowUsage 0}
+      %   {ShowUsage 0}
       %end
 
       % Fill global variables from command-line arguments
@@ -65,10 +65,12 @@ define
 
       % Run the program
       case Args.1 of MainObject|AppArgs then
-	 {RunMainObject MainObject AppArgs}
+         {RunMainObject MainObject AppArgs}
       else
-	 raise error(ap(usage 'Main object required.')
-		     debug:unit) end
+         raise
+            error(ap(usage 'Main object required.')
+                  debug:unit)
+         end
       end
       
       {Application.exit 0}
