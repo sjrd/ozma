@@ -823,11 +823,8 @@ abstract class GenOzCode extends OzmaSubComponent {
 
     def atomForSymbol(sym: Symbol) = {
       val name = sym.name.toString
-
-      val encodedName = if (sym.isMethod)
-        name + "#" + paramsHash(sym)
-      else
-        name
+      val hash = if (sym.isMethod) paramsHash(sym) else 0
+      val encodedName = if (hash != 0) name + "#" + hash else name
 
       ast.Atom(encodedName)
     }
