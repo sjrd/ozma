@@ -131,6 +131,18 @@ trait ASTs { self: OzCodes =>
         Record(this, features:_*) setPos pos
     }
 
+    // Utils
+
+    def escapePseudoChars(name: String, delim: Char) = {
+      val result = new StringBuffer
+      name foreach { c =>
+        if (c == '\\' || c == delim)
+          result append '\\'
+        result append c
+      }
+      result.toString
+    }
+
     // Auto-boxing
 
     implicit def int2literal(value: Int) = IntLiteral(value)
@@ -228,7 +240,7 @@ trait ASTs { self: OzCodes =>
 
     case class Atom(atom: String) extends Phrase with FeatureNoVar
         with RecordLabel with MethodName {
-      def syntax(indent: String) = "'" + atom + "'"
+      def syntax(indent: String) = "'" + escapePseudoChars(atom, '\'') + "'"
     }
 
     object NullVal {
@@ -265,7 +277,11 @@ trait ASTs { self: OzCodes =>
         with Feature with MethodArgName with ExportItemArg {
       override val astLabel = "fVar"
 
-      def syntax(indent: String) = name
+      def syntax(indent: String) = this match {
+        case QuotedVar(innerName) =>
+          "`" + escapePseudoChars(innerName, '`') + "`"
+        case _ => name
+      }
     }
 
     object QuotedVar {
