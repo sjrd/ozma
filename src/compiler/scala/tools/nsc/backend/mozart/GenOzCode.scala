@@ -308,7 +308,6 @@ abstract class GenOzCode extends OzmaSubComponent {
             assert(!tree.symbol.isPackageClass, "Cannot use package as value: " + tree)
             genModule(ctx, tree.symbol, tree.pos)
           } else {
-            // TODO get the 'this' of an outer class
             ast.Self()
           }
 
@@ -496,11 +495,16 @@ abstract class GenOzCode extends OzmaSubComponent {
 
         // Binary operation
         case List(lsrc, rsrc) =>
+          def divOperator = toTypeKind(args.head.tpe) match {
+            case INT => "div"
+            case FLOAT => "/"
+          }
+
           code match {
             case ADD => ast.BinaryOpApply(ast.Atom("+"), lsrc, rsrc)
             case SUB => ast.BinaryOpApply(ast.Atom("-"), lsrc, rsrc)
             case MUL => ast.BinaryOpApply(ast.Atom("*"), lsrc, rsrc)
-            case DIV => ast.BinaryOpApply(ast.Atom("/"), lsrc, rsrc) // TODO div
+            case DIV => ast.BinaryOpApply(ast.Atom(divOperator), lsrc, rsrc)
             case MOD => ast.BinaryOpApply(ast.Atom("mod"), lsrc, rsrc)
             case OR => genBuiltinApply("BinOr", lsrc, rsrc)
             case XOR => genBuiltinApply("BinXor", lsrc, rsrc)
