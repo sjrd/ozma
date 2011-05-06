@@ -846,7 +846,7 @@ abstract class GenOzCode extends OzmaSubComponent {
      */
     private def paramsHash(sym: Symbol) = sym.tpe match {
       case MethodType(params, _) =>
-        params.foldLeft(0) { _ ^ _.fullName.## }
+        params.foldLeft(0) { _ + _.tpe.typeSymbol.fullName.## }
 
       case NullaryMethodType(_) => 0
 
