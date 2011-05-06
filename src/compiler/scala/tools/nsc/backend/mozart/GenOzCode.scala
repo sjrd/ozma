@@ -780,7 +780,7 @@ abstract class GenOzCode extends OzmaSubComponent {
     def makeClassConstant(clazz: OzClass) = {
       val sym = clazz.symbol
 
-      val fullName = ast.StringLiteral(sym.fullName)
+      val fullName = ast.StringLiteral(sym.fullName + suffixFor(sym))
       val superClass = if (sym.superClass == NoSymbol)
         varForClass(ObjectClass)
       else
