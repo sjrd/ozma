@@ -559,7 +559,7 @@ abstract class GenOzCode extends OzmaSubComponent {
       expr match {
         case ast.Atom(_) => ast.Skip()
 
-        case ast.And(statement, _:ast.Atom) => statement
+        case ast.And(statement, _:ast.RecordLabel) => statement
 
         case ast.And(statements @ _*) =>
           val last :: others = statements.toList.reverse

@@ -84,7 +84,7 @@ trait ASTs { self: OzCodes =>
     }
 
     def makeCoord() = {
-      ast.Atom("unit")
+      ast.UnitVal()
     }
 
     def walk[U](handler: Node => U) {
@@ -125,6 +125,11 @@ trait ASTs { self: OzCodes =>
     trait EscapableVariable extends Phrase with EscapedFeature with MethodName
     trait FunctorDescriptor extends Node
     trait ClassDescriptor extends Node
+
+    trait RecordLabel extends Phrase {
+      def apply(features: RecordArgument*) =
+        Record(this, features:_*) setPos pos
+    }
 
     // Auto-boxing
 
@@ -223,31 +228,35 @@ trait ASTs { self: OzCodes =>
       def syntax(indent: String) = "@" + cell.syntax(indent+" ")
     }
 
-    case class Atom(
-        atom: String) extends Phrase with FeatureNoVar with MethodName {
+    case class Atom(atom: String) extends Phrase with FeatureNoVar
+        with RecordLabel with MethodName {
       def syntax(indent: String) = "'" + atom + "'"
-
-      def apply(features: RecordArgument*) =
-        Record(this, features:_*) setPos pos
     }
 
-    abstract class SpecialAtom(val tag: String) {
-      def apply() = Atom(tag)
-      def unapply(atom: Atom) = atom.atom == tag
+    object NullVal {
+      def apply() = Atom("null")
+      def unapply(atom: Atom) = atom.atom == "null"
     }
 
-    object UnitVal extends SpecialAtom("unit")
+    abstract class BuiltinName(tag: String) extends Phrase with RecordLabel {
+      override val astLabel = "fAtom"
 
-    object NullVal extends SpecialAtom("null")
+      def syntax(indent: String) = tag
 
-    object True extends SpecialAtom("true")
+      override def makeASTArguments() =
+        List(this.clone.asInstanceOf[BuiltinName])
+    }
 
-    object False extends SpecialAtom("false")
+    case class UnitVal() extends BuiltinName("unit")
+
+    case class True() extends BuiltinName("true")
+
+    case class False() extends BuiltinName("false")
 
     object Bool {
       def apply(value: Boolean) = if (value) True() else False()
 
-      def unapply(atom: Atom) = atom match {
+      def unapply(atom: Phrase) = atom match {
         case True() => Some(true)
         case False() => Some(false)
         case _ => None
@@ -303,7 +312,7 @@ trait ASTs { self: OzCodes =>
       def syntax(indent: String) = value.toString
     }
 
-    case class Record(val label: Atom,
+    case class Record(val label: RecordLabel,
         val features: RecordArgument*) extends Phrase {
 
       override val hasCoord = false
@@ -340,7 +349,8 @@ trait ASTs { self: OzCodes =>
     }
 
     object Tuple {
-      def apply(label: Atom, features: Phrase*) = Record(label, features:_*)
+      def apply(label: RecordLabel, features: Phrase*) =
+        Record(label, features:_*)
     }
 
     case class ListLiteral(val items: Phrase*) extends Phrase {
