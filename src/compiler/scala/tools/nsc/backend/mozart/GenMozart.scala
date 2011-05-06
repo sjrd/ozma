@@ -152,8 +152,11 @@ abstract class GenMozart extends OzmaSubComponent {
 
     def makeImportDecl(enclFunctorName: String, functorName: String,
         importedVarNames: Set[String]) = {
-      val importItems = for (varName <- importedVarNames.toList)
-        yield AliasedFeature(QuotedVar(varName), Atom(varName))
+      val importItems = for (varName <- importedVarNames.toList) yield {
+        val quoted = varName contains ':'
+        AliasedFeature(if (quoted) QuotedVar(varName) else Variable(varName),
+            Atom(varName))
+      }
 
       val depth = enclFunctorName.foldLeft(0) { (res, c) =>
         if (c == '.') res+1 else res
