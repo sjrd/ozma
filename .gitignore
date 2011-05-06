@@ -1,3 +1,6 @@
 .scala_dependencies
 .settings
 build
+*~
+*.ozf
+
