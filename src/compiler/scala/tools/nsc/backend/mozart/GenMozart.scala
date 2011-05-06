@@ -119,7 +119,7 @@ abstract class GenMozart extends OzmaSubComponent {
         "NewObject", "AsInstance", "IsIstance",
         "BinNot", "BinAnd", "BinOr", "BinXor", "LSL", "LSR", "ASR") toSet
 
-    def makeImports(name: String, definitions: Node) = {
+    def makeImports(functorName: String, definitions: Node) = {
       val importsByGroup = new HashMap[String, Set[String]]
 
       def groupFor(groupName: String) =
@@ -129,7 +129,7 @@ abstract class GenMozart extends OzmaSubComponent {
 
       def importClass(varName: String) {
         val groupName = groupNameFor(varName)
-        if (groupName == name)
+        if (groupName == functorName)
           return // do not import classes defined in this functor
 
         val group = groupFor(groupName)
@@ -145,18 +145,24 @@ abstract class GenMozart extends OzmaSubComponent {
       }
 
       val importDecls = for ((name, varNames) <- importsByGroup)
-        yield makeImportDecl(name, varNames)
+        yield makeImportDecl(functorName, name, varNames)
 
       ast.Import(importDecls.toList)
     }
 
-    def makeImportDecl(functorName: String, classVarNames: Set[String]) = {
-      val importItems = for (varName <- classVarNames.toList)
+    def makeImportDecl(enclFunctorName: String, functorName: String,
+        importedVarNames: Set[String]) = {
+      val importItems = for (varName <- importedVarNames.toList)
         yield AliasedFeature(QuotedVar(varName), Atom(varName))
 
-      val fileName = "./" + functorName.replace('.', '/') + ".ozf"
+      val depth = enclFunctorName.foldLeft(0) { (res, c) =>
+        if (c == '.') res+1 else res
+      }
+
+      val prefix = "../" * depth
+      val fileName = prefix + functorName.replace('.', '/') + ".ozf"
       val importAt = ImportAt(Atom(fileName))
-      ImportItem(Variable("`"+functorName+"`"), importItems, importAt)
+      ImportItem(QuotedVar("functor:" + functorName), importItems, importAt)
     }
 
     def makeExports(name: String, classes: List[ClassDef],
@@ -200,11 +206,16 @@ abstract class GenMozart extends OzmaSubComponent {
       outstream.close()
     }
 
-    def getFileFor(functor: Functor, suffix: String) = functor.name match {
-      case ast.Atom(label) =>
-        val dir: AbstractFile =
-          settings.outputDirs.outputDirFor(unit.source.file)
-        dir.fileNamed(label + suffix)
+    def getFileFor(functor: Functor, suffix: String) = {
+      val Atom(fullName) = functor.name
+      var dir: AbstractFile =
+        settings.outputDirs.outputDirFor(unit.source.file)
+
+      val pathParts = fullName.split("[./]").toList
+      for (part <- pathParts.init)
+        dir = dir.subdirectoryNamed(part)
+
+      dir.fileNamed(pathParts.last + suffix)
     }
   }
 }
