@@ -301,13 +301,13 @@ trait ASTs { self: OzCodes =>
     case class IntLiteral(value: Long) extends Phrase with FeatureNoVar {
       override val astLabel = "fInt"
 
-      def syntax(indent: String) = value.toString
+      def syntax(indent: String) = value.toString.replace('-', '~')
     }
 
     case class FloatLiteral(value: Double) extends Phrase {
       override val astLabel = "fFloat"
 
-      def syntax(indent: String) = value.toString
+      def syntax(indent: String) = value.toString.replace('-', '~')
     }
 
     case class Record(val label: RecordLabel,
