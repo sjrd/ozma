@@ -385,8 +385,8 @@ abstract class GenOzCode extends OzmaSubComponent {
           genExpression(expr, ctx)
 
         case Assign(lhs @ Select(_, _), rhs) =>
-          val assignment = ast.Assign(varForSymbol(lhs.symbol) setPos lhs.pos,
-              genExpression(rhs, ctx))
+          val assignment = ast.ColonEquals(
+              varForSymbol(lhs.symbol) setPos lhs.pos, genExpression(rhs, ctx))
           ast.And(assignment, ast.UnitVal())
 
         case Assign(lhs, rhs) =>
@@ -394,7 +394,7 @@ abstract class GenOzCode extends OzmaSubComponent {
           val assignment = if (hasSingleAssignSemantics(sym))
             ast.Eq(varForSymbol(sym) setPos lhs.pos, genExpression(rhs, ctx))
           else
-            ast.Assign(varForSymbol(sym) setPos lhs.pos,
+            ast.ColonEquals(varForSymbol(sym) setPos lhs.pos,
                 genExpression(rhs, ctx))
           ast.And(assignment, ast.UnitVal())
 

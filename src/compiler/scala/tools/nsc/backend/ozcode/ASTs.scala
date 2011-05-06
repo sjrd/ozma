@@ -211,7 +211,7 @@ trait ASTs { self: OzCodes =>
       protected val opSyntax = " = "
     }
 
-    case class Assign(left: Phrase, right: Phrase) extends InfixPhrase {
+    case class ColonEquals(left: Phrase, right: Phrase) extends InfixPhrase {
       protected val opSyntax = " := "
     }
 
