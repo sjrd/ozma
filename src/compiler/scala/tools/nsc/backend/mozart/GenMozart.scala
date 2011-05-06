@@ -112,7 +112,7 @@ abstract class GenMozart extends OzmaSubComponent {
       val exports = makeExports(name, classes, modules)
       val define = Define(definitions)
       val descriptors = List(imports, exports, define)
-      ast.Functor(ast.Atom(name), descriptors)
+      ast.Functor(ast.Dollar(), descriptors) setFullName name
     }
 
     private val isOzmaRuntimeBuiltin = List(
@@ -207,11 +207,10 @@ abstract class GenMozart extends OzmaSubComponent {
     }
 
     def getFileFor(functor: Functor, suffix: String) = {
-      val Atom(fullName) = functor.name
       var dir: AbstractFile =
         settings.outputDirs.outputDirFor(unit.source.file)
 
-      val pathParts = fullName.split("[./]").toList
+      val pathParts = functor.fullName.split("[./]").toList
       for (part <- pathParts.init)
         dir = dir.subdirectoryNamed(part)
 

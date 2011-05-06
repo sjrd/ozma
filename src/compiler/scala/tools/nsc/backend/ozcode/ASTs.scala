@@ -435,6 +435,13 @@ trait ASTs { self: OzCodes =>
 
     case class Functor(name: Phrase,
         descriptors: List[FunctorDescriptor]) extends Phrase {
+      var fullName: String = _
+
+      def setFullName(value: String): this.type = {
+        fullName = value
+        this
+      }
+
       def syntax(indent: String) = {
         val firstLine = "functor " + name.syntax(indent + "        ") + "\n\n"
         descriptors.foldLeft(firstLine) {
