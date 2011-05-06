@@ -122,7 +122,7 @@ abstract class GenMozart extends OzmaSubComponent {
     }
 
     private val isOzmaRuntimeBuiltin = List(
-        "NewObject", "AsInstance", "IsIstance",
+        "NewObject", "AsInstance", "IsIstance", "StringLiteral",
         "BinNot", "BinAnd", "BinOr", "BinXor", "LSL", "LSR", "ASR") toSet
 
     def makeImports(functorName: String, definitions: Node) = {

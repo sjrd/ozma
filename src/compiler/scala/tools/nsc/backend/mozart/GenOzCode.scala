@@ -367,7 +367,8 @@ abstract class GenOzCode extends OzmaSubComponent {
             case FloatTag | DoubleTag =>
               ast.FloatLiteral(value.doubleValue)
             case StringTag =>
-              ast.StringLiteral(value.stringValue)
+              genBuiltinApply("StringLiteral",
+                  ast.StringLiteral(value.stringValue))
             case NullTag =>
               ast.NullVal()
           }
