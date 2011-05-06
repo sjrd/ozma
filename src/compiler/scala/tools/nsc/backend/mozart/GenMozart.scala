@@ -88,9 +88,13 @@ abstract class GenMozart extends OzmaSubComponent {
     }
 
     def groupNameFor(varName: String) = {
-      val fullName = varName.stripPrefix("type:")
-                            .stripPrefix("module:")
-                            .stripPrefix("class:")
+      val initFullName = varName.substring(varName.indexOf(':')+1)
+
+      val fullName = if (varName startsWith "static:")
+        initFullName.substring(0, initFullName.lastIndexOf('.'))
+      else
+        initFullName
+
       val dollar = fullName.indexOf('$')
 
       val baseName = if (dollar < 0)
@@ -133,7 +137,7 @@ abstract class GenMozart extends OzmaSubComponent {
       }
 
       definitions walk {
-        case QuotedVar(varName) if (isClassOrModule(varName)) =>
+        case QuotedVar(varName) if (varName contains ':') =>
           importClass(varName)
         case Variable(varName) if (isOzmaRuntimeBuiltin(varName)) =>
           builtinGroup += varName
@@ -145,10 +149,6 @@ abstract class GenMozart extends OzmaSubComponent {
 
       ast.Import(importDecls.toList)
     }
-
-    def isClassOrModule(varName: String) =
-      (varName.startsWith("type:") || varName.startsWith("module:") ||
-          varName.startsWith("class:"))
 
     def makeImportDecl(functorName: String, classVarNames: Set[String]) = {
       val importItems = for (varName <- classVarNames.toList)

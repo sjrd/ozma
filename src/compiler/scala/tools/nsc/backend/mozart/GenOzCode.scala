@@ -332,7 +332,6 @@ abstract class GenOzCode extends OzmaSubComponent {
             assert(!tree.symbol.isPackageClass, "Cannot use package as value: " + tree)
             genModule(ctx, sym, tree.pos)
           } else {
-            // TODO Review this
             ast.At(varForSymbol(sym))
           }
 
@@ -384,10 +383,9 @@ abstract class GenOzCode extends OzmaSubComponent {
           genExpression(expr, ctx)
 
         case Assign(lhs @ Select(_, _), rhs) =>
-          // TODO Review this
           val assignment = ast.Assign(varForSymbol(lhs.symbol),
               genExpression(rhs, ctx))
-          ast.And(assignment, ast.Atom("unit"))
+          ast.And(assignment, ast.UnitVal())
 
         case Assign(lhs, rhs) =>
           val sym = lhs.symbol
@@ -395,7 +393,7 @@ abstract class GenOzCode extends OzmaSubComponent {
             ast.Eq(varForSymbol(sym), genExpression(rhs, ctx))
           else
             ast.Assign(varForSymbol(sym), genExpression(rhs, ctx))
-          ast.And(assignment, ast.Atom("unit"))
+          ast.And(assignment, ast.UnitVal())
 
         case ArrayValue(tpt @ TypeTree(), _elems) =>
           ast.Atom("TODO: array item value")
@@ -785,6 +783,8 @@ abstract class GenOzCode extends OzmaSubComponent {
         "type:" + sym.fullName
       else if (sym.isModule)
         "module:" + sym.fullName
+      else if (sym.isStaticMember)
+        "static:" + sym.fullName
       else
         sym.name.toString
 
