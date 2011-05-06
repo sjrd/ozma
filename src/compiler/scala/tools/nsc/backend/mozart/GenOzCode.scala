@@ -228,7 +228,7 @@ abstract class GenOzCode extends OzmaSubComponent {
           val to = targs.head.tpe
           val l = toTypeKind(from)
           val r = toTypeKind(to)
-          val source = genQualifier(fun, ctx)
+          val source = genExpression(obj, ctx)
 
           if (l.isValueType && r.isValueType) {
             if (cast)
@@ -292,7 +292,8 @@ abstract class GenOzCode extends OzmaSubComponent {
             if (sym == ctx.method.symbol)
               ctx.method.recursive = true
 
-            val instance = genQualifier(fun, ctx)
+            val Select(receiver, _) = fun
+            val instance = genExpression(receiver, ctx)
             val arguments = args map { genExpression(_, ctx) }
             val message = buildMessage(atomForSymbol(fun.symbol) setPos fun.pos,
                 arguments)
@@ -586,15 +587,6 @@ abstract class GenOzCode extends OzmaSubComponent {
         case _ => ast.Eq(ast.Wildcard(), expr) setPos expr.pos
       }
     }
-
-    /** Generate the qualifier of `tree' */
-    private def genQualifier(tree: Tree, ctx: Context): ast.Phrase =
-      tree match {
-        case Select(qualifier, _) =>
-          genExpression(qualifier, ctx)
-        case _ =>
-          abort("Unknown qualifier " + tree)
-      }
 
     private def genModule(ctx: Context, sym: Symbol, pos: Position) =
       varForSymbol(sym) setPos pos
