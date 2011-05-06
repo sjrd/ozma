@@ -770,9 +770,17 @@ abstract class GenOzCode extends OzmaSubComponent {
       val sym = clazz.symbol
 
       val fullName = ast.StringLiteral(sym.fullName)
-      val superClass = varForClass(sym.superClass)
+      val superClass = if (sym.superClass == NoSymbol)
+        varForClass(ObjectClass)
+      else
+        varForClass(sym.superClass)
       val mixins = ast.ListLiteral((sym.mixinClasses map varForClass):_*)
-      val ancestors = ast.ListLiteral((sym.ancestors map varForClass):_*)
+
+      val rawAncestors = if (sym.ancestors.isEmpty)
+        List(ObjectClass)
+      else
+        sym.ancestors
+      val ancestors = ast.ListLiteral((rawAncestors map varForClass):_*)
 
       val arguments = List(fullName, superClass, mixins, ancestors)
       val value = genNew(definitions.ClassClass, arguments)
