@@ -484,7 +484,7 @@ abstract class GenOzCode extends OzmaSubComponent {
             case POS =>
               source // nothing to do
             case NEG =>
-              ast.UnaryOpApply(ast.Atom("~"), source)
+              ast.UnaryOpApply("~", source)
             case NOT =>
               genBuiltinApply("BinNot", source)
             case ZNOT =>
@@ -501,23 +501,23 @@ abstract class GenOzCode extends OzmaSubComponent {
           }
 
           code match {
-            case ADD => ast.BinaryOpApply(ast.Atom("+"), lsrc, rsrc)
-            case SUB => ast.BinaryOpApply(ast.Atom("-"), lsrc, rsrc)
-            case MUL => ast.BinaryOpApply(ast.Atom("*"), lsrc, rsrc)
-            case DIV => ast.BinaryOpApply(ast.Atom(divOperator), lsrc, rsrc)
-            case MOD => ast.BinaryOpApply(ast.Atom("mod"), lsrc, rsrc)
+            case ADD => ast.BinaryOpApply("+", lsrc, rsrc)
+            case SUB => ast.BinaryOpApply("-", lsrc, rsrc)
+            case MUL => ast.BinaryOpApply("*", lsrc, rsrc)
+            case DIV => ast.BinaryOpApply(divOperator, lsrc, rsrc)
+            case MOD => ast.BinaryOpApply("mod", lsrc, rsrc)
             case OR => genBuiltinApply("BinOr", lsrc, rsrc)
             case XOR => genBuiltinApply("BinXor", lsrc, rsrc)
             case AND => genBuiltinApply("BinAnd", lsrc, rsrc)
             case LSL => genBuiltinApply("LSL", lsrc, rsrc)
             case LSR => genBuiltinApply("LSR", lsrc, rsrc)
             case ASR => genBuiltinApply("ASR", lsrc, rsrc)
-            case LT => ast.BinaryOpApply(ast.Atom("<"), lsrc, rsrc)
-            case LE => ast.BinaryOpApply(ast.Atom("=<"), lsrc, rsrc)
-            case GT => ast.BinaryOpApply(ast.Atom(">"), lsrc, rsrc)
-            case GE => ast.BinaryOpApply(ast.Atom(">="), lsrc, rsrc)
-            case ID | EQ => ast.BinaryOpApply(ast.Atom("=="), lsrc, rsrc)
-            case NI | NE => ast.BinaryOpApply(ast.Atom("\\="), lsrc, rsrc)
+            case LT => ast.BinaryOpApply("<", lsrc, rsrc)
+            case LE => ast.BinaryOpApply("=<", lsrc, rsrc)
+            case GT => ast.BinaryOpApply(">", lsrc, rsrc)
+            case GE => ast.BinaryOpApply(">=", lsrc, rsrc)
+            case ID | EQ => ast.BinaryOpApply("==", lsrc, rsrc)
+            case NI | NE => ast.BinaryOpApply("\\=", lsrc, rsrc)
             case ZOR => ast.OrElse(lsrc, rsrc)
             case ZAND => ast.AndThen(lsrc, rsrc)
             case _ =>
@@ -592,7 +592,6 @@ abstract class GenOzCode extends OzmaSubComponent {
       varForSymbol(sym) setPos pos
 
     def genConversion(from: TypeKind, to: TypeKind, value: ast.Phrase) = {
-      def noteq = ast.Atom("\\=")
       def int0 = ast.IntLiteral(0)
       def int1 = ast.IntLiteral(1)
       def float0 = ast.FloatLiteral(0.0)
@@ -604,8 +603,8 @@ abstract class GenOzCode extends OzmaSubComponent {
         case (INT, FLOAT) => genBuiltinApply("IntToFloat", value)
         case (FLOAT, INT) => genBuiltinApply("FloatToInt", value)
 
-        case (INT, BOOL) => ast.BinaryOpApply(noteq, value, int0)
-        case (FLOAT, BOOL) => ast.BinaryOpApply(noteq, value, float0)
+        case (INT, BOOL) => ast.BinaryOpApply("\\=", value, int0)
+        case (FLOAT, BOOL) => ast.BinaryOpApply("\\=", value, float0)
 
         case (BOOL, INT) => ast.IfThenElse(value, int1, int0)
         case (BOOL, FLOAT) => ast.IfThenElse(value, float1, float0)

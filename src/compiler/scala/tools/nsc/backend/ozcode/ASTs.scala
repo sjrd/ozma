@@ -194,7 +194,7 @@ trait ASTs { self: OzCodes =>
       protected val opSyntax = " andthen "
     }
 
-    case class UnaryOpApply(operator: Atom, arg: Phrase,
+    case class UnaryOpApply(operator: String, arg: Phrase,
         asStatement: Boolean = false) extends Phrase {
       override val astLabel =
         if (asStatement) "fOpApplyStatement" else "fOpApply"
@@ -202,13 +202,11 @@ trait ASTs { self: OzCodes =>
       override protected def getASTArguments(): List[Any] =
         List(operator, List(arg))
 
-      def syntax(indent: String) = {
-        val op = operator.syntax(indent)
-        op + arg.syntax(indent + " "*op.length)
-      }
+      def syntax(indent: String) =
+        operator + arg.syntax(indent + " "*operator.length)
     }
 
-    case class BinaryOpApply(operator: Atom, left: Phrase, right: Phrase,
+    case class BinaryOpApply(operator: String, left: Phrase, right: Phrase,
         asStatement: Boolean = false) extends InfixPhrase {
       override val astLabel =
         if (asStatement) "fOpApplyStatement" else "fOpApply"
@@ -216,7 +214,7 @@ trait ASTs { self: OzCodes =>
       override protected def getASTArguments(): List[Any] =
         List(operator, List(left, right))
 
-      protected val opSyntax = operator.atom
+      protected val opSyntax = " " + operator + " "
     }
 
     case class ObjApply(superClass: Phrase, message: Phrase) extends Phrase {
@@ -736,6 +734,8 @@ trait ASTs { self: OzCodes =>
     }
 
     case class CaseClause(pattern: Pattern, body: Phrase) extends Node {
+      override val hasCoord = false
+
       def syntax(indent: String) = {
         pattern.syntax(indent) + " then\n" + indent + body.syntax(indent)
       }
