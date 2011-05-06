@@ -817,13 +817,8 @@ abstract class GenOzCode extends OzmaSubComponent {
       ast.QuotedVar(name + suffixFor(sym))
     }
 
-    private def suffixFor(sym: Symbol) = {
-      if (sym.hasModuleFlag && !sym.isMethod &&
-          !sym.isImplClass && !sym.isJavaDefined)
-        "$"
-      else
-        ""
-    }
+    private def suffixFor(sym: Symbol) =
+      if (sym.hasModuleFlag && !sym.isMethod && !sym.isImplClass) "$" else ""
 
     def atomForSymbol(sym: Symbol) = {
       val name = sym.name.toString
