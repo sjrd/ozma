@@ -20,4 +20,4 @@ OZMA_HOME=`cd "$OZMA_HOME"; pwd -P`
 OZMA_HOME=`cd "$OZMA_HOME"/..; pwd`
 
 # run the compiler
-ozengine "$OZMA_HOME/src/ozastc/Compile.ozf" "$@"
+ozengine "$OZMA_HOME/build/ozastc/Compile.ozf" "$@"
