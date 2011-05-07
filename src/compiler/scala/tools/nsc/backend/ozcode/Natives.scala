@@ -27,7 +27,6 @@ trait Natives { self: OzCodes =>
 
       register(Integer_toString)
       register(Float_toString)
-      register(Double_toString)
     }
 
     def getBodyFor(symbol: Symbol) = {
@@ -82,9 +81,9 @@ trait Natives { self: OzCodes =>
   abstract class Number_toString(fullName: String) extends
       NativeMethod(fullName) {
     def ValueToString: BuiltinFunction
-    def ValueField: Variable
 
     def body = {
+      def ValueField = QuotedVar("value ")
       def Raw = Variable("Raw")
       def Tail = Variable("Tail")
 
@@ -103,18 +102,10 @@ trait Natives { self: OzCodes =>
   object Integer_toString extends Number_toString(
       "java.lang.Integer.toString") {
     def ValueToString = IntToString
-    def ValueField = QuotedVar("intValue ")
   }
 
   object Float_toString extends Number_toString(
       "java.lang.Float.toString") {
     def ValueToString = FloatToString
-    def ValueField = QuotedVar("floatValue ")
-  }
-
-  object Double_toString extends Number_toString(
-      "java.lang.Double.toString") {
-    def ValueToString = FloatToString
-    def ValueField = QuotedVar("doubleValue ")
   }
 }
