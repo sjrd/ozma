@@ -155,16 +155,6 @@ trait ASTs { self: OzCodes =>
       result.toString
     }
 
-    // Auto-boxing
-
-    implicit def int2literal(value: Int) = IntLiteral(value)
-    implicit def float2literal(value: Double) = FloatLiteral(value)
-    implicit def symbol2atom(value: scala.Symbol) = Atom(value.name)
-
-    implicit def pair2colon(pair: Pair[Feature, Phrase]) = pair match {
-      case Pair(feature, phrase) => Colon(feature, phrase)
-    }
-
     // Actual nodes
 
     case class StepPoint(phrase: Phrase, kind: Atom) extends Phrase {

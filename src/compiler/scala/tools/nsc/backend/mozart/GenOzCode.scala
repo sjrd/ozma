@@ -39,6 +39,7 @@ abstract class GenOzCode extends OzmaSubComponent {
 
     override def run {
       scalaPrimitives.init
+      nativeMethods.init
       super.run
     }
 
@@ -107,8 +108,12 @@ abstract class GenOzCode extends OzmaSubComponent {
         addMethodParams(ctx1, vparamss)
         m.native = m.symbol.hasAnnotation(definitions.NativeAttr)
 
-        if (!m.isAbstractMethod && !m.native)
-          ctx1.method.code = genExpression(rhs, ctx1)
+        ctx1.method.code = if (m.native)
+          nativeMethods.getBodyFor(m.symbol)
+        else if (!m.isAbstractMethod)
+          genExpression(rhs, ctx1)
+        else
+          null
 
         ctx1
 
@@ -826,27 +831,6 @@ abstract class GenOzCode extends OzmaSubComponent {
       val encodedName = if (hash != 0) name + "#" + hash else name
 
       ast.Atom(encodedName)
-    }
-
-    /** In order to support method overloading on the Mozart platform, we give
-     *  every method a hash code that is appended to its name on the back-end.
-     *  <p>This method computes the hash of a method.
-     *  <p>Two methods should have the same hash if and only if they would
-     *  <i>match</i> (as defined by the Scala reference, definition 5.1.4)
-     *  if they had the same name. This ensures that proper overriding applies
-     *  when running on Mozart.
-     *  <p>As currently implemented, we only guarantee that two matching methods
-     *  will have the same hash. We do not guarantee that two non-matching
-     *  methods will have different hashes, though we try to achieve this on a
-     *  best-effort basis.
-     */
-    private def paramsHash(sym: Symbol) = sym.tpe match {
-      case MethodType(params, _) =>
-        params.foldLeft(0) { _ + _.tpe.typeSymbol.fullName.## }
-
-      case NullaryMethodType(_) => 0
-
-      case _ => abort("Expected a method type for " + sym)
     }
   }
 }
