@@ -2,7 +2,7 @@
 
 <project name="ozma" default="build">
   <description>
-Ozma is a language based on Scala, with extensions wrt declarative concurrency. It used Mozart as a back-end.
+Ozma is a language based on Scala, with extensions wrt declarative concurrency. It uses Mozart as a back-end.
   </description>
 
 <!-- ===========================================================================
@@ -31,7 +31,20 @@ PROPERTIES
 
   <!-- Defines the repository layout -->
   <property name="src.dir" value="${basedir}/src"/>
-  <property name="build.dir" value="${basedir}/build/classes"/>
+  <property name="build.dir" value="${basedir}/build"/>
+  <property name="classes.dir" value="${build.dir}/classes"/>
+  <property name="bin.dir" value="${basedir}/bin"/>
+
+  <property name="build.library.dir" value="${classes.dir}/library"/>
+  <property name="build.compiler.dir" value="${classes.dir}/compiler"/>
+  <property name="build.ozastc.dir" value="${build.dir}/ozastc"/>
+  <property name="build.runtime.dir" value="${build.dir}/runtime"/>
+  <property name="build.engine.dir" value="${build.dir}/engine"/>
+
+  <property name="bin.ozc" value="ozc"/>
+  <property name="bin.ozastc" value="${bin.dir}/ozastc"/>
+  <property name="bin.ozmac" value="${bin.dir}/ozmac"/>
+  <property name="bin.ozma" value="${bin.dir}/ozma"/>
 
   <!-- Loads custom properties definitions -->
   <property file="${basedir}/build.properties"/>
@@ -50,8 +63,8 @@ PROPERTIES
   <path id="build.classpath">
     <pathelement location="${scala-library.jar}"/>
     <pathelement location="${scala-compiler.jar}"/>
-    <pathelement location="${build.dir}/library"/>
-    <pathelement location="${build.dir}/compiler"/>
+    <pathelement location="${build.library.dir}"/>
+    <pathelement location="${build.compiler.dir}"/>
   </path>
 
   <!-- if ANT_OPTS is already set by the environment, it will be unaltered,
@@ -90,8 +103,8 @@ ACTUAL TASKS
 ============================================================================ -->
 
   <target name="build.library" depends="init">
-    <mkdir dir="${build.dir}/library"/>
-    <scalac srcdir="${src.dir}/library" destdir="${build.dir}/library"
+    <mkdir dir="${build.library.dir}"/>
+    <scalac srcdir="${src.dir}/library" destdir="${build.library.dir}"
       classpathref="build.classpath"
       addparams="${scalac.args.all}">
       <include name="**/*.scala"/>
@@ -99,18 +112,62 @@ ACTUAL TASKS
   </target>
 
   <target name="build.compiler" depends="init">
-    <mkdir dir="${build.dir}/compiler"/>
-    <scalac srcdir="${src.dir}/compiler" destdir="${build.dir}/compiler"
+    <mkdir dir="${build.compiler.dir}"/>
+    <scalac srcdir="${src.dir}/compiler" destdir="${build.compiler.dir}"
       classpathref="build.classpath"
       addparams="${scalac.args.all}">
       <include name="**/*.scala"/>
     </scalac>
   </target>
 
-  <target name="build.done" depends="build.library,build.compiler"/>
+  <target name="build.ozastc" depends="init">
+    <mkdir dir="${build.ozastc.dir}"/>
+    <apply executable="${bin.ozc}" dest="${build.ozastc.dir}" parallel="false"
+        failonerror="true">
+      <globmapper from="*.oz" to="*.ozf"/>
+      <arg value="-c"/> <srcfile/> <arg value="-o"/> <targetfile/>
+      <fileset dir="${src.dir}/ozastc" includes="*.oz" excludes="ASTPatch.oz"/>
+    </apply>
+  </target>
+
+  <target name="build.runtime" depends="build.library,build.compiler,build.ozastc">
+    <!-- ozc does not like when its destination dir does not exist -->
+    <mkdir dir="${build.runtime.dir}/java/lang"/>
+    <mkdir dir="${build.runtime.dir}/scala/ozma"/>
+
+    <!-- compile native functors -->
+    <apply executable="${bin.ozc}" dest="${build.runtime.dir}" parallel="false"
+        failonerror="true">
+      <globmapper from="*.oz" to="*.ozf"/>
+      <arg value="-c"/> <srcfile/> <arg value="-o"/> <targetfile/>
+      <fileset dir="${src.dir}/runtime" includes="**/*.oz"/>
+    </apply>
+
+    <!-- compile classes written in Ozma -->
+    <apply executable="${bin.ozmac}" dest="${build.runtime.dir}"
+        parallel="true" dir="${src.dir}/runtime" force="true"
+        failonerror="true">
+      <globmapper from="*.scala" to="*.ozf"/>
+      <arg value="-d"/> <arg path="${build.runtime.dir}"/> <srcfile/>
+      <fileset dir="${src.dir}/runtime" includes="**/*.scala"/>
+    </apply>
+  </target>
+
+  <target name="build.engine" depends="init">
+    <mkdir dir="${build.engine.dir}"/>
+    <apply executable="${bin.ozc}" dest="${build.engine.dir}" parallel="false"
+        failonerror="true">
+      <globmapper from="*.oz" to="*.ozf"/>
+      <arg value="-c"/> <srcfile/> <arg value="-o"/> <targetfile/>
+      <fileset dir="${src.dir}/engine" includes="*.oz"/>
+    </apply>
+  </target>
+
+  <target name="build.done" depends="build.library,build.compiler,build.ozastc,build.runtime"/>
 
   <target name="build.clean" depends="init">
-    <delete dir="${build.dir}/library" includeemptydirs="yes" quiet="yes" failonerror="no"/>
-    <delete dir="${build.dir}/compiler" includeemptydirs="yes" quiet="yes" failonerror="no"/>
+    <delete includeemptydirs="true">
+      <fileset dir="${build.dir}" includes="**/*"/>
+    </delete>
   </target>
 </project>
