@@ -48,8 +48,17 @@ define
       ObjID = {VirtualString.toAtom 'module:'#MainObject#'$'}
       Obj
    in
-      Obj = Mod.ObjID
-      {Obj 'main#-1181422703'(Args _)}
+      try
+         Obj = Mod.ObjID
+         {Obj 'main#-1181422703'(Args _)}
+      catch E andthen {IsObject E} then
+         {DumpException E}
+      end
+   end
+
+   proc {DumpException Exception}
+      {System.showError 'Application terminated with an exception:'}
+      {System.showError {{Exception toString($)} toRawString($)}}
    end
 
    try
@@ -72,7 +81,7 @@ define
                   debug:unit)
          end
       end
-      
+
       {Application.exit 0}
 
    catch error(ap(usage Message) debug:_) then
