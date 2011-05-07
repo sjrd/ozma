@@ -449,18 +449,6 @@ abstract class GenOzCode extends OzmaSubComponent {
       blackholeReturnedValue(genExpression(tree, ctx))
     }
 
-    private def buildMessage(label: ast.Atom, arguments: List[ast.Phrase],
-        additionalArg: ast.Phrase = ast.Dollar()) =
-      ast.Tuple(label, (arguments ++ List(additionalArg):_*))
-
-    private def genNew(clazz: Symbol, arguments: List[ast.Phrase] = Nil,
-        label: ast.Atom = ast.Atom("<init>")) = {
-      val typeVar = varForSymbol(clazz)
-      val classVar = varForClass(clazz)
-      val message = buildMessage(label, arguments, ast.Wildcard())
-      genBuiltinApply("NewObject", typeVar, classVar, message)
-    }
-
     private def isPrimitive(sym: Symbol) =
       scalaPrimitives.isPrimitive(sym) && (sym ne definitions.String_+)
 
@@ -619,11 +607,6 @@ abstract class GenOzCode extends OzmaSubComponent {
     def genCast(from: Type, to: Type, value: ast.Phrase, cast: Boolean) = {
       genBuiltinApply(if (cast) "AsInstance" else "IsInstance",
           value, varForClass(to.typeSymbol) setPos value.pos)
-    }
-
-    def genBuiltinApply(funName: String, args: ast.Phrase*) = {
-      val pos = if (args.isEmpty) NoPosition else args(0).pos
-      ast.Apply(ast.Variable(funName) setPos pos, args.toList) setPos pos
     }
 
     /////////////////// Context ///////////////////////
@@ -800,37 +783,6 @@ abstract class GenOzCode extends OzmaSubComponent {
     def makeByNeed(value: ast.Phrase) = {
       val fun = ast.Fun(ast.Dollar(), Nil, value)
       genBuiltinApply("ByNeed", fun)
-    }
-
-    /* Symbol encoding */
-
-    def varForSymbol(sym: Symbol) = {
-      val name = if (sym.name.isTypeName)
-        "type:" + sym.fullName
-      else if (sym.isModule)
-        "module:" + sym.fullName
-      else if (sym.isStaticMember)
-        "static:" + sym.fullName
-      else
-        sym.name.toString
-
-      ast.QuotedVar(name + suffixFor(sym))
-    }
-
-    def varForClass(sym: Symbol) = {
-      val name = "class:" + sym.fullName
-      ast.QuotedVar(name + suffixFor(sym))
-    }
-
-    private def suffixFor(sym: Symbol) =
-      if (sym.hasModuleFlag && !sym.isMethod && !sym.isImplClass) "$" else ""
-
-    def atomForSymbol(sym: Symbol) = {
-      val name = sym.name.toString
-      val hash = if (sym.isMethod) paramsHash(sym) else 0
-      val encodedName = if (hash != 0) name + "#" + hash else name
-
-      ast.Atom(encodedName)
     }
   }
 }

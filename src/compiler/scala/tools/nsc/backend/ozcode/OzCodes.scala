@@ -36,6 +36,57 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
     classes.values foreach (_.dump)
   }
 
+  def buildMessage(label: ast.Atom, arguments: List[ast.Phrase],
+      additionalArg: ast.Phrase = ast.Dollar()) =
+    ast.Tuple(label, (arguments ++ List(additionalArg):_*))
+
+  def genNew(clazz: Symbol, arguments: List[ast.Phrase] = Nil,
+      label: ast.Atom = ast.Atom("<init>")) = {
+    val typeVar = varForSymbol(clazz)
+    val classVar = varForClass(clazz)
+    val message = buildMessage(label, arguments, ast.Wildcard())
+    genBuiltinApply("NewObject", typeVar, classVar, message)
+  }
+
+  def genBuiltinApply(funName: String, args: ast.Phrase*) = {
+    val pos = if (args.isEmpty) NoPosition else args(0).pos
+    ast.Apply(ast.Variable(funName) setPos pos, args.toList) setPos pos
+  }
+
+  /* Symbol encoding */
+
+  def varForSymbol(sym: Symbol) = {
+    val name = if (sym.name.isTypeName)
+      "type:" + sym.fullName
+    else if (sym.isModule)
+      "module:" + sym.fullName
+    else if (sym.isStaticMember)
+      "static:" + sym.fullName
+    else if (sym.owner.isClass && !(sym.name.toString endsWith " "))
+      " " + sym.name.toString
+    else
+      sym.name.toString
+
+    ast.QuotedVar(name + suffixFor(sym))
+  }
+
+  def varForClass(sym: Symbol) = {
+    val name = "class:" + sym.fullName
+    ast.QuotedVar(name + suffixFor(sym))
+  }
+
+  def suffixFor(sym: Symbol) =
+    if (sym.hasModuleFlag && !sym.isMethod && !sym.isImplClass) "$" else ""
+
+  def atomForSymbol(sym: Symbol): ast.Atom = {
+    val name = sym.name.toString
+    val hash = if (sym.isMethod) paramsHash(sym) else 0
+    atomForSymbol(name, hash)
+  }
+
+  def atomForSymbol(name: String, hash: Int) =
+    ast.Atom(if (hash != 0) name + "#" + hash else name)
+
   /** In order to support method overloading on the Mozart platform, we give
    *  every method a hash code that is appended to its name on the back-end.
    *  <p>This method computes the hash of a method.
