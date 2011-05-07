@@ -23,4 +23,5 @@ OZMA_HOME=`cd "$OZMA_HOME"/..; pwd`
 TOOLCP=$OZMA_HOME/build/classes/library/:$OZMA_HOME/build/classes/compiler/
 
 # run the compiler
+export OZMA_HOME
 scala -toolcp "$TOOLCP" scala.tools.nsc.ozma.Main "$@"

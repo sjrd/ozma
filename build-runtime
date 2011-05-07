@@ -22,7 +22,6 @@ OZMA_HOME=`cd "$OZMA_HOME"; pwd -P`
 SRCDIR="$OZMA_HOME/src/runtime"
 BUILDDIR="$OZMA_HOME/build/runtime"
 OZMAC="$OZMA_HOME/bin/ozmac"
-OZASTC="$OZMA_HOME/bin/ozastc"
 
 mkdir -p "$BUILDDIR/java/lang"
 mkdir -p "$BUILDDIR/scala/ozma"
@@ -33,11 +32,3 @@ find . -name "*.oz" -exec ozc -c {} -o $BUILDDIR/{}f \;
 
 # Build Ozma files
 find . -name "*.scala" -print0 | xargs -0 "$OZMAC" -d "$BUILDDIR"
-
-# Build AST into ozf
-find "$BUILDDIR" -name "*.ast.oz" | while read filename; do
-    dir=`dirname "$filename"`
-    name=`basename "$filename"`
-    cd "$dir"
-    "$OZASTC" -c "$name"
-done

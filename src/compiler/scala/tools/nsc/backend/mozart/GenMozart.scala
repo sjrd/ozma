@@ -205,6 +205,7 @@ abstract class GenMozart extends OzmaSubComponent {
       val outfile = getFileFor(functor, ".ast.oz")
       val ast = functor.makeAST()
       writeSyntax(ast, outfile)
+      compileASTToOZF(outfile)
     }
 
     def writeSyntax(node: Node, outfile: AbstractFile) {
@@ -213,6 +214,27 @@ abstract class GenMozart extends OzmaSubComponent {
       outstream.write(node.syntax())
       outstream.write("\n")
       outstream.close()
+    }
+
+    def compileASTToOZF(astfile: AbstractFile) {
+      import java.io._
+
+      val compiler = System.getenv("OZMA_HOME") + "/bin/ozastc"
+      val commandLine = Array(compiler, "-c", astfile.name)
+      val workingDir = new File(astfile.container.path)
+      val process = Runtime.getRuntime.exec(commandLine, null, workingDir)
+
+      val input = new BufferedReader(new InputStreamReader(
+          process.getErrorStream()))
+
+      var line = input.readLine()
+      while (line ne null) {
+        scala.Console.println(line)
+        line = input.readLine()
+      }
+
+      if (process.waitFor() != 0)
+        abort("Oz AST compiler returned with error for file " + astfile)
     }
 
     def getFileFor(functor: Functor, suffix: String) = {
