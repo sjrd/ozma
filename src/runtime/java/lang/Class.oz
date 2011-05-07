@@ -28,6 +28,10 @@ define
          unit
       end
 
+      meth getName($)
+         @name
+      end
+
       meth toString($)
          @name
       end

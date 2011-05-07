@@ -2,7 +2,8 @@ functor
 
 import
    OzmaRuntime('NewObject':NewObject
-               'InitObject':InitObject) at '../../scala/ozma/OzmaRuntime.ozf'
+               'InitObject':InitObject
+               'StringLiteral':StringLiteral) at '../../scala/ozma/OzmaRuntime.ozf'
    `functor:java.lang.Class`('type:java.lang.Class':Class
                              'class:java.lang.Class':ClassClass) at 'Class.ozf'
 
@@ -29,8 +30,13 @@ define
          @'class'
       end
 
+      % In the JavaDoc, defined as:
+      %   getClass().getName() + '@' + Integer.toHexString(hashCode())
       meth toString($)
-         "Object"
+         ClassName = {{@'class' getName($)} toRawString($)}
+         HashCode = {self hashCode($)}
+      in
+         {StringLiteral ClassName#'@'#HashCode}
       end
 
       meth hashCode($)
