@@ -606,7 +606,10 @@ abstract class GenOzCode extends OzmaSubComponent {
     }
 
     private def genModule(ctx: Context, sym: Symbol, pos: Position) =
-      varForSymbol(sym) setPos pos
+      if (sym.isModuleClass)
+        varForSymbol(sym.companionModule) setPos pos
+      else
+        varForSymbol(sym) setPos pos
 
     def genConversion(from: TypeKind, to: TypeKind, value: ast.Phrase) = {
       def int0 = ast.IntLiteral(0) setPos value.pos
