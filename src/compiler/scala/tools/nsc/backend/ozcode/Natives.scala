@@ -195,7 +195,7 @@ trait Natives { self: OzCodes =>
           Raw === S.toRawString(),
       // in
           Case(Raw, List(
-              '-' :: Tail ==> StringToValue('-' :: Tail)),
+              '-' :: Tail ==> StringToValue('~' :: Tail)),
           // else
               StringToValue(Raw)
           )
