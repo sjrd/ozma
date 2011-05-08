@@ -28,11 +28,16 @@ define
          unit
       end
 
+      meth 'getName#1195259493'($)
+         @name
+      end
+
+      % For convenience in other Oz functors
       meth getName($)
          @name
       end
 
-      meth toString($)
+      meth 'toString#1195259493'($)
          @name
       end
 

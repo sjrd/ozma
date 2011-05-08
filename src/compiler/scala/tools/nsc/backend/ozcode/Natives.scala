@@ -125,7 +125,7 @@ trait Natives { self: OzCodes =>
       val actualArgs = arguments1 map (_._1)
       val paramTypeNames = arguments1 map (_._2)
       genNew(clazz, actualArgs,
-          atomForSymbol("<init>", paramsHash(paramTypeNames, null)))
+          atomForSymbol("<init>", paramsHash(paramTypeNames, clazz.fullName)))
     }
 
     def New(className: String, arguments: Pair[Phrase, String]*): Phrase =

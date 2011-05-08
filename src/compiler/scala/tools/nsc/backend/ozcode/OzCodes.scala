@@ -41,10 +41,15 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
     ast.Tuple(label, (arguments ++ List(additionalArg):_*))
 
   def genNew(clazz: Symbol, arguments: List[ast.Phrase] = Nil,
-      label: ast.Atom = ast.Atom("<init>")) = {
+      label: ast.Atom = null) = {
+    val actualLabel = if (label ne null)
+      label
+    else
+      atomForSymbol("<init>", paramsHash(List(clazz.fullName)))
+
     val typeVar = varForSymbol(clazz)
     val classVar = varForClass(clazz)
-    val message = buildMessage(label, arguments, ast.Wildcard())
+    val message = buildMessage(actualLabel, arguments, ast.Wildcard())
     genBuiltinApply("NewObject", typeVar, classVar, message)
   }
 

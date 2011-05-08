@@ -36,6 +36,10 @@ define
       in
          {NewObject String StringClass '<init>'(Raw _)}
       end
+
+      meth '$plus#-1324018343'(Right $)
+         {self '$plus#-918398289'({Right toString($)} $)}
+      end
    end
 
    StringClass = {ByNeed fun {$}

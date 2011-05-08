@@ -810,7 +810,7 @@ abstract class GenOzCode extends OzmaSubComponent {
       val ancestors = ast.ListLiteral((rawAncestors map varForClass):_*)
 
       val arguments = List(fullName, superClass, mixins, ancestors)
-      val value = genNew(definitions.ClassClass, arguments)
+      val value = genNew(definitions.ClassClass, arguments, ast.Atom("<init>"))
 
       ast.Eq(varForClass(clazz.symbol), makeByNeed(value))
     }
