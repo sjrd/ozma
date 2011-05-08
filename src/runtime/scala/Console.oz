@@ -17,26 +17,26 @@ define
 
    class `type:scala.Console$` from Object
       meth '<init>'($)
-         Object, '<init>'(_)
+         Object, '<init>#1063877011'(_)
          unit
       end
 
-      meth 'print#1195259493'(Str $)
+      meth 'print#-1794996995'(Str $)
          {System.printInfo {Str toRawString($)}}
          unit
       end
 
-      meth 'print#1063877011'(Obj $)
-         {self 'print#1195259493'({Obj toString($)} $)}
+      meth 'print#-313144565'(Obj $)
+         {self 'print#-1794996995'({Obj toString($)} $)}
       end
 
-      meth 'println#1195259493'(Str $)
+      meth 'println#-1794996995'(Str $)
          {System.showInfo {Str toRawString($)}}
          unit
       end
 
-      meth 'println#1063877011'(Obj $)
-         {self 'println#1195259493'({Obj toString($)} $)}
+      meth 'println#-313144565'(Obj $)
+         {self 'println#-1794996995'({Obj toString($)} $)}
       end
    end
 

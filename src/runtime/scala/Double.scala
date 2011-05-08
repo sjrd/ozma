@@ -139,6 +139,6 @@ object Double extends AnyValCompanion {
   final val MaxValue = jl.Double.MAX_VALUE
 
   def box(x: Double): jl.Double = jl.Double.valueOf(x)
-  def unbox(x: jl.Object): Double = x.asInstanceOf[jl.Double].doubleValue()
+  @native def unbox(x: jl.Object): Double = x.asInstanceOf[jl.Double].doubleValue()
   override def toString = "object scala.Double"
 }

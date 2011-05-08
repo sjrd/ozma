@@ -20,7 +20,7 @@ define
          ancestors
 
       meth '<init>'(ARawName ASuperClass AMixins AAncestors $)
-         Object, '<init>'(_)
+         Object, '<init>#1063877011'(_)
          name := {StringLiteral ARawName}
          superClass := ASuperClass
          mixins := AMixins
@@ -36,11 +36,11 @@ define
          @name
       end
 
-      meth 'isInstance#1063877011'(Obj $)
-         {self 'isAssignableFrom#-530663260'({Obj getClass($)} $)}
+      meth 'isInstance#-1875011758'(Obj $)
+         {self 'isAssignableFrom#1326077541'({Obj getClass($)} $)}
       end
 
-      meth 'isAssignableFrom#-530663260'(SubClass $)
+      meth 'isAssignableFrom#1326077541'(SubClass $)
          {SubClass IsAncestor(self $)}
       end
 

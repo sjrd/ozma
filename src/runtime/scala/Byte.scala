@@ -149,6 +149,6 @@ object Byte extends AnyValCompanion {
   final val MaxValue = jl.Byte.MAX_VALUE
 
   def box(x: Byte): jl.Byte = jl.Byte.valueOf(x)
-  def unbox(x: jl.Object): Byte = x.asInstanceOf[jl.Byte].byteValue()
+  @native def unbox(x: jl.Object): Byte = x.asInstanceOf[jl.Byte].byteValue()
   override def toString = "object scala.Byte"
 }

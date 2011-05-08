@@ -55,7 +55,7 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
 
   /* Symbol encoding */
 
-  def varForSymbol(sym: Symbol) = {
+  def varForSymbol(sym: Symbol): ast.Phrase with ast.EscapedFeature = {
     val name = if (sym.name.isTypeName)
       "type:" + sym.fullName
     else if (sym.isModule)
@@ -67,7 +67,10 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
     else
       sym.name.toString
 
-    ast.QuotedVar(name + suffixFor(sym))
+    if ((name contains ':') || sym.isPrivate || sym.isLocal)
+      ast.QuotedVar(name + suffixFor(sym))
+    else
+      ast.Atom(name + suffixFor(sym))
   }
 
   def varForClass(sym: Symbol) = {
@@ -99,15 +102,29 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
    *  methods will have different hashes, though we try to achieve this on a
    *  best-effort basis.
    */
-  def paramsHash(sym: Symbol) = sym.tpe match {
-    case MethodType(params, _) =>
-      params.foldLeft(0) { _ + _.tpe.typeSymbol.fullName.## }
+  def paramsHash(sym: Symbol): Int = {
+    sym.tpe match {
+      case MethodType(params, resultType) =>
+        paramsHash(params.toList map (_.tpe.typeSymbol.fullName),
+            resultType.typeSymbol.fullName)
 
-    case NullaryMethodType(_) => 0
+      case NullaryMethodType(resultType) =>
+        paramsHash(Nil, resultType.typeSymbol.fullName)
 
-    case _ => abort("Expected a method type for " + sym)
+      case _ => abort("Expected a method type for " + sym)
+    }
   }
 
-  def paramsHash(paramTypeNames: List[String]) =
-    paramTypeNames.foldLeft(0) { _ + _.## }
+  def paramsHash(paramTypeNames: List[String], resultTypeName: String): Int =
+    paramsHash(paramTypeNames ::: List(resultTypeName))
+
+  def paramsHash(paramAndResultTypeNames: List[String]) = {
+    (paramAndResultTypeNames.foldLeft((0, 0)) { (prevPair, item) =>
+      val (idx, prev) = prevPair
+      (idx+1, prev ^ rotateLeft(item.##, idx))
+    })._2
+  }
+
+  private def rotateLeft(value: Int, shift: Int) =
+    (value << shift) | (value >>> (32-shift))
 }

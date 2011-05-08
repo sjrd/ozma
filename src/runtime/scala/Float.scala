@@ -139,6 +139,6 @@ object Float extends AnyValCompanion {
   final val MaxValue = jl.Float.MAX_VALUE
 
   def box(x: Float): jl.Float = jl.Float.valueOf(x)
-  def unbox(x: jl.Object): Float = x.asInstanceOf[jl.Float].floatValue()
+  @native def unbox(x: jl.Object): Float = x.asInstanceOf[jl.Float].floatValue()
   override def toString = "object scala.Float"
 }

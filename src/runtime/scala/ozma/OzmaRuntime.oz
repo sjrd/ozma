@@ -22,7 +22,7 @@ define
    end
 
    fun {IsInstance Obj Class}
-      {Class 'isInstance#1063877011'(Obj $)}
+      {Class 'isInstance#-1875011758'(Obj $)}
    end
 
    fun {AsInstance Obj Class}

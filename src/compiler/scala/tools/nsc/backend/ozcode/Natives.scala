@@ -8,9 +8,12 @@ trait Natives { self: OzCodes =>
   import global.{ Symbol, definitions, stringToTermName }
   import ast._
 
-  abstract class NativeMethod(val fullName: String,
+  abstract class NativeMethod(val fullName: String, val resultTypeName: String,
       val argDefs: Pair[String, String]*) {
-    val hash = paramsHash(argDefs.toList map (_._2))
+    def this(fullName: String, argDefs: Pair[String, String]*) =
+      this(fullName, null:String, argDefs:_*)
+
+    val hash = paramsHash(argDefs.toList map (_._2), resultTypeName)
 
     def body: ast.Phrase
   }
@@ -25,10 +28,20 @@ trait Natives { self: OzCodes =>
     def init() {
       methods.clear()
 
+      register(ScalaOzma_newUnbound)
+      register(ScalaOzma_thread)
+
       register(Integer_toString)
       register(Float_toString)
       register(Integer_parseInt)
       register(Float_parseFloat)
+
+      register(Byte_unbox)
+      register(Short_unbox)
+      register(Int_unbox)
+      register(Long_unbox)
+      register(Float_unbox)
+      register(Double_unbox)
     }
 
     def getBodyFor(symbol: Symbol) = {
@@ -36,7 +49,10 @@ trait Natives { self: OzCodes =>
 
       methods.get(key) match {
         case Some(method) => method.body
-        case None => null
+        case None =>
+          Console.println("Warning: could not find native definition for")
+          Console.println(symbol.toString)
+          null
       }
     }
   }
@@ -84,6 +100,8 @@ trait Natives { self: OzCodes =>
       def ::(left: Phrase) = Tuple(Atom("|"), left, phrase)
 
       def toRawString = new MethodWrapper(phrase, "toRawString")
+
+      def doApply = new MethodWrapper(phrase, "apply", "java.lang.Object")
     }
 
     implicit def wrapPhrase(phrase: Phrase) = new PhraseWrapper(phrase)
@@ -107,7 +125,7 @@ trait Natives { self: OzCodes =>
       val actualArgs = arguments1 map (_._1)
       val paramTypeNames = arguments1 map (_._2)
       genNew(clazz, actualArgs,
-          atomForSymbol("<init>", paramsHash(paramTypeNames)))
+          atomForSymbol("<init>", paramsHash(paramTypeNames, null)))
     }
 
     def New(className: String, arguments: Pair[Phrase, String]*): Phrase =
@@ -117,8 +135,22 @@ trait Natives { self: OzCodes =>
   import astDSL._
   import astDSL.StringLiteral
 
+  object ScalaOzma_newUnbound extends
+      NativeMethod("scala.ozma.package.newUnbound", "java.lang.Object") {
+    def body = __
+  }
+
+  object ScalaOzma_thread extends
+      NativeMethod("scala.ozma.package.thread", "java.lang.Object",
+          "`stat`" -> "scala.Function0") {
+    def body = {
+      val stat = QuotedVar("stat")
+      Thread(stat.doApply())
+    }
+  }
+
   abstract class Number_toString(fullName: String) extends
-      NativeMethod(fullName) {
+      NativeMethod(fullName, "java.lang.String") {
     def ValueToString: BuiltinFunction
 
     def body = {
@@ -148,8 +180,8 @@ trait Natives { self: OzCodes =>
     def ValueToString = FloatToString
   }
 
-  abstract class Number_parse(fullName: String)
-      extends NativeMethod(fullName, "`s`" -> "java.lang.String") {
+  abstract class Number_parse(fullName: String, resultType: String)
+      extends NativeMethod(fullName, resultType, "`s`" -> "java.lang.String") {
     def StringToValue: BuiltinFunction
     def ErrorIdentifier: Atom
 
@@ -178,14 +210,37 @@ trait Natives { self: OzCodes =>
   }
 
   object Integer_parseInt extends Number_parse(
-      "java.lang.Integer.parseInt") {
+      "java.lang.Integer.parseInt", "scala.Int") {
     def StringToValue = StringToInt
     def ErrorIdentifier = Atom("stringNoInt")
   }
 
   object Float_parseFloat extends Number_parse(
-      "java.lang.Float.parseFloat") {
+      "java.lang.Float.parseFloat", "scala.Float") {
     def StringToValue = StringToFloat
     def ErrorIdentifier = Atom("stringNoFloat")
   }
+
+  abstract class Primitive_unbox(primitiveType: String,
+      theValueMethod: String)
+      extends NativeMethod(primitiveType+".unbox", primitiveType,
+          "`x`" -> "java.lang.Object") {
+
+    def body = {
+      implicit def wrapForTheValue(phrase: Phrase) = new {
+        def theValue = new MethodWrapper(phrase, theValueMethod, primitiveType)
+      }
+
+      def x = QuotedVar("x")
+
+      Thread(x.theValue())
+    }
+  }
+
+  object Byte_unbox extends Primitive_unbox("scala.Byte", "byteValue")
+  object Short_unbox extends Primitive_unbox("scala.Short", "shortValue")
+  object Int_unbox extends Primitive_unbox("scala.Int", "intValue")
+  object Long_unbox extends Primitive_unbox("scala.Long", "longValue")
+  object Float_unbox extends Primitive_unbox("scala.Float", "floatValue")
+  object Double_unbox extends Primitive_unbox("scala.Double", "doubleValue")
 }

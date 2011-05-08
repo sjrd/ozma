@@ -149,6 +149,6 @@ object Short extends AnyValCompanion {
   final val MaxValue = jl.Short.MAX_VALUE
 
   def box(x: Short): jl.Short = jl.Short.valueOf(x)
-  def unbox(x: jl.Object): Short = x.asInstanceOf[jl.Short].shortValue()
+  @native def unbox(x: jl.Object): Short = x.asInstanceOf[jl.Short].shortValue()
   override def toString = "object scala.Short"
 }

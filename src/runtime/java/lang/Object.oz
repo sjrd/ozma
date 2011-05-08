@@ -22,28 +22,41 @@ define
          {self InitMessage}
       end
 
-      meth '<init>'($)
+      meth '<init>#1063877011'($)
          unit
       end
 
-      meth getClass($)
+      meth '$getPublic$'(Field $)
+         @Field
+      end
+
+      meth '$setPublic$'(Field Value)
+         Field := Value
+      end
+
+      meth 'getClass#-530663260'($)
          @'class'
       end
 
       % In the JavaDoc, defined as:
       %   getClass().getName() + '@' + Integer.toHexString(hashCode())
-      meth toString($)
-         ClassName = {{@'class' getName($)} toRawString($)}
-         HashCode = {self hashCode($)}
+      meth 'toString#1195259493'($)
+         ClassName = {{@'class' 'getName#1195259493'($)} toRawString($)}
+         HashCode = {self 'hashCode#-1882783961'($)}
       in
          {StringLiteral ClassName#'@'#HashCode}
       end
 
-      meth hashCode($)
+      % For convenience in other Oz functors
+      meth toString($)
+         {self 'toString#1195259493'($)}
+      end
+
+      meth 'hashCode#-1882783961'($)
          0
       end
 
-      meth 'equals#1063877011'(Other $)
+      meth 'equals#-1875011758'(Other $)
          self == Other
       end
    end

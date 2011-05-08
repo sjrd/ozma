@@ -18,12 +18,12 @@ define
          rawString
 
       meth '<init>'(ARawString $)
-         Object, '<init>'(_)
+         Object, '<init>#1063877011'(_)
          rawString := ARawString
          unit
       end
 
-      meth toString($)
+      meth 'toString#1195259493'($)
          self
       end
 
@@ -31,7 +31,7 @@ define
          @rawString
       end
 
-      meth '$plus#1063877011'(Right $)
+      meth '$plus#-918398289'(Right $)
          Raw = (@rawString)#{Right toRawString($)}
       in
          {NewObject String StringClass '<init>'(Raw _)}

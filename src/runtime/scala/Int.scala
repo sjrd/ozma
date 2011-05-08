@@ -149,6 +149,6 @@ object Int extends AnyValCompanion {
   final val MaxValue = jl.Integer.MAX_VALUE
 
   def box(x: Int): jl.Integer = jl.Integer.valueOf(x)
-  def unbox(x: jl.Object): Int = x.asInstanceOf[jl.Integer].intValue()
+  @native def unbox(x: jl.Object): Int = x.asInstanceOf[jl.Integer].intValue()
   override def toString = "object scala.Int"
 }

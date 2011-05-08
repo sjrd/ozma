@@ -340,7 +340,18 @@ abstract class GenOzCode extends OzmaSubComponent {
             assert(!tree.symbol.isPackageClass, "Cannot use package as value: " + tree)
             genModule(ctx, sym, tree.pos)
           } else {
-            ast.At(varForSymbol(sym))
+            val symVar = varForSymbol(sym)
+
+            if (qualifier.isInstanceOf[This] || symVar.isInstanceOf[ast.Variable])
+              ast.At(symVar)
+            else {
+              val instance = genExpression(qualifier, ctx)
+              val arguments = List(symVar)
+              val message = buildMessage(
+                  ast.Atom("$getPublic$") setPos tree.pos, arguments)
+
+              ast.Apply(instance, List(message))
+            }
           }
 
         case Ident(name) =>
@@ -391,9 +402,22 @@ abstract class GenOzCode extends OzmaSubComponent {
         case Typed(expr, _) =>
           genExpression(expr, ctx)
 
-        case Assign(lhs @ Select(_, _), rhs) =>
-          val assignment = ast.ColonEquals(
-              varForSymbol(lhs.symbol) setPos lhs.pos, genExpression(rhs, ctx))
+        case Assign(lhs @ Select(qualifier, _), rhs) =>
+          val sym = lhs.symbol
+          val symVar = varForSymbol(sym) setPos lhs.pos
+
+          val assignment =
+            if (qualifier.isInstanceOf[This] || symVar.isInstanceOf[ast.Variable])
+              ast.ColonEquals(symVar, genExpression(rhs, ctx))
+            else {
+              val instance = genExpression(qualifier, ctx)
+              val arguments = List(symVar, genExpression(rhs, ctx))
+              val message = ast.Tuple(
+                  ast.Atom("$setPublic$") setPos tree.pos, arguments:_*)
+
+              ast.Apply(instance, List(message))
+            }
+
           ast.And(assignment, ast.UnitVal())
 
         case Assign(lhs, rhs) =>
@@ -695,14 +719,17 @@ abstract class GenOzCode extends OzmaSubComponent {
       }
 
       val sym = clazz.symbol
-      val superClass = if (sym.superClass == NoSymbol)
-        ObjectClass
-      else
-        sym.superClass
+      val withFrom = if (sym.isInterface)
+        withAttrs
+      else {
+        val superClass = if (sym.superClass == NoSymbol)
+          ObjectClass
+        else
+          sym.superClass
 
-      val bases = for (mixin <- superClass :: sym.mixinClasses)
-        yield varForSymbol(mixin) setPos clazz.symbol.pos
-      val withFrom = (ast.From(bases) setPos clazz.symbol.pos) :: withAttrs
+        val superClassVar = varForSymbol(superClass) setPos sym.pos
+        (ast.From(List(superClassVar))) :: withAttrs
+      }
 
       withFrom
     }
@@ -716,7 +743,8 @@ abstract class GenOzCode extends OzmaSubComponent {
       val name = atomForSymbol(method.symbol) setPos method.symbol.pos
       val args0 = method.params.map {
         local => ast.MethodArg(None,
-            varForSymbol(local.sym) setPos local.sym.pos, None)
+            varForSymbol(local.sym).asInstanceOf[
+              ast.MethodArgName] setPos local.sym.pos, None)
       }
       val args = args0 ++ List(ast.MethodArg(None, ast.Dollar(), None))
       val body = method.code.asInstanceOf[ast.Phrase]
@@ -752,8 +780,15 @@ abstract class GenOzCode extends OzmaSubComponent {
     }
 
     def makeModule(clazz: OzClass) = {
-      val module = clazz.symbol.companionModule
-      val value = genNew(clazz.symbol)
+      val sym = clazz.symbol
+      val module = sym.companionModule
+
+      val atom = if (sym.isImplClass)
+        ast.Atom("<init>#1063877011")
+      else
+        atomForSymbol(clazz.symbol.primaryConstructor)
+
+      val value = genNew(clazz.symbol, Nil, atom)
 
       ast.Eq(varForSymbol(module), makeByNeed(value))
     }

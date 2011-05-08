@@ -50,7 +50,7 @@ define
    in
       try
          Obj = Mod.ObjID
-         {Obj 'main#-1181422703'(Args _)}
+         {Obj 'main#1806194953'(Args _)}
       catch E andthen {IsObject E} then
          {DumpException E}
       end
