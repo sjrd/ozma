@@ -128,6 +128,7 @@ trait ASTs { self: OzCodes =>
     trait OptFinally extends Node
     trait Phrase extends Node with RecordArgument with Pattern with OptElse
                               with OptFinally
+    trait Constant extends Phrase
     trait AttrOrFeat extends Node
     trait MethodName extends Node
     trait MethodArgName extends Node
@@ -252,7 +253,7 @@ trait ASTs { self: OzCodes =>
       def syntax(indent: String) = "@" + cell.syntax(indent+" ")
     }
 
-    case class Atom(atom: String) extends Phrase with FeatureNoVar
+    case class Atom(atom: String) extends Constant with FeatureNoVar
         with RecordLabel with MethodName {
       def syntax(indent: String) = "'" + escapePseudoChars(atom, '\'') + "'"
     }
@@ -262,7 +263,7 @@ trait ASTs { self: OzCodes =>
       def unapply(atom: Atom) = atom.atom == "null"
     }
 
-    abstract class BuiltinName(tag: String) extends Phrase with RecordLabel {
+    abstract class BuiltinName(tag: String) extends Constant with RecordLabel {
       override val astLabel = "fAtom"
 
       def syntax(indent: String) = tag
@@ -328,13 +329,13 @@ trait ASTs { self: OzCodes =>
       def syntax(indent: String) = "$"
     }
 
-    case class IntLiteral(value: Long) extends Phrase with FeatureNoVar {
+    case class IntLiteral(value: Long) extends Constant with FeatureNoVar {
       override val astLabel = "fInt"
 
       def syntax(indent: String) = value.toString.replace('-', '~')
     }
 
-    case class FloatLiteral(value: Double) extends Phrase {
+    case class FloatLiteral(value: Double) extends Constant {
       override val astLabel = "fFloat"
 
       def syntax(indent: String) = value.toString.replace('-', '~')

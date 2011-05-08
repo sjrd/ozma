@@ -583,7 +583,7 @@ abstract class GenOzCode extends OzmaSubComponent {
 
     private def blackholeReturnedValue(expr: ast.Phrase): ast.Phrase = {
       expr match {
-        case ast.Atom(_) => ast.Skip() setPos expr.pos
+        case _:ast.Constant => ast.Skip() setPos expr.pos
 
         case ast.And(statement, _:ast.RecordLabel) => statement
 
