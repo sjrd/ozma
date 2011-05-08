@@ -15,11 +15,13 @@ define
 
    class String from Object
       attr
+         rawVS
          rawString
 
-      meth '<init>'(ARawString $)
+      meth '<init>'(RawVS $)
          Object, '<init>#1063877011'(_)
-         rawString := ARawString
+         rawVS := RawVS
+         rawString := {ByNeed fun {$} {VirtualString.toString RawVS} end}
          unit
       end
 
@@ -27,12 +29,16 @@ define
          self
       end
 
+      meth toRawVS($)
+         @rawVS
+      end
+
       meth toRawString($)
          @rawString
       end
 
       meth '$plus#-918398289'(Right $)
-         Raw = (@rawString)#{Right toRawString($)}
+         Raw = (@rawVS)#{Right toRawVS($)}
       in
          {NewObject String StringClass '<init>'(Raw _)}
       end

@@ -99,6 +99,7 @@ trait Natives { self: OzCodes =>
 
       def ::(left: Phrase) = Tuple(Atom("|"), left, phrase)
 
+      def toRawVS = new MethodWrapper(phrase, "toRawVS")
       def toRawString = new MethodWrapper(phrase, "toRawString")
 
       def doApply = new MethodWrapper(phrase, "apply", "java.lang.Object")

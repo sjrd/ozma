@@ -22,7 +22,7 @@ define
       end
 
       meth 'print#-1794996995'(Str $)
-         {System.printInfo {Str toRawString($)}}
+         {System.printInfo {Str toRawVS($)}}
          unit
       end
 
@@ -31,7 +31,7 @@ define
       end
 
       meth 'println#-1794996995'(Str $)
-         {System.showInfo {Str toRawString($)}}
+         {System.showInfo {Str toRawVS($)}}
          unit
       end
 

@@ -58,7 +58,7 @@ define
 
    proc {DumpException Exception}
       {System.showError 'Application terminated with an exception:'}
-      {System.showError {{Exception toString($)} toRawString($)}}
+      {System.showError {{Exception toString($)} toRawVS($)}}
    end
 
    try
