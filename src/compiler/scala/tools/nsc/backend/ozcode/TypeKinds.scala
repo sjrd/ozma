@@ -67,7 +67,8 @@ trait TypeKinds { self: OzCodes =>
 
   /** An object */
   case class REFERENCE(cls: Symbol) extends TypeKind {
-    override def isReferenceType = false
+    override def toString = "REFERENCE(" + cls.fullName + ")"
+    override def isReferenceType = true
 
     def toType = cls.tpe
   }
