@@ -3,6 +3,8 @@ functor
 import
    `functor:java.lang.String`('type:java.lang.String':`type:java.lang.String`
                               'class:java.lang.String':`class:java.lang.String`) at '../../java/lang/String.ozf'
+   `functor:java.lang.Number`('class:java.lang.Number':`class:java.lang.Number`) at '../../java/lang/Number.ozf'
+   `functor:java.lang.Character`('class:java.lang.Character':`class:java.lang.Character`) at '../../java/lang/Character.ozf'
    `functor:java.lang.ClassCastException`('type:java.lang.ClassCastException':`type:java.lang.ClassCastException`
                                           'class:java.lang.ClassCastException':`class:java.lang.ClassCastException`) at '../../java/lang/ClassCastException.ozf'
 
@@ -15,6 +17,8 @@ export
    'ArrayClassOf':ArrayClassOf
    'MultiArrayClassOf':MultiArrayClassOf
    'StringLiteral':StringLiteral
+   'AnyEqEq':AnyEqEq
+   'AnyRefEqEq':AnyRefEqEq
 
 define
 
@@ -62,6 +66,28 @@ define
       {NewObject `type:java.lang.String`
        `class:java.lang.String`
        '<init>'(RawString _)}
+   end
+
+   fun {AnyEqEq Left Right}
+      if Left == Right then
+         true
+      elseif Left == null then
+         false
+      elseif {IsInstance Left `class:java.lang.Number`} then
+         {Left 'scala_$eq$eq#-1875011758'(Right $)}
+      elseif {IsInstance Left `class:java.lang.Character`} then
+         {Left 'scala_$eq$eq#-1875011758'(Right $)}
+      else
+         {Left 'equals#-1875011758'(Right $)}
+      end
+   end
+
+   fun {AnyRefEqEq Left Right}
+      if Left == null then
+         Right == null
+      else
+         {Left 'equals#-1875011758'(Right $)}
+      end
    end
 
 end

@@ -29,6 +29,8 @@ abstract class GenOzCode extends OzmaSubComponent {
     getMember
   }
 
+  import platform.isMaybeBoxed
+
   val phaseName = "ozcode"
 
   override def newPhase(p: Phase) = new OzCodePhase(p)
@@ -532,9 +534,19 @@ abstract class GenOzCode extends OzmaSubComponent {
 
         // Binary operation
         case List(lsrc, rsrc) =>
-          def divOperator = toTypeKind(args.head.tpe) match {
+          lazy val leftKind = toTypeKind(args.head.tpe)
+
+          def divOperator = leftKind match {
             case _:INT => "div"
             case _:FLOAT => "/"
+          }
+
+          def genEquality(eqeq: Boolean, not: Boolean) = {
+            if (eqeq && leftKind.isReferenceType) {
+              val body = genEqEqPrimitive(args(0), args(1), lsrc, rsrc, ctx)
+              if (not) genBuiltinApply("Not", body) else body
+            } else
+              ast.BinaryOpApply(if (not) "\\=" else "==", lsrc, rsrc)
           }
 
           (code match {
@@ -553,8 +565,10 @@ abstract class GenOzCode extends OzmaSubComponent {
             case LE => ast.BinaryOpApply("=<", lsrc, rsrc)
             case GT => ast.BinaryOpApply(">", lsrc, rsrc)
             case GE => ast.BinaryOpApply(">=", lsrc, rsrc)
-            case ID | EQ => ast.BinaryOpApply("==", lsrc, rsrc)
-            case NI | NE => ast.BinaryOpApply("\\=", lsrc, rsrc)
+            case EQ => genEquality(eqeq = true, not = false)
+            case NE => genEquality(eqeq = true, not = true)
+            case ID => genEquality(eqeq = false, not = false)
+            case NI => genEquality(eqeq = false, not = true)
             case ZOR => ast.OrElse(lsrc, rsrc)
             case ZAND => ast.AndThen(lsrc, rsrc)
             case _ =>
@@ -564,6 +578,22 @@ abstract class GenOzCode extends OzmaSubComponent {
         case _ =>
           abort("Too many arguments for primitive function: " + tree)
       }
+    }
+
+    def genEqEqPrimitive(l: Tree, r: Tree, lsrc: ast.Phrase, rsrc: ast.Phrase,
+        ctx: Context) = {
+      /** True if the equality comparison is between values that require the use of the rich equality
+        * comparator (scala.runtime.Comparator.equals). This is the case when either side of the
+        * comparison might have a run-time type subtype of java.lang.Number or java.lang.Character.
+        * When it is statically known that both sides are equal and subtypes of Number of Character,
+        * not using the rich equality is possible (their own equals method will do ok.)*/
+      def mustUseAnyComparator: Boolean = {
+        def areSameFinals = l.tpe.isFinalType && r.tpe.isFinalType && (l.tpe =:= r.tpe)
+        !areSameFinals && isMaybeBoxed(l.tpe.typeSymbol) && isMaybeBoxed(r.tpe.typeSymbol)
+      }
+
+      val function = if (mustUseAnyComparator) "AnyEqEq" else "AnyRefEqEq"
+      genBuiltinApply(function, lsrc, rsrc)
     }
 
     private def genScalaHash(tree: Apply, receiver: Tree,
