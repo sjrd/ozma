@@ -166,7 +166,7 @@ ACTUAL TASKS
     </apply>
   </target>
 
-  <target name="build.done" depends="build.library,build.compiler,build.ozastc,build.runtime"/>
+  <target name="build.done" depends="build.library,build.compiler,build.ozastc,build.runtime,build.engine"/>
 
   <target name="build.clean" depends="init">
     <delete includeemptydirs="true">
