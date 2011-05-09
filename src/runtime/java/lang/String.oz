@@ -1,7 +1,8 @@
 functor
 
 import
-   OzmaRuntime('NewObject':NewObject) at '../../scala/ozma/OzmaRuntime.ozf'
+   OzmaRuntime('NewObject':NewObject
+               'IsInstance':IsInstance) at '../../scala/ozma/OzmaRuntime.ozf'
    `functor:java.lang.Object`('type:java.lang.Object':Object
                               'class:java.lang.Object':ObjectClass) at 'Object.ozf'
    `functor:java.lang.Class`('type:java.lang.Class':Class
@@ -45,6 +46,14 @@ define
 
       meth '$plus#-1324018343'(Right $)
          {self '$plus#-918398289'({Right toString($)} $)}
+      end
+
+      meth 'equals#-1875011758'(Other $)
+         if {IsInstance Other StringClass} then
+            @rawString == {Other toRawString($)}
+         else
+            false
+         end
       end
    end
 
