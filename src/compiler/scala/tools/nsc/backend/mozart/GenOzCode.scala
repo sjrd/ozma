@@ -211,7 +211,7 @@ abstract class GenOzCode extends OzmaSubComponent {
           abort("Cannot encode a 'return' in Oz")
 
         case t @ Try(_, _, _) =>
-          ast.Atom("TODO: generate a try")
+          genTry(t, ctx)
 
         case Throw(expr) =>
           ast.Raise(genExpression(expr, ctx))
@@ -680,6 +680,45 @@ abstract class GenOzCode extends OzmaSubComponent {
     def genCast(from: Type, to: Type, value: ast.Phrase, cast: Boolean) = {
       genBuiltinApply(if (cast) "AsInstance" else "IsInstance",
           value, varForClass(to.typeSymbol) setPos value.pos)
+    }
+
+    private def genTry(tree: Try, ctx: Context): ast.Phrase = {
+      val Try(block, catches, finalizer) = tree
+
+      val blockAST = genExpression(block, ctx)
+
+      val clauses = for (CaseDef(pat, _, body) <- catches) yield {
+        val bodyAST = genExpression(body, ctx)
+
+        def genCaseClause(sym: Symbol, E: ast.Phrase = ast.Variable("E")) = {
+          val isObject = genBuiltinApply("IsObject", E)
+          val isInstance = genBuiltinApply("IsInstance", E, varForClass(sym))
+          val pattern =
+            ast.SideCondition(E, ast.Skip(), ast.AndThen(isObject, isInstance))
+          ast.CaseClause(pattern, bodyAST)
+        }
+
+        pat match {
+          case Typed(Ident(nme.WILDCARD), tpt) =>
+            genCaseClause(tpt.tpe.typeSymbol)
+          case Ident(nme.WILDCARD) =>
+            genCaseClause(ThrowableClass)
+          case Bind(name, _) =>
+            genCaseClause(pat.symbol.tpe.typeSymbol, varForSymbol(pat.symbol))
+        }
+      }
+
+      val catchesAST = if (clauses.isEmpty)
+        ast.NoCatch()
+      else
+        ast.Catch(clauses)
+
+      val finalizerAST = genStatement(finalizer, ctx) match {
+        case ast.Skip() => ast.NoFinally()
+        case ast => ast
+      }
+
+      ast.Try(blockAST, catchesAST, finalizerAST)
     }
 
     /////////////////// Context ///////////////////////

@@ -6,6 +6,8 @@ import
                               'class:java.lang.Object':`class:java.lang.Object`) at 'Object.ozf'
    `functor:java.lang.Class`('type:java.lang.Class':`type:java.lang.Class`
                              'class:java.lang.Class':`class:java.lang.Class`) at 'Class.ozf'
+   `functor:java.lang.ArrayIndexOutOfBoundsException`('type:java.lang.ArrayIndexOutOfBoundsException':`type:java.lang.ArrayIndexOutOfBoundsException`
+                                                      'class:java.lang.ArrayIndexOutOfBoundsException':`class:java.lang.ArrayIndexOutOfBoundsException`) at 'ArrayIndexOutOfBoundsException.ozf'
 
 export
    MakeNewArrayClass
@@ -23,7 +25,7 @@ define
    fun {NewArrayObject ArrayClass Length InitValue}
       {NewObject ArrayType ArrayClass '<init>'(Length InitValue _)}
    end
-   
+
    class ArrayType from `type:java.lang.Object`
       attr
          length
@@ -44,11 +46,23 @@ define
       end
 
       meth put(Index Value)
+         ArrayType, checkIndex(Index)
          (@rawArray).Index := Value
       end
 
       meth get(Index $)
+         ArrayType, checkIndex(Index)
          (@rawArray).Index
+      end
+
+      meth checkIndex(Index)
+         if (Index < 0) orelse (Index >= @length) then
+            raise
+               {NewObject `type:java.lang.ArrayIndexOutOfBoundsException`
+                          `class:java.lang.ArrayIndexOutOfBoundsException`
+                          '<init>#1625905794'(_)}
+            end
+         end
       end
    end
 

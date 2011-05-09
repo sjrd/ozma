@@ -38,6 +38,11 @@ define
          @'class'
       end
 
+      % For convenience in other Oz functors
+      meth getClass($)
+         {self 'getClass#-530663260'($)}
+      end
+
       % In the JavaDoc, defined as:
       %   getClass().getName() + '@' + Integer.toHexString(hashCode())
       meth 'toString#1195259493'($)

@@ -787,6 +787,14 @@ trait ASTs { self: OzCodes =>
       }
     }
 
+    case class SideCondition(pattern: Phrase, dontknow: Phrase,
+        condition: Phrase) extends Pattern {
+      def syntax(indent: String) = {
+        val prefix = pattern.syntax(indent) + " andthen "
+        prefix + condition.syntax(indent + " "*prefix.length)
+      }
+    }
+
     case class NoElse() extends OptElse {
       def syntax(indent: String) = "<noelse>"
     }
