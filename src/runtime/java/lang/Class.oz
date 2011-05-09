@@ -49,7 +49,11 @@ define
       end
 
       meth 'isInstance#-1875011758'(Obj $)
-         {self 'isAssignableFrom#1326077541'({Obj getClass($)} $)}
+         if Obj == null then
+            false
+         else
+            {self 'isAssignableFrom#1326077541'({Obj getClass($)} $)}
+         end
       end
 
       meth 'isAssignableFrom#1326077541'(SubClass $)

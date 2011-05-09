@@ -35,7 +35,7 @@ define
    end
 
    fun {AsInstance Obj Class}
-      if {IsInstance Obj Class} then
+      if (Obj == null) orelse {IsInstance Obj Class} then
          Obj
       else
          raise
