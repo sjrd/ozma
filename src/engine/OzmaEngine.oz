@@ -44,9 +44,9 @@ define
    proc {RunMainObject MainObject Args}
       FileName = {ClassNameToFileName MainObject}
       URL = ClassPath#'/'#FileName
-      [Mod StringMod RuntimeMod] = {Module.link [URL
-                                                 'java/lang/String.ozf'
-                                                 'scala/ozma/OzmaRuntime.ozf']}
+      StringURL = ClassPath#'/java/lang/String.ozf'
+      RuntimeURL = ClassPath#'/scala/ozma/OzmaRuntime.ozf'
+      [Mod StringMod RuntimeMod] = {Module.link [URL StringURL RuntimeURL]}
       ObjID = {VirtualString.toAtom 'module:'#MainObject#'$'}
       Obj OzmaArgs
    in
