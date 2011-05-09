@@ -33,9 +33,12 @@ trait Natives { self: OzCodes =>
 
       register(Integer_toString)
       register(Float_toString)
+      register(Character_toString)
       register(Integer_parseInt)
       register(Float_parseFloat)
 
+      register(Boolean_unbox)
+      register(Char_unbox)
       register(Byte_unbox)
       register(Short_unbox)
       register(Int_unbox)
@@ -73,6 +76,7 @@ trait Natives { self: OzCodes =>
     }
 
     def unit = ast.UnitVal()
+    def nil = ast.Atom("nil")
 
     def __ = ast.Wildcard()
 
@@ -181,6 +185,15 @@ trait Natives { self: OzCodes =>
     def ValueToString = FloatToString
   }
 
+  object Character_toString extends NativeMethod(
+      "java.lang.Character.toString", "java.lang.String") {
+    def body = {
+      val ValueField = QuotedVar(" value")
+
+      StringLiteral(At(ValueField) :: nil)
+    }
+  }
+
   abstract class Number_parse(fullName: String, resultType: String)
       extends NativeMethod(fullName, resultType, "`s`" -> "java.lang.String") {
     def StringToValue: BuiltinFunction
@@ -238,6 +251,8 @@ trait Natives { self: OzCodes =>
     }
   }
 
+  object Boolean_unbox extends Primitive_unbox("scala.Boolean", "booleanValue")
+  object Char_unbox extends Primitive_unbox("scala.Char", "charValue")
   object Byte_unbox extends Primitive_unbox("scala.Byte", "byteValue")
   object Short_unbox extends Primitive_unbox("scala.Short", "shortValue")
   object Int_unbox extends Primitive_unbox("scala.Int", "intValue")
