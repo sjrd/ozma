@@ -19,19 +19,15 @@ trait TypeKinds { self: OzCodes =>
     Map(
       UnitClass     -> UNIT,
       BooleanClass  -> BOOL,
-      CharClass     -> INT,
-      ByteClass     -> INT,
-      ShortClass    -> INT,
-      IntClass      -> INT,
-      LongClass     -> INT,
-      FloatClass    -> FLOAT,
-      DoubleClass   -> FLOAT
+      CharClass     -> INT(CharClass),
+      ByteClass     -> INT(ByteClass),
+      ShortClass    -> INT(ShortClass),
+      IntClass      -> INT(IntClass),
+      LongClass     -> INT(LongClass),
+      FloatClass    -> FLOAT(FloatClass),
+      DoubleClass   -> FLOAT(DoubleClass)
     )
   }
-
-  /** Reverse map for toType */
-  private lazy val reversePrimitiveMap: Map[TypeKind, Symbol] =
-    primitiveTypeMap map (_.swap) toMap
 
   /**
    * This class represents a type kind. Type kinds represent the types that the
@@ -48,34 +44,32 @@ trait TypeKinds { self: OzCodes =>
       this.getClass.getName stripSuffix "$" dropWhile (_ != '$') drop 1
     }
 
-    def toType: Type = reversePrimitiveMap get this map (_.tpe) getOrElse {
-      this match {
-        case REFERENCE(cls) => cls.tpe
-        case ARRAY(elem) => arrayType(elem.toType)
-        case _ => abort("Unknown type kind.")
-      }
-    }
+    def toType: Type
   }
 
-  sealed abstract class ValueTypeKind extends TypeKind {
+  sealed abstract class ValueTypeKind(cls: Symbol) extends TypeKind {
     override def isValueType = true
+
+    def toType = cls.tpe
   }
 
   /** Int */
-  case object INT extends ValueTypeKind {}
+  case class INT(cls: Symbol) extends ValueTypeKind(cls) {}
 
   /** Float */
-  case object FLOAT extends ValueTypeKind {}
+  case class FLOAT(cls: Symbol) extends ValueTypeKind(cls) {}
 
   /** Boolean */
-  case object BOOL extends ValueTypeKind {}
+  case object BOOL extends ValueTypeKind(definitions.BooleanClass) {}
 
   /** The unit value */
-  case object UNIT extends ValueTypeKind {}
+  case object UNIT extends ValueTypeKind(definitions.UnitClass) {}
 
   /** An object */
   case class REFERENCE(cls: Symbol) extends TypeKind {
     override def isReferenceType = false
+
+    def toType = cls.tpe
   }
 
   /** An array */
@@ -83,6 +77,8 @@ trait TypeKinds { self: OzCodes =>
     override def toString = "ARRAY[" + elem + "]"
     override def isArrayType = true
     override def dimensions = elem.dimensions + 1
+
+    def toType = arrayType(elem.toType)
 
     /** The ultimate element type of this array. */
     def elementKind: TypeKind = elem match {

@@ -11,6 +11,7 @@ import
 export
    'type:java.lang.Class':Class
    'class:java.lang.Class':ClassClass
+   'type:java.lang.Class$PrimitiveClass':`type:java.lang.Class$PrimitiveClass`
 
 define
 
@@ -59,6 +60,10 @@ define
          (Cls == self) orelse {Member Cls @ancestors}
       end
 
+      meth 'isPrimitive#-676694176'($)
+         false
+      end
+
       meth 'isArray#-676694176'($)
          false
       end
@@ -84,5 +89,24 @@ define
                                      [ObjectClass]
                                      _)}
                         end}
+
+   class `type:java.lang.Class$PrimitiveClass` from Class
+      attr
+         arrayEncodedName
+
+      meth '<init>'(RawName ArrayEncodedName $)
+         arrayEncodedName := ArrayEncodedName
+         Class, '<init>'(RawName null nil nil _)
+         unit
+      end
+
+      meth arrayEncodedName($)
+         @arrayEncodedName
+      end
+
+      meth 'isPrimitive#-676694176'($)
+         true
+      end
+   end
 
 end

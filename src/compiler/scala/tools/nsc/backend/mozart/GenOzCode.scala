@@ -533,8 +533,8 @@ abstract class GenOzCode extends OzmaSubComponent {
         // Binary operation
         case List(lsrc, rsrc) =>
           def divOperator = toTypeKind(args.head.tpe) match {
-            case INT => "div"
-            case FLOAT => "/"
+            case _:INT => "div"
+            case _:FLOAT => "/"
           }
 
           (code match {
@@ -666,14 +666,14 @@ abstract class GenOzCode extends OzmaSubComponent {
       (from, to) match {
         case _ if from eq to => value
 
-        case (INT, FLOAT) => genBuiltinApply("IntToFloat", value)
-        case (FLOAT, INT) => genBuiltinApply("FloatToInt", value)
+        case (_:INT, _:FLOAT) => genBuiltinApply("IntToFloat", value)
+        case (_:FLOAT, _:INT) => genBuiltinApply("FloatToInt", value)
 
-        case (INT, BOOL) => ast.BinaryOpApply("\\=", value, int0)
-        case (FLOAT, BOOL) => ast.BinaryOpApply("\\=", value, float0)
+        case (_:INT, BOOL) => ast.BinaryOpApply("\\=", value, int0)
+        case (_:FLOAT, BOOL) => ast.BinaryOpApply("\\=", value, float0)
 
-        case (BOOL, INT) => ast.IfThenElse(value, int1, int0)
-        case (BOOL, FLOAT) => ast.IfThenElse(value, float1, float0)
+        case (BOOL, _:INT) => ast.IfThenElse(value, int1, int0)
+        case (BOOL, _:FLOAT) => ast.IfThenElse(value, float1, float0)
       }
     }
 
@@ -843,25 +843,55 @@ abstract class GenOzCode extends OzmaSubComponent {
     }
 
     def makeClassConstant(clazz: OzClass) = {
+      import definitions._
+
       val sym = clazz.symbol
-
       val fullName = ast.StringLiteral(sym.fullName + suffixFor(sym))
-      val superClass = if (sym.superClass == NoSymbol)
-        varForClass(ObjectClass)
-      else
-        varForClass(sym.superClass)
-      val mixins = ast.ListLiteral((sym.mixinClasses map varForClass):_*)
 
-      val rawAncestors = if (sym.ancestors.isEmpty)
-        List(ObjectClass)
-      else
-        sym.ancestors
-      val ancestors = ast.ListLiteral((rawAncestors map varForClass):_*)
+      val value = if (isPrimitiveType(sym)) {
+        val encodedArrayType = toTypeKind(sym.tpe).toType.typeSymbol match {
+          case UnitClass     => "U"
+          case BooleanClass  => "Z"
+          case CharClass     => "C"
+          case ByteClass     => "B"
+          case ShortClass    => "S"
+          case IntClass      => "I"
+          case LongClass     => "J"
+          case FloatClass    => "F"
+          case DoubleClass   => "D"
+          case x => abort("Unknown primitive type: " + x.fullName)
+        }
 
-      val arguments = List(fullName, superClass, mixins, ancestors)
-      val value = genNew(definitions.ClassClass, arguments, ast.Atom("<init>"))
+        val message = ast.Tuple(ast.Atom("<init>"),
+            fullName, ast.Atom(encodedArrayType), ast.Wildcard())
+
+        genBuiltinApply("NewObject",
+            ast.QuotedVar("type:java.lang.Class$PrimitiveClass"),
+            varForClass(ClassClass), message)
+      } else {
+        val superClass = if (sym.superClass == NoSymbol)
+          varForClass(ObjectClass)
+        else
+          varForClass(sym.superClass)
+        val mixins = ast.ListLiteral((sym.mixinClasses map varForClass):_*)
+
+        val rawAncestors = if (sym.ancestors.isEmpty)
+          List(ObjectClass)
+        else
+          sym.ancestors
+        val ancestors = ast.ListLiteral((rawAncestors map varForClass):_*)
+
+        val arguments = List(fullName, superClass, mixins, ancestors)
+        genNew(definitions.ClassClass, arguments, ast.Atom("<init>"))
+      }
 
       ast.Eq(varForClass(clazz.symbol), makeByNeed(value))
+    }
+
+    private def isPrimitiveType(sym: Symbol) = toTypeKind(sym.tpe) match {
+      case _:REFERENCE => false
+      case _:ARRAY => false
+      case _ => true
     }
 
     def makeByNeed(value: ast.Phrase) = {
