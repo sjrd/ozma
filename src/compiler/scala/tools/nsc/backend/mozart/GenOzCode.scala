@@ -760,8 +760,10 @@ abstract class GenOzCode extends OzmaSubComponent {
       val withAttrs = if (clazz.fields.isEmpty)
         Nil
       else {
-        val attrs = ast.Attr(clazz.fields.map {
-          field => varForSymbol(field.symbol) setPos field.symbol.pos
+        val attrs = ast.Attr(clazz.fields.map { field =>
+          val name = varForSymbol(field.symbol) setPos field.symbol.pos
+          val initValue = genZeroOf(field.symbol)
+          ast.InitAttrFeat(name, initValue)
         })
 
         List(attrs)
@@ -862,8 +864,10 @@ abstract class GenOzCode extends OzmaSubComponent {
           case x => abort("Unknown primitive type: " + x.fullName)
         }
 
+        val zero = genZeroOf(sym)
+
         val message = ast.Tuple(ast.Atom("<init>"),
-            fullName, ast.Atom(encodedArrayType), ast.Wildcard())
+            fullName, ast.Atom(encodedArrayType), zero, ast.Wildcard())
 
         genBuiltinApply("NewObject",
             ast.QuotedVar("type:java.lang.Class$PrimitiveClass"),

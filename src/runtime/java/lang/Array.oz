@@ -20,8 +20,8 @@ define
               end}
    end
 
-   fun {NewArrayObject ArrayClass Length}
-      {NewObject ArrayType ArrayClass '<init>'(Length _)}
+   fun {NewArrayObject ArrayClass Length InitValue}
+      {NewObject ArrayType ArrayClass '<init>'(Length InitValue _)}
    end
    
    class ArrayType from `type:java.lang.Object`
@@ -29,9 +29,9 @@ define
          length
          rawArray
 
-      meth '<init>'(Length $)
+      meth '<init>'(Length InitValue $)
          length := Length
-         rawArray := {NewArray 0 Length-1 null}
+         rawArray := {NewArray 0 Length-1 InitValue}
          unit
       end
 

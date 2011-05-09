@@ -73,11 +73,17 @@ define
       end
 
       meth newArrayOfThisClass(Length $)
-         {NewArrayObject @arrayOfThisClass Length}
+         InitValue = {self zeroOfThisClass($)}
+      in
+         {NewArrayObject @arrayOfThisClass Length InitValue}
       end
 
       meth arrayEncodedName($)
          'L'#{(@name) toRawVS($)}#';'
+      end
+
+      meth zeroOfThisClass($)
+         null
       end
    end
 
@@ -93,15 +99,21 @@ define
    class `type:java.lang.Class$PrimitiveClass` from Class
       attr
          arrayEncodedName
+         zeroOfThisClass
 
-      meth '<init>'(RawName ArrayEncodedName $)
+      meth '<init>'(RawName ArrayEncodedName Zero $)
          arrayEncodedName := ArrayEncodedName
+         zeroOfThisClass := Zero
          Class, '<init>'(RawName null nil nil _)
          unit
       end
 
       meth arrayEncodedName($)
          @arrayEncodedName
+      end
+
+      meth zeroOfThisClass($)
+         @zeroOfThisClass
       end
 
       meth 'isPrimitive#-676694176'($)

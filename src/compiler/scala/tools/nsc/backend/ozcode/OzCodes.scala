@@ -75,6 +75,17 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
     ast.Apply(ast.Variable(funName) setPos pos, args.toList) setPos pos
   }
 
+  def genZeroOf(sym: Symbol): ast.Constant = genZeroOf(sym.tpe)
+
+  def genZeroOf(tpe: Type): ast.Constant = toTypeKind(tpe) match {
+    case UNIT => ast.UnitVal()
+    case BOOL => ast.False()
+    case INT(_) => ast.IntLiteral(0)
+    case FLOAT(_) => ast.FloatLiteral(0.0)
+    case REFERENCE(_) => ast.NullVal()
+    case ARRAY(_) => ast.NullVal()
+  }
+
   /* Symbol encoding */
 
   def varForSymbol(sym: Symbol): ast.Phrase with ast.EscapedFeature = {

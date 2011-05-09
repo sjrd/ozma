@@ -637,6 +637,19 @@ trait ASTs { self: OzCodes =>
       }
     }
 
+    case class InitAttrFeat(name: EscapedFeature,
+        initValue: Phrase) extends AttrOrFeat {
+      override val astLabel = "#"
+
+      override val hasCoord = false
+
+      def syntax(indent: String) = {
+        val prefix = name.syntax(indent) + ":"
+        val subIndent = indent + " "*prefix.length
+        prefix + initValue.syntax(subIndent)
+      }
+    }
+
     case class MethodDef(name: MethodName, args: List[MethodArg],
         body: Phrase) extends Node {
       override val astLabel = "fMeth"
