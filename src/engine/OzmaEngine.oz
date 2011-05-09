@@ -44,16 +44,34 @@ define
    proc {RunMainObject MainObject Args}
       FileName = {ClassNameToFileName MainObject}
       URL = ClassPath#'/'#FileName
-      [Mod] = {Module.link [URL]}
+      [Mod StringMod RuntimeMod] = {Module.link [URL
+                                                 'java/lang/String.ozf'
+                                                 'scala/ozma/OzmaRuntime.ozf']}
       ObjID = {VirtualString.toAtom 'module:'#MainObject#'$'}
-      Obj
+      Obj OzmaArgs
    in
       try
+         StringClass = StringMod.'class:java.lang.String'
+         StringLiteral = RuntimeMod.'StringLiteral'
+      in
+         OzmaArgs = {MakeOzmaArgs Args StringClass StringLiteral}
          Obj = Mod.ObjID
-         {Obj 'main#1806194953'(Args _)}
+         {Obj 'main#1806194953'(OzmaArgs _)}
       catch E andthen {IsObject E} then
          {DumpException E}
       end
+   end
+
+   proc {MakeOzmaArgs Args StringClass StringLiteral Result}
+      Result = {StringClass newArrayOfThisClass({Length Args} $)}
+
+      {List.forAllInd Args
+       proc {$ Index RawString}
+          ArrIndex = Index-1
+          String = {StringLiteral RawString}
+       in
+          {Result put(ArrIndex String)}
+       end}
    end
 
    proc {DumpException Exception}
