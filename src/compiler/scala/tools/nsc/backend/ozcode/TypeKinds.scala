@@ -11,6 +11,8 @@ trait TypeKinds { self: OzCodes =>
   import global._
   import definitions.{ ArrayClass, AnyRefClass, ObjectClass, NullClass, NothingClass, arrayType }
 
+  lazy val ObjectReference = REFERENCE(definitions.ObjectClass)
+
   /** A map from scala primitive Types to OzCode TypeKinds */
   lazy val primitiveTypeMap: Map[Symbol, TypeKind] = {
     import definitions._
@@ -37,10 +39,21 @@ trait TypeKinds { self: OzCodes =>
    */
   sealed abstract class TypeKind {
     def isReferenceType = false
+    def isArrayType = false
     def isValueType = false
+
+    def dimensions: Int = 0
 
     override def toString = {
       this.getClass.getName stripSuffix "$" dropWhile (_ != '$') drop 1
+    }
+
+    def toType: Type = reversePrimitiveMap get this map (_.tpe) getOrElse {
+      this match {
+        case REFERENCE(cls) => cls.tpe
+        case ARRAY(elem) => arrayType(elem.toType)
+        case _ => abort("Unknown type kind.")
+      }
     }
   }
 
@@ -61,11 +74,26 @@ trait TypeKinds { self: OzCodes =>
   case object UNIT extends ValueTypeKind {}
 
   /** An object */
-  case object OBJECT extends TypeKind {
+  case class REFERENCE(cls: Symbol) extends TypeKind {
     override def isReferenceType = false
   }
 
+  /** An array */
+  case class ARRAY(elem: TypeKind) extends TypeKind {
+    override def toString = "ARRAY[" + elem + "]"
+    override def isArrayType = true
+    override def dimensions = elem.dimensions + 1
+
+    /** The ultimate element type of this array. */
+    def elementKind: TypeKind = elem match {
+      case a @ ARRAY(_) => a.elementKind
+      case k => k
+    }
+  }
+
   ////////////////// Conversions //////////////////////////////
+
+  // The following code is a hard copy-and-paste from backend.icode.TypeKinds
 
   /** Return the TypeKind of the given type
    *
@@ -73,18 +101,17 @@ trait TypeKinds { self: OzCodes =>
    *  arrayOrClassType below would return ObjectReference.
    */
   def toTypeKind(t: Type): TypeKind = t.normalize match {
-    case ThisType(sym)                   => OBJECT
-    case SingleType(_, sym)              => symbolToTypeKind(sym)
+    case ThisType(ArrayClass)            => ObjectReference
+    case ThisType(sym)                   => REFERENCE(sym)
+    case SingleType(_, sym)              => primitiveOrRefType(sym)
     case ConstantType(_)                 => toTypeKind(t.underlying)
-    case TypeRef(_, sym, args)           => symbolToTypeKind(sym)
-    case ClassInfoType(_, _, sym)        => symbolToTypeKind(sym)
+    case TypeRef(_, sym, args)           => primitiveOrClassType(sym, args)
+    case ClassInfoType(_, _, ArrayClass) => abort("ClassInfoType to ArrayClass!")
+    case ClassInfoType(_, _, sym)        => primitiveOrRefType(sym)
     case ExistentialType(_, t)           => toTypeKind(t)
     case AnnotatedType(_, t, _)          => toTypeKind(t)
-    // PP to ID: I added RefinedType here, is this OK or should they never be
-    // allowed to reach here?
-    case RefinedType(parents, _)         => OBJECT
     // bq: useful hack when wildcard types come here
-    // case WildcardType                    => OBJECT
+    // case WildcardType                    => REFERENCE(ObjectClass)
     case norm => abort(
       "Unknown type: %s, %s [%s, %s] TypeRef? %s".format(
         t, norm, t.getClass, norm.getClass, t.isInstanceOf[TypeRef]
@@ -92,6 +119,35 @@ trait TypeKinds { self: OzCodes =>
     )
   }
 
-  private def symbolToTypeKind(sym: Symbol) =
-    primitiveTypeMap.getOrElse(sym, OBJECT)
+  /** Return the type kind of a class, possibly an array type.
+   */
+  private def arrayOrClassType(sym: Symbol, targs: List[Type]) = sym match {
+    case ArrayClass       => ARRAY(toTypeKind(targs.head))
+    case _ if sym.isClass => newReference(sym)
+    case _                =>
+      assert(sym.isType, sym) // it must be compiling Array[a]
+      ObjectReference
+  }
+
+  /** Interfaces have to be handled delicately to avoid introducing
+   *  spurious errors, but if we treat them all as AnyRef we lose too
+   *  much information.
+   */
+  private def newReference(sym: Symbol): TypeKind = {
+    // Can't call .toInterface (at this phase) or we trip an assertion.
+    // See PackratParser#grow for a method which fails with an apparent mismatch
+    // between "object PackratParsers$class" and "trait PackratParsers"
+    if (sym.isImplClass) {
+      // pos/spec-List.scala is the sole failure if we don't check for NoSymbol
+      val traitSym = sym.owner.info.decl(nme.interfaceName(sym.name))
+      if (traitSym != NoSymbol)
+        return REFERENCE(traitSym)
+    }
+    REFERENCE(sym)
+  }
+
+  private def primitiveOrRefType(sym: Symbol) =
+    primitiveTypeMap.getOrElse(sym, newReference(sym))
+  private def primitiveOrClassType(sym: Symbol, targs: List[Type]) =
+    primitiveTypeMap.getOrElse(sym, arrayOrClassType(sym, targs))
 }

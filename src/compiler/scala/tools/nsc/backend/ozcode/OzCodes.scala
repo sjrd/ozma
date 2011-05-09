@@ -53,6 +53,23 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
     genBuiltinApply("NewObject", typeVar, classVar, message)
   }
 
+  def genNewArray(elementKind: TypeKind, dimensions: Int,
+      arguments: List[ast.Phrase]) = {
+    val argsLength = arguments.length
+
+    if (argsLength > dimensions)
+      abort("too many arguments for array constructor: found " + argsLength +
+        " but array has only " + dimensions + " dimension(s)")
+
+    if (argsLength != 1)
+      abort("FIXME: cannot create an array with multiple length arguments")
+
+    val componentClass = elementKind.toType.typeSymbol
+
+    genBuiltinApply("NewArrayObject", varForClass(componentClass),
+        ast.IntLiteral(dimensions), arguments.head)
+  }
+
   def genBuiltinApply(funName: String, args: ast.Phrase*) = {
     val pos = if (args.isEmpty) NoPosition else args(0).pos
     ast.Apply(ast.Variable(funName) setPos pos, args.toList) setPos pos

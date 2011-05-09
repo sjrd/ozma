@@ -279,8 +279,20 @@ abstract class GenOzCode extends OzmaSubComponent {
                    "'new' call to non-constructor: " + ctor.name)
 
           val arguments = args map { genExpression(_, ctx) }
-          genNew(tpt.symbol, arguments,
-              atomForSymbol(fun.symbol) setPos fun.pos)
+
+          val generatedType = toTypeKind(tpt.tpe)
+          if (settings.debug.value)
+            assert(generatedType.isReferenceType || generatedType.isArrayType,
+                 "Non reference type cannot be instantiated: " + generatedType)
+
+          generatedType match {
+            case arr @ ARRAY(elem) =>
+              genNewArray(arr.elementKind, arr.dimensions, arguments)
+
+            case rt @ REFERENCE(cls) =>
+              genNew(cls, arguments,
+                  atomForSymbol(fun.symbol) setPos fun.pos)
+          }
 
         case app @ Apply(fun, args) =>
           val sym = fun.symbol
@@ -430,7 +442,7 @@ abstract class GenOzCode extends OzmaSubComponent {
           ast.And(assignment, ast.UnitVal())
 
         case ArrayValue(tpt @ TypeTree(), _elems) =>
-          ast.Atom("TODO: array item value")
+          abort("FIXME: cannot create an array initialize")
 
         case Match(selector, cases) =>
           if (settings.debug.value)
@@ -487,6 +499,8 @@ abstract class GenOzCode extends OzmaSubComponent {
         genSimpleOp(tree, receiver :: args, ctx, code)
       else if (code == HASH)
         genScalaHash(tree, receiver, ctx)
+      else if (isArrayOp(code))
+        genArrayOp(tree, ctx, code)
       else if (isCoercion(code))
         genCoercion(tree, receiver, ctx, code)
       else
@@ -562,6 +576,38 @@ abstract class GenOzCode extends OzmaSubComponent {
           arguments:_*)
 
       ast.Apply(instance, List(message)) setPos tree.pos
+    }
+
+    private def genArrayOp(tree: Tree, ctx: Context, code: Int) = {
+      import scalaPrimitives._
+
+      val Apply(Select(arrayObj, _), args) = tree
+      val arrayValue = genExpression(arrayObj, ctx)
+      val arguments = args map (arg => genExpression(arg, ctx))
+
+      if (scalaPrimitives.isArrayGet(code)) {
+        // get an item of the array
+        if (settings.debug.value)
+          assert(args.length == 1,
+                 "Too many arguments for array get operation: " + tree)
+
+        val message = buildMessage(ast.Atom("get"), arguments)
+        ast.Apply(arrayValue, List(message))
+      }
+      else if (scalaPrimitives.isArraySet(code)) {
+        // set an item of the array
+        if (settings.debug.value)
+          assert(args.length == 2,
+                 "Too many arguments for array set operation: " + tree)
+
+        val message = ast.Tuple(ast.Atom("put"), arguments:_*)
+        ast.And(ast.Apply(arrayValue, List(message)), ast.UnitVal())
+      }
+      else {
+        // length of the array
+        val message = buildMessage(ast.Atom("length"), Nil)
+        ast.Apply(arrayValue, List(message))
+      }
     }
 
     private def genCoercion(tree: Apply, receiver: Tree, ctx: Context,

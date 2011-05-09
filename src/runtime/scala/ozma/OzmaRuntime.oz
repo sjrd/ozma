@@ -9,8 +9,11 @@ import
 export
    'InitObject':InitObject
    'NewObject':NewObject
+   'NewArrayObject':NewArrayObject
    'IsInstance':IsInstance
    'AsInstance':AsInstance
+   'ArrayClassOf':ArrayClassOf
+   'MultiArrayClassOf':MultiArrayClassOf
    'StringLiteral':StringLiteral
 
 define
@@ -19,6 +22,12 @@ define
 
    fun {NewObject Type Class Init}
       {New Type InitObject(Class Init)}
+   end
+
+   fun {NewArrayObject ComponentClass Dims Length}
+      ActualComponentClass = {MultiArrayClassOf ComponentClass Dims-1}
+   in
+      {ActualComponentClass newArrayOfThisClass(Length $)}
    end
 
    fun {IsInstance Obj Class}
@@ -34,6 +43,18 @@ define
              `class:java.lang.ClassCastException`
              '<init>'(_)}
          end
+      end
+   end
+
+   fun {ArrayClassOf ComponentClass}
+      {ComponentClass arrayOfThisClass($)}
+   end
+
+   fun {MultiArrayClassOf ComponentClass Dims}
+      if Dims == 0 then
+         ComponentClass
+      else
+         {MultiArrayClassOf {ArrayClassOf ComponentClass} Dims-1}
       end
    end
 
