@@ -170,8 +170,7 @@ abstract class GenMozart extends OzmaSubComponent {
         if (c == '.') res+1 else res
       }
 
-      val prefix = "../" * depth
-      val fileName = prefix + functorName.replace('.', '/') + ".ozf"
+      val fileName = "x-ozma://root/" + functorName.replace('.', '/') + ".ozf"
       val importAt = ImportAt(Atom(fileName))
       ImportItem(QuotedVar("functor:" + functorName), importItems, importAt)
     }

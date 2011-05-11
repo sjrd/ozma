@@ -7,12 +7,14 @@ import
    System
    Module
    Application
+   Resolve
 
 prepare
 
    OptSpecs = record(
                  %help(char:[&h &?] type:bool default:false)
-                 classpath(single char:"p" type:string default:"."))
+                 classpath(single char:"p" type:string default:"./")
+                 bootclasspath(single type:string))
 
    Usage =
    'Usage:\n'#
@@ -20,8 +22,6 @@ prepare
    '  ozma [--classpath PATH] OBJECT\n'
 
 define
-
-   ClassPath
 
    proc {ShowUsage ExitCode}
       {System.printInfo Usage}
@@ -43,9 +43,9 @@ define
 
    proc {RunMainObject MainObject Args}
       FileName = {ClassNameToFileName MainObject}
-      URL = ClassPath#'/'#FileName
-      StringURL = ClassPath#'/java/lang/String.ozf'
-      RuntimeURL = ClassPath#'/scala/ozma/OzmaRuntime.ozf'
+      URL = 'x-ozma://root/'#FileName
+      StringURL = 'x-ozma://root/java/lang/String.ozf'
+      RuntimeURL = 'x-ozma://root/scala/ozma/OzmaRuntime.ozf'
       [Mod StringMod RuntimeMod] = {Module.link [URL StringURL RuntimeURL]}
       ObjID = {VirtualString.toAtom 'module:'#MainObject#'$'}
       Obj OzmaArgs
@@ -79,6 +79,21 @@ define
       {System.showError {{Exception toString($)} toRawVS($)}}
    end
 
+   fun {MakeResolveHandlers ClassPath}
+      case ClassPath of nil then
+         nil
+      else
+         Path Tail
+      in
+         {String.token ClassPath &: Path Tail}
+         {MakeResolveHandler Path}|{MakeResolveHandlers Tail}
+      end
+   end
+
+   fun {MakeResolveHandler Path}
+      {Resolve.handler.prefix "x-ozma://root/" Path}
+   end
+
    try
       % Parse command-line arguments
       Args = {Application.getArgs OptSpecs}
@@ -87,8 +102,13 @@ define
       %   {ShowUsage 0}
       %end
 
-      % Fill global variables from command-line arguments
-      ClassPath = Args.classpath
+      % Set up classpath
+      local
+         BootHandlers = {MakeResolveHandlers Args.bootclasspath}
+         Handlers = {MakeResolveHandlers Args.classpath}
+      in
+         {Resolve.pickle.setHandlers {Append Handlers BootHandlers}}
+      end
 
       % Run the program
       case Args.1 of MainObject|AppArgs then

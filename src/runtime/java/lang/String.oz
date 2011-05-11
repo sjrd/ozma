@@ -2,11 +2,11 @@ functor
 
 import
    OzmaRuntime('NewObject':NewObject
-               'IsInstance':IsInstance) at '../../scala/ozma/OzmaRuntime.ozf'
+               'IsInstance':IsInstance) at 'x-ozma://root/scala/ozma/OzmaRuntime.ozf'
    `functor:java.lang.Object`('type:java.lang.Object':Object
-                              'class:java.lang.Object':ObjectClass) at 'Object.ozf'
+                              'class:java.lang.Object':ObjectClass) at 'x-ozma://root/java/lang/Object.ozf'
    `functor:java.lang.Class`('type:java.lang.Class':Class
-                             'class:java.lang.Class':ClassClass) at 'Class.ozf'
+                             'class:java.lang.Class':ClassClass) at 'x-ozma://root/java/lang/Class.ozf'
 
 export
    'type:java.lang.String':String

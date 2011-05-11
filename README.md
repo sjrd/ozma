@@ -76,13 +76,6 @@ To run a compiled object, use the program `ozma`.
 
     $ ozma package.subpack.ObjectName [ARGS...]
 
-In the current state of development, `ozma` cannot work with multiple paths in
-its classpath. Hence, you need to add symlinks to the `java/` and `scala/`
-directory of the runtime:
-
-    $ ln -s <ozma>/build/runtime/java java
-    $ ln -s <ozma>/build/runtime/scala scala
-
 Then, you can run the Hello world program:
 
     $ ozma helloword.HelloWorld

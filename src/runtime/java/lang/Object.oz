@@ -3,9 +3,9 @@ functor
 import
    OzmaRuntime('NewObject':NewObject
                'InitObject':InitObject
-               'StringLiteral':StringLiteral) at '../../scala/ozma/OzmaRuntime.ozf'
+               'StringLiteral':StringLiteral) at 'x-ozma://root/scala/ozma/OzmaRuntime.ozf'
    `functor:java.lang.Class`('type:java.lang.Class':Class
-                             'class:java.lang.Class':ClassClass) at 'Class.ozf'
+                             'class:java.lang.Class':ClassClass) at 'x-ozma://root/java/lang/Class.ozf'
 
 export
    'type:java.lang.Object':Object

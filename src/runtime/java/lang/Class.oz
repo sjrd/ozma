@@ -2,11 +2,11 @@ functor
 
 import
    OzmaRuntime('NewObject':NewObject
-               'StringLiteral':StringLiteral) at '../../scala/ozma/OzmaRuntime.ozf'
+               'StringLiteral':StringLiteral) at 'x-ozma://root/scala/ozma/OzmaRuntime.ozf'
    `functor:java.lang.Object`('type:java.lang.Object':Object
-                              'class:java.lang.Object':ObjectClass) at 'Object.ozf'
+                              'class:java.lang.Object':ObjectClass) at 'x-ozma://root/java/lang/Object.ozf'
    `functor:java.lang.Array`(makeNewArrayClass:MakeNewArrayClass
-                             newArrayObject:NewArrayObject) at 'Array.ozf'
+                             newArrayObject:NewArrayObject) at 'x-ozma://root/java/lang/Array.ozf'
 
 export
    'type:java.lang.Class':Class

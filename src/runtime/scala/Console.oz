@@ -2,11 +2,11 @@ functor
 
 import
    System
-   OzmaRuntime('NewObject':NewObject) at 'ozma/OzmaRuntime.ozf'
+   OzmaRuntime('NewObject':NewObject) at 'x-ozma://root/scala/ozma/OzmaRuntime.ozf'
    `functor:java.lang.Object`('type:java.lang.Object':Object
-                              'class:java.lang.Object':ObjectClass) at '../java/lang/Object.ozf'
+                              'class:java.lang.Object':ObjectClass) at 'x-ozma://root/java/lang/Object.ozf'
    `functor:java.lang.Class`('type:java.lang.Class':Class
-                             'class:java.lang.Class':ClassClass) at '../java/lang/Class.ozf'
+                             'class:java.lang.Class':ClassClass) at 'x-ozma://root/java/lang/Class.ozf'
 
 export
    'type:scala.Console$':`type:scala.Console$`

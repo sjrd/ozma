@@ -2,11 +2,11 @@ functor
 
 import
    `functor:java.lang.String`('type:java.lang.String':`type:java.lang.String`
-                              'class:java.lang.String':`class:java.lang.String`) at '../../java/lang/String.ozf'
-   `functor:java.lang.Number`('class:java.lang.Number':`class:java.lang.Number`) at '../../java/lang/Number.ozf'
-   `functor:java.lang.Character`('class:java.lang.Character':`class:java.lang.Character`) at '../../java/lang/Character.ozf'
+                              'class:java.lang.String':`class:java.lang.String`) at 'x-ozma://root/java/lang/String.ozf'
+   `functor:java.lang.Number`('class:java.lang.Number':`class:java.lang.Number`) at 'x-ozma://root/java/lang/Number.ozf'
+   `functor:java.lang.Character`('class:java.lang.Character':`class:java.lang.Character`) at 'x-ozma://root/java/lang/Character.ozf'
    `functor:java.lang.ClassCastException`('type:java.lang.ClassCastException':`type:java.lang.ClassCastException`
-                                          'class:java.lang.ClassCastException':`class:java.lang.ClassCastException`) at '../../java/lang/ClassCastException.ozf'
+                                          'class:java.lang.ClassCastException':`class:java.lang.ClassCastException`) at 'x-ozma://root/java/lang/ClassCastException.ozf'
 
 export
    'InitObject':InitObject

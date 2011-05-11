@@ -1,13 +1,13 @@
 functor
 
 import
-   OzmaRuntime('NewObject':NewObject) at '../../scala/ozma/OzmaRuntime.ozf'
+   OzmaRuntime('NewObject':NewObject) at 'x-ozma://root/scala/ozma/OzmaRuntime.ozf'
    `functor:java.lang.Object`('type:java.lang.Object':`type:java.lang.Object`
-                              'class:java.lang.Object':`class:java.lang.Object`) at 'Object.ozf'
+                              'class:java.lang.Object':`class:java.lang.Object`) at 'x-ozma://root/java/lang/Object.ozf'
    `functor:java.lang.Class`('type:java.lang.Class':`type:java.lang.Class`
-                             'class:java.lang.Class':`class:java.lang.Class`) at 'Class.ozf'
+                             'class:java.lang.Class':`class:java.lang.Class`) at 'x-ozma://root/java/lang/Class.ozf'
    `functor:java.lang.ArrayIndexOutOfBoundsException`('type:java.lang.ArrayIndexOutOfBoundsException':`type:java.lang.ArrayIndexOutOfBoundsException`
-                                                      'class:java.lang.ArrayIndexOutOfBoundsException':`class:java.lang.ArrayIndexOutOfBoundsException`) at 'ArrayIndexOutOfBoundsException.ozf'
+                                                      'class:java.lang.ArrayIndexOutOfBoundsException':`class:java.lang.ArrayIndexOutOfBoundsException`) at 'x-ozma://root/java/lang/ArrayIndexOutOfBoundsException.ozf'
 
 export
    MakeNewArrayClass

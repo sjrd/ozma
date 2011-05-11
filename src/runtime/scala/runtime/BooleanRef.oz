@@ -1,8 +1,8 @@
 functor
 
 import
-   ValueRef(makeValueRefClass) at 'ValueRef.ozf'
-   ModFunctor('module:java.lang.Boolean$':Module) at '../../java/lang/Boolean.ozf'
+   ValueRef(makeValueRefClass) at 'x-ozma://root/scala/runtime/ValueRef.ozf'
+   ModFunctor('module:java.lang.Boolean$':Module) at 'x-ozma://root/java/lang/Boolean.ozf'
 
 export
    'type:scala.runtime.BooleanRef':Type

@@ -2,11 +2,11 @@ functor
 
 import
    OzmaRuntime('NewObject':NewObject
-               'StringLiteral':StringLiteral) at '../ozma/OzmaRuntime.ozf'
+               'StringLiteral':StringLiteral) at 'x-ozma://root/scala/ozma/OzmaRuntime.ozf'
    `functor:java.lang.Object`('type:java.lang.Object':`type:java.lang.Object`
-                              'class:java.lang.Object':`class:java.lang.Object`) at '../../java/lang/Object.ozf'
+                              'class:java.lang.Object':`class:java.lang.Object`) at 'x-ozma://root/java/lang/Object.ozf'
    `functor:java.lang.Class`('type:java.lang.Class':`type:java.lang.Class`
-                             'class:java.lang.Class':`class:java.lang.Class`) at '../../java/lang/Class.ozf'
+                             'class:java.lang.Class':`class:java.lang.Class`) at 'x-ozma://root/java/lang/Class.ozf'
 
 export
    'type:scala.runtime.BoxedUnit':`type:scala.runtime.BoxedUnit`
