@@ -82,6 +82,7 @@ trait Members { self: OzCodes =>
     var sourceFile: String = _
 
     var recursive: Boolean = false
+    var hasReturn: Boolean = false
 
     /** local variables and method parameters */
     var locals: List[Local] = Nil

@@ -112,9 +112,16 @@ abstract class GenOzCode extends OzmaSubComponent {
 
         ctx1.method.code = if (m.native)
           nativeMethods.getBodyFor(m.symbol)
-        else if (!m.isAbstractMethod)
-          genExpression(rhs, ctx1)
-        else
+        else if (!m.isAbstractMethod) {
+          val base = genExpression(rhs, ctx1)
+          if (!m.hasReturn) base else {
+            ast.Try(base, ast.Catch(List(
+                ast.CaseClause(
+                    ast.Tuple(ast.Atom("return"), ast.Variable("R")),
+                    ast.Variable("R"))
+            )), ast.NoFinally())
+          }
+        } else
           null
 
         ctx1
@@ -210,7 +217,8 @@ abstract class GenOzCode extends OzmaSubComponent {
               genExpression(elsep, ctx))
 
         case Return(expr) =>
-          abort("Cannot encode a 'return' in Oz")
+          ctx.method.hasReturn = true
+          ast.Raise(ast.Tuple(ast.Atom("return"), genExpression(expr, ctx)))
 
         case t @ Try(_, _, _) =>
           genTry(t, ctx)
