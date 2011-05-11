@@ -45,6 +45,9 @@ trait Natives { self: OzCodes =>
       register(Long_unbox)
       register(Float_unbox)
       register(Double_unbox)
+
+      register(Console_print)
+      register(Console_println)
     }
 
     def getBodyFor(symbol: Symbol) = {
@@ -103,6 +106,8 @@ trait Natives { self: OzCodes =>
 
       def ::(left: Phrase) = Tuple(Atom("|"), left, phrase)
 
+      def ~>(right: Phrase) = BinaryOpApply(".", phrase, right)
+
       def toRawVS = new MethodWrapper(phrase, "toRawVS")
       def toRawString = new MethodWrapper(phrase, "toRawString")
 
@@ -122,6 +127,13 @@ trait Natives { self: OzCodes =>
     def StringToInt = BuiltinFunction(Variable("StringToInt"))
     def StringToFloat = BuiltinFunction(Variable("StringToFloat"))
     def StringLiteral = BuiltinFunction(Variable("StringLiteral"))
+
+    // System module
+
+    object System {
+      def printInfo = BuiltinFunction(Variable("System") ~> 'printInfo)
+      def showInfo = BuiltinFunction(Variable("System") ~> 'showInfo)
+    }
 
     // New constructor call
 
@@ -259,4 +271,18 @@ trait Natives { self: OzCodes =>
   object Long_unbox extends Primitive_unbox("scala.Long", "longValue")
   object Float_unbox extends Primitive_unbox("scala.Float", "floatValue")
   object Double_unbox extends Primitive_unbox("scala.Double", "doubleValue")
+
+  object Console_print extends NativeMethod("scala.Console.print",
+      "scala.Unit", "`s`" -> "java.lang.String") {
+    def body = {
+      And(System.printInfo(QuotedVar("s").toRawVS()), unit)
+    }
+  }
+
+  object Console_println extends NativeMethod("scala.Console.println",
+      "scala.Unit", "`s`" -> "java.lang.String") {
+    def body = {
+      And(System.showInfo(QuotedVar("s").toRawVS()), unit)
+    }
+  }
 }
