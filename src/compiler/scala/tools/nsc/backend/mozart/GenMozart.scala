@@ -127,7 +127,10 @@ abstract class GenMozart extends OzmaSubComponent {
         "AnyEqEq", "AnyRefEqEq",
         "BinNot", "BinAnd", "BinOr", "BinXor", "LSL", "LSR", "ASR") toSet
 
+    private val isOzSystemModule = List("System").toSet
+
     def makeImports(functorName: String, definitions: Node) = {
+      val systemImports = new HashSet[String]
       val importsByGroup = new HashMap[String, Set[String]]
 
       def groupFor(groupName: String) =
@@ -149,13 +152,18 @@ abstract class GenMozart extends OzmaSubComponent {
           importClass(varName)
         case Variable(varName) if (isOzmaRuntimeBuiltin(varName)) =>
           builtinGroup += varName
+        case Variable(varName) if (isOzSystemModule(varName)) =>
+          systemImports += varName
         case _ => ()
       }
+
+      val systemImportDecls = for (varName <- systemImports.toList)
+        yield ImportItem(Variable(varName), Nil, NoImportAt())
 
       val importDecls = for ((name, varNames) <- importsByGroup)
         yield makeImportDecl(functorName, name, varNames)
 
-      ast.Import(importDecls.toList)
+      ast.Import(systemImportDecls ::: importDecls.toList)
     }
 
     def makeImportDecl(enclFunctorName: String, functorName: String,

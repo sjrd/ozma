@@ -137,6 +137,7 @@ trait ASTs { self: OzCodes =>
     trait FeatureNoVar extends Feature with EscapedFeature
     trait EscapableVariable extends Phrase with EscapedFeature with MethodName
     trait FunctorDescriptor extends Node
+    trait OptImportAt extends Node
     trait ClassDescriptor extends Node
 
     trait RecordLabel extends Phrase {
@@ -502,7 +503,7 @@ trait ASTs { self: OzCodes =>
 
     case class ImportItem(functor: Variable,
         aliasedFeatures: List[AliasedFeature],
-        importAt: ImportAt) extends Node {
+        importAt: OptImportAt) extends Node {
       override val hasCoord = false
 
       def syntax(indent: String) = {
@@ -538,12 +539,18 @@ trait ASTs { self: OzCodes =>
       }
     }
 
-    case class ImportAt(url: Atom) extends Node {
+    case class ImportAt(url: Atom) extends OptImportAt {
       override val hasCoord = false
 
       def syntax(indent: String) = {
         " at " + url.syntax(indent + "    ")
       }
+    }
+
+    case class NoImportAt() extends OptImportAt {
+      override val hasCoord = false
+
+      def syntax(indent: String) = ""
     }
 
     case class Export(exportItems: List[ExportItem]) extends FunctorDescriptor {
