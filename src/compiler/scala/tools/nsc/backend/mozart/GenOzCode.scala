@@ -421,7 +421,9 @@ abstract class GenOzCode extends OzmaSubComponent {
           val symVar = varForSymbol(sym) setPos lhs.pos
 
           val assignment =
-            if (qualifier.isInstanceOf[This] || symVar.isInstanceOf[ast.Variable])
+            if (sym.hasAnnotation(SingleAssignmentClass))
+              ast.Eq(genExpression(lhs, ctx), genExpression(rhs, ctx))
+            else if (qualifier.isInstanceOf[This] || symVar.isInstanceOf[ast.Variable])
               ast.ColonEquals(symVar, genExpression(rhs, ctx))
             else {
               val instance = genExpression(qualifier, ctx)
@@ -831,8 +833,13 @@ abstract class GenOzCode extends OzmaSubComponent {
       else {
         val attrs = ast.Attr(clazz.fields.map { field =>
           val name = varForSymbol(field.symbol) setPos field.symbol.pos
-          val initValue = genZeroOf(field.symbol)
-          ast.InitAttrFeat(name, initValue)
+
+          if (field.symbol.hasAnnotation(SingleAssignmentClass))
+            name
+          else {
+            val initValue = genZeroOf(field.symbol)
+            ast.InitAttrFeat(name, initValue)
+          }
         })
 
         List(attrs)

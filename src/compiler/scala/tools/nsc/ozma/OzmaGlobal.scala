@@ -51,6 +51,13 @@ trait OzmaGlobal extends Global with OzmaTrees {
     val runsRightAfter = Some("uncurry") // "tailcalls" in Global
   } with SpecializeTypes
 
+  // phaseName = "lambdalift"
+  object ozmaLambdaLift extends {
+    val global: OzmaGlobal.this.type = OzmaGlobal.this
+    val runsAfter = List[String]("lazyvals")
+    val runsRightAfter = None
+  } with OzmaLambdaLift
+
   // phaseName = "ozcode"
   object ozcode extends {
     val global: OzmaGlobal.this.type = OzmaGlobal.this
@@ -98,7 +105,7 @@ trait OzmaGlobal extends Global with OzmaTrees {
       ozmaExplicitOuter       -> "this refs to outer pointers, translate patterns",
       erasure                 -> "erase types, add interfaces for traits",
       lazyVals                -> "allocate bitmaps, translate lazy vals into lazified defs",
-      lambdaLift              -> "move nested functions to top level",
+      ozmaLambdaLift          -> "move nested functions to top level",
       constructors            -> "move field definitions into constructors",
       mixer                   -> "mixin composition",
       cleanup                 -> "platform-specific cleanups, generate reflective calls",
