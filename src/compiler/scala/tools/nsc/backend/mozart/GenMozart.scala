@@ -229,7 +229,7 @@ abstract class GenMozart extends OzmaSubComponent {
       import java.io._
 
       val compiler = System.getenv("OZMA_HOME") + "/bin/ozastc"
-      val commandLine = Array(compiler, "-c", astfile.name)
+      val commandLine = Array(compiler, "-c", "--nowarnunused", astfile.name)
       val workingDir = new File(astfile.container.path)
       val process = Runtime.getRuntime.exec(commandLine, null, workingDir)
 
