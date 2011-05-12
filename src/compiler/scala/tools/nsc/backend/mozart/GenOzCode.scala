@@ -179,7 +179,10 @@ abstract class GenOzCode extends OzmaSubComponent {
 
       (tree match {
         case LabelDef(name, params, rhs) =>
-          abort("Labels should not reach the GenOzCode back-end")
+          if (settings.debug.value)
+            log("Encountered a label def: " + tree)
+          val tag = ast.Eq(ast.Wildcard(), ast.Atom("LabelDef("+name+")"))
+          ast.And(tag, genExpression(rhs, ctx))
 
         case ValDef(_, nme.THIS, _, _) =>
           if (settings.debug.value)
@@ -308,6 +311,8 @@ abstract class GenOzCode extends OzmaSubComponent {
           val sym = fun.symbol
 
           if (sym.isLabel) {  // jump to a label
+            Console.println("Jump found at "+tree.pos)
+            Console.println(app)
             abort("Cannot jump to a label in Oz")
           } else if (isPrimitive(sym)) {
             // primitive operation
