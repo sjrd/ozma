@@ -5,6 +5,12 @@ package object ozma {
 
   @native def thread[A](stat: => A): A = sys.error("stub")
 
+  @native def waitBound(value: Any): Unit = sys.error("stub")
+  @native def waitNeeded(value: Any): Unit = sys.error("stub")
+
+  @native def byNeed[A](value: => A): A = sys.error("stub")
+  @native def byNeedFuture[A](value: => A): A = sys.error("stub")
+
   def whileLoop[U](cond: => Boolean)(body: => U) {
     if (cond) {
       body

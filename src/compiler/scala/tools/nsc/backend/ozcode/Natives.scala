@@ -30,6 +30,10 @@ trait Natives { self: OzCodes =>
 
       register(ScalaOzma_newUnbound)
       register(ScalaOzma_thread)
+      register(ScalaOzma_waitBound)
+      register(ScalaOzma_waitNeeded)
+      register(ScalaOzma_byNeed)
+      register(ScalaOzma_byNeedFuture)
 
       register(Integer_toString)
       register(Float_toString)
@@ -192,6 +196,46 @@ trait Natives { self: OzCodes =>
     def body = {
       val stat = QuotedVar("stat")
       Thread(stat.doApply())
+    }
+  }
+
+  object ScalaOzma_waitBound extends NativeMethod(
+      "scala.ozma.package.waitBound", "scala.Unit",
+      "`value`" -> "java.lang.Object") {
+    def body = {
+      And(
+          Wait(QuotedVar("value")),
+          unit
+      )
+    }
+  }
+
+  object ScalaOzma_waitNeeded extends NativeMethod(
+      "scala.ozma.package.waitNeeded", "scala.Unit",
+      "`value`" -> "java.lang.Object") {
+    def body = {
+      And(
+          WaitNeeded(QuotedVar("value")),
+          unit
+      )
+    }
+  }
+
+  object ScalaOzma_byNeed extends NativeMethod(
+      "scala.ozma.package.byNeed", "java.lang.Object",
+      "`value`" -> "scala.Function0") {
+    def body = {
+      val value = QuotedVar("value")
+      ByNeed(Fun($, Nil, value.doApply()))
+    }
+  }
+
+  object ScalaOzma_byNeedFuture extends NativeMethod(
+      "scala.ozma.package.byNeedFuture", "java.lang.Object",
+      "`value`" -> "scala.Function0") {
+    def body = {
+      val value = QuotedVar("value")
+      ByNeedFuture(Fun($, Nil, value.doApply()))
     }
   }
 
