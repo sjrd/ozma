@@ -29,6 +29,6 @@ final class Boolean extends AnyVal {
 
 object Boolean extends AnyValCompanion {
   override def toString = "object scala.Boolean"
-  def box(x: Boolean): jl.Boolean = jl.Boolean.valueOf(x)
+  @native def box(x: Boolean): jl.Boolean = jl.Boolean.valueOf(x)
   @native def unbox(x: jl.Object): Boolean = x.asInstanceOf[jl.Boolean].booleanValue()
 }

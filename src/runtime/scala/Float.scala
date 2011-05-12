@@ -138,7 +138,7 @@ object Float extends AnyValCompanion {
   /** The largest finite positive number representable as a Float. */
   final val MaxValue = jl.Float.MAX_VALUE
 
-  def box(x: Float): jl.Float = jl.Float.valueOf(x)
+  @native def box(x: Float): jl.Float = jl.Float.valueOf(x)
   @native def unbox(x: jl.Object): Float = x.asInstanceOf[jl.Float].floatValue()
   override def toString = "object scala.Float"
 }

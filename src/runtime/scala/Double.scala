@@ -138,7 +138,7 @@ object Double extends AnyValCompanion {
   /** The largest finite positive number representable as a Double. */
   final val MaxValue = jl.Double.MAX_VALUE
 
-  def box(x: Double): jl.Double = jl.Double.valueOf(x)
+  @native def box(x: Double): jl.Double = jl.Double.valueOf(x)
   @native def unbox(x: jl.Object): Double = x.asInstanceOf[jl.Double].doubleValue()
   override def toString = "object scala.Double"
 }

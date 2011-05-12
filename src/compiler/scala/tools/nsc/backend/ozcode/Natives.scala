@@ -37,6 +37,15 @@ trait Natives { self: OzCodes =>
       register(Integer_parseInt)
       register(Float_parseFloat)
 
+      register(Boolean_box)
+      register(Char_box)
+      register(Byte_box)
+      register(Short_box)
+      register(Int_box)
+      register(Long_box)
+      register(Float_box)
+      register(Double_box)
+
       register(Boolean_unbox)
       register(Char_unbox)
       register(Byte_unbox)
@@ -82,6 +91,7 @@ trait Natives { self: OzCodes =>
     def nil = ast.Atom("nil")
 
     def __ = ast.Wildcard()
+    def $ = ast.Dollar()
 
     // Method
 
@@ -115,6 +125,8 @@ trait Natives { self: OzCodes =>
     }
 
     implicit def wrapPhrase(phrase: Phrase) = new PhraseWrapper(phrase)
+    implicit def wrapSymbol(symbol: scala.Symbol) =
+      new PhraseWrapper(symbol2atom(symbol))
 
     // Builtin functions
 
@@ -122,6 +134,11 @@ trait Natives { self: OzCodes =>
       def apply(params: Phrase*) = Apply(fun, params.toList)
     }
 
+    def Wait = BuiltinFunction(Variable("Wait"))
+    def WaitNeeded = BuiltinFunction(Variable("WaitNeeded"))
+    def ByNeed = BuiltinFunction(Variable("ByNeed"))
+    def ByNeedFuture = BuiltinFunction(Variable("ByNeedFuture"))
+    def IsDet = BuiltinFunction(Variable("IsDet"))
     def IntToString = BuiltinFunction(Variable("IntToString"))
     def FloatToString = BuiltinFunction(Variable("FloatToString"))
     def StringToInt = BuiltinFunction(Variable("StringToInt"))
@@ -131,8 +148,20 @@ trait Natives { self: OzCodes =>
     // System module
 
     object System {
-      def printInfo = BuiltinFunction(Variable("System") ~> 'printInfo)
-      def showInfo = BuiltinFunction(Variable("System") ~> 'showInfo)
+      @inline private[this] def System = Variable("System")
+
+      def printInfo = BuiltinFunction(System ~> 'printInfo)
+      def showInfo = BuiltinFunction(System ~> 'showInfo)
+    }
+
+    // Value module
+
+    object Value {
+      @inline private[this] def Value = Variable("Value")
+
+      def waitQuiet = BuiltinFunction(Value ~> 'waitQuiet)
+      def status = BuiltinFunction(Value ~> 'status)
+      def makeNeeded = BuiltinFunction(Value ~> 'makeNeeded)
     }
 
     // New constructor call
@@ -247,6 +276,52 @@ trait Natives { self: OzCodes =>
     def ErrorIdentifier = Atom("stringNoFloat")
   }
 
+  abstract class Primitive_box(primitiveType: String, boxedType: String)
+      extends NativeMethod(primitiveType+".box", boxedType,
+          "`x`" -> primitiveType) {
+
+    def body = {
+      def BoxedType = QuotedVar("module:"+boxedType+"$")
+
+      implicit def wrapForValueOf(phrase: Phrase) = new {
+        def valueOf = new MethodWrapper(phrase, "valueOf",
+            primitiveType, boxedType)
+      }
+
+      def x = QuotedVar("x")
+      def R = Variable("R")
+
+      Case(Value.status(x), List(
+          'det(__) ==> BoxedType.valueOf(x),
+          'failed ==> x
+      ), // else
+          LocalDef(
+              R,
+          And(// in
+              Thread(And(
+                  Try(Value.waitQuiet(x), Catch(List(
+                      __ ==> Skip()
+                  )), NoFinally()),
+                  Value.makeNeeded(R)
+              )),
+              R === ByNeedFuture(Fun($, Nil,
+                  And(Wait(x), BoxedType.valueOf(x))
+              )),
+              R
+          ))
+      )
+    }
+  }
+
+  object Boolean_box extends Primitive_box("scala.Boolean", "java.lang.Boolean")
+  object Char_box extends Primitive_box("scala.Char", "java.lang.Character")
+  object Byte_box extends Primitive_box("scala.Byte", "java.lang.Byte")
+  object Short_box extends Primitive_box("scala.Short", "java.lang.Short")
+  object Int_box extends Primitive_box("scala.Int", "java.lang.Integer")
+  object Long_box extends Primitive_box("scala.Long", "java.lang.Long")
+  object Float_box extends Primitive_box("scala.Float", "java.lang.Float")
+  object Double_box extends Primitive_box("scala.Double", "java.lang.Double")
+
   abstract class Primitive_unbox(primitiveType: String,
       theValueMethod: String)
       extends NativeMethod(primitiveType+".unbox", primitiveType,
@@ -258,8 +333,25 @@ trait Natives { self: OzCodes =>
       }
 
       def x = QuotedVar("x")
+      def R = Variable("R")
 
-      Thread(x.theValue())
+      Case(Value.status(x), List(
+          'det(__) ==> x.theValue(),
+          'failed ==> x
+      ), // else
+          LocalDef(
+              R,
+          And(// in
+              Thread(And(
+                  Try(Value.waitQuiet(x), Catch(List(
+                      __ ==> Skip()
+                  )), NoFinally()),
+                  Value.makeNeeded(R)
+              )),
+              R === ByNeedFuture(Fun($, Nil, x.theValue())),
+              R
+          ))
+      )
     }
   }
 

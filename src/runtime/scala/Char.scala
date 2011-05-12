@@ -148,7 +148,7 @@ object Char extends AnyValCompanion {
   final val MinValue = jl.Character.MIN_VALUE
   final val MaxValue = jl.Character.MAX_VALUE
 
-  def box(x: Char): jl.Character = jl.Character.valueOf(x)
+  @native def box(x: Char): jl.Character = jl.Character.valueOf(x)
   @native def unbox(x: jl.Object): Char = x.asInstanceOf[jl.Character].charValue()
   override def toString = "object scala.Char"
 }
