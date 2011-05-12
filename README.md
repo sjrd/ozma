@@ -18,7 +18,7 @@ Usage
 In order to build the Ozma compiler and library, you need the following software
 installed on your computer:
 
-*   Scala >= 2.9.0 (currently in RC)
+*   Scala >= 2.9.0
 *   Mozart >= 1.4.0
 *   Ant >= 1.6
 
