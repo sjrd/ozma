@@ -44,12 +44,12 @@ trait OzmaGlobal extends Global with OzmaTrees {
     val runsRightAfter = None
   } with ExplicitOuter
 
-  /*// phaseName = "specialize"
+  // phaseName = "specialize"
   object ozmaSpecializeTypes extends {
     val global: OzmaGlobal.this.type = OzmaGlobal.this
     val runsAfter = List[String]("")
     val runsRightAfter = Some("uncurry") // "tailcalls" in Global
-  } with SpecializeTypes*/
+  } with SpecializeTypes
 
   // phaseName = "lambdalift"
   object ozmaLambdaLift extends {
@@ -101,7 +101,7 @@ trait OzmaGlobal extends Global with OzmaTrees {
       pickler                 -> "serialize symbol tables",
       refchecks               -> "reference/override checking, translate nested objects",
       uncurry                 -> "uncurry, translate function values to anonymous classes",
-      //ozmaSpecializeTypes     -> "@specialized-driven class and method specialization",
+      ozmaSpecializeTypes     -> "@specialized-driven class and method specialization",
       ozmaExplicitOuter       -> "this refs to outer pointers, translate patterns",
       erasure                 -> "erase types, add interfaces for traits",
       lazyVals                -> "allocate bitmaps, translate lazy vals into lazified defs",
