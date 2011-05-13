@@ -212,8 +212,10 @@ abstract class GenMozart extends OzmaSubComponent {
 
     def writeFunctorAST(functor: Functor) {
       val outfile = getFileFor(functor, ".ast.oz")
+      val outstream = new OutputStreamWriter(outfile.bufferedOutput, "US-ASCII")
       val ast = functor.makeAST()
-      writeSyntax(ast, outfile)
+      ast.save(outstream)
+      outstream.close()
       compileASTToOZF(outfile)
     }
 

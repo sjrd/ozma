@@ -8,6 +8,7 @@ package scala.tools.nsc
 package backend
 package ozcode
 
+import java.io.OutputStreamWriter
 import util.{Position, NoPosition}
 
 
@@ -56,7 +57,7 @@ trait ASTs { self: OzCodes =>
 
     val hasCoord = true
 
-    def makeAST(): ast.Phrase = {
+    def makeAST(): OzAST = {
       val label = ast.Atom(astLabel)
       val arguments = makeASTArguments()
 
@@ -68,12 +69,12 @@ trait ASTs { self: OzCodes =>
       ast.Tuple(label, actualArguments:_*)
     }
 
-    protected def makeASTArguments(): List[ast.Phrase] =
+    protected def makeASTArguments(): List[OzAST] =
       getASTArguments map { elem => makeASTArgument(elem) }
 
     protected def getASTArguments(): List[Any] = productIterator.toList
 
-    protected def makeASTArgument(element: Any): ast.Phrase = element match {
+    protected def makeASTArgument(element: Any): OzAST = element match {
       case node:Node => node.makeAST()
 
       case str:String => ast.Atom(str)
@@ -112,7 +113,11 @@ trait ASTs { self: OzCodes =>
     }
   }
 
-  private case class ASTNode(node: ast.Phrase)
+  private case class ASTNode(node: OzAST)
+
+  trait OzAST extends ast.Phrase {
+    def save(output: OutputStreamWriter): Unit
+  }
 
   object ast {
     var _nextID = 0
@@ -128,7 +133,6 @@ trait ASTs { self: OzCodes =>
     trait OptFinally extends Node
     trait Phrase extends Node with RecordArgument with Pattern with OptElse
                               with OptFinally
-    trait Constant extends Phrase
     trait AttrOrFeat extends Node
     trait MethodName extends Node
     trait MethodArgName extends Node
@@ -139,6 +143,12 @@ trait ASTs { self: OzCodes =>
     trait FunctorDescriptor extends Node
     trait OptImportAt extends Node
     trait ClassDescriptor extends Node
+
+    trait Constant extends Phrase with OzAST {
+      def save(output: OutputStreamWriter) {
+        output.write(syntax())
+      }
+    }
 
     trait RecordLabel extends Phrase {
       def apply(features: RecordArgument*) =
@@ -178,9 +188,9 @@ trait ASTs { self: OzCodes =>
 
       override val hasCoord = false
 
-      override def makeAST(): ast.Phrase = makeAST(phrases.toList)
+      override def makeAST(): OzAST = makeAST(phrases.toList)
 
-      def makeAST(list: List[Phrase]): Phrase = (list: @unchecked) match {
+      def makeAST(list: List[Phrase]): OzAST = (list: @unchecked) match {
         case phrase :: Nil => phrase.makeAST()
         case head :: tail =>
           Tuple(ast.Atom(astLabel), head.makeAST(), makeAST(tail))
@@ -343,7 +353,7 @@ trait ASTs { self: OzCodes =>
     }
 
     case class Record(val label: RecordLabel,
-        val features: RecordArgument*) extends Phrase {
+        val features: RecordArgument*) extends Phrase with OzAST {
 
       setPos(label.pos)
 
@@ -368,6 +378,28 @@ trait ASTs { self: OzCodes =>
           } + ")"
         }
       }
+
+      def save(output: OutputStreamWriter) {
+        output.write(label.syntax())
+
+        if (!features.isEmpty) {
+          output.write("(")
+          for (feature <- features) {
+            feature match {
+              case Colon(feat, phrase:OzAST) =>
+                output.write(feat.syntax())
+                output.write(":")
+                phrase.save(output)
+
+              case phrase:OzAST =>
+                phrase.save(output)
+            }
+
+            output.write(" ")
+          }
+          output.write(")")
+        }
+      }
     }
 
     // The 'colon' record argument
@@ -385,7 +417,7 @@ trait ASTs { self: OzCodes =>
         Record(label, features:_*)
     }
 
-    case class ListLiteral(val items: Phrase*) extends Phrase {
+    case class ListLiteral(val items: Phrase*) extends Phrase with OzAST {
       def syntax(indent: String) = items.toList match {
         case Nil => "nil"
 
@@ -398,6 +430,22 @@ trait ASTs { self: OzCodes =>
           otherItems.foldLeft(firstLine) {
             _ + "\n" + subIndent + _.syntax(subIndent)
           } + "]"
+        }
+      }
+
+      def save(output: OutputStreamWriter) {
+        if (items.isEmpty)
+          output.write("nil")
+        else {
+          output.write("[")
+          for (item <- items) {
+            item match {
+              case phrase:OzAST =>
+                phrase.save(output)
+                output.write(" ")
+            }
+          }
+          output.write("]")
         }
       }
 
