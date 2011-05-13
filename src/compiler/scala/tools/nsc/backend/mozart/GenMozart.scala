@@ -201,7 +201,8 @@ abstract class GenMozart extends OzmaSubComponent {
     /////////////////// Write to files ///////////////////////
 
     def writeFunctor(functor: Functor) {
-      writeFunctorCode(functor)
+      if (settings.verbose.value)
+        writeFunctorCode(functor)
       writeFunctorAST(functor)
     }
 
