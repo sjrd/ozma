@@ -63,8 +63,6 @@ PROPERTIES
   <path id="build.classpath">
     <pathelement location="${scala-library.jar}"/>
     <pathelement location="${scala-compiler.jar}"/>
-    <pathelement location="${build.library.dir}"/>
-    <pathelement location="${build.compiler.dir}"/>
   </path>
 
   <!-- if ANT_OPTS is already set by the environment, it will be unaltered,
@@ -111,7 +109,7 @@ ACTUAL TASKS
     </scalac>
   </target>
 
-  <target name="build.compiler" depends="init">
+  <target name="build.compiler" depends="init,build.library">
     <mkdir dir="${build.compiler.dir}"/>
     <scalac srcdir="${src.dir}/compiler" destdir="${build.compiler.dir}"
       classpathref="build.classpath"
@@ -130,7 +128,7 @@ ACTUAL TASKS
     </apply>
   </target>
 
-  <target name="build.runtime" depends="build.library,build.compiler,build.ozastc">
+  <target name="build.runtime" depends="build.compiler,build.ozastc">
     <!-- ozc does not like when its destination dir does not exist -->
     <mkdir dir="${build.runtime.dir}/java/lang"/>
     <mkdir dir="${build.runtime.dir}/java/io"/>
