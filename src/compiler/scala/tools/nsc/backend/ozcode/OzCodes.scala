@@ -160,4 +160,16 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
 
   private def rotateLeft(value: Int, shift: Int) =
     (value << shift) | (value >>> (32-shift))
+
+  /** A phase which works on ozcode */
+  abstract class OzCodePhase(prev: Phase) extends global.GlobalPhase(prev) {
+    override def erasedTypes = true
+
+    override def apply(unit: global.CompilationUnit): Unit = {
+      val OzCodeClasses(classes) = unit.body
+      classes foreach apply
+    }
+
+    def apply(clazz: global.ozcodes.OzClass): Unit
+  }
 }

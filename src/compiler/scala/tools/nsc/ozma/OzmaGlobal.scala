@@ -8,6 +8,7 @@ import transform.{ ExplicitOuter, SpecializeTypes }
 import backend.MozartPlatform
 import backend.mozart._
 import backend.ozcode._
+import backend.ozcode.opt._
 
 trait OzmaGlobal extends Global with OzmaTrees {
   /** Platform */
@@ -65,6 +66,13 @@ trait OzmaGlobal extends Global with OzmaTrees {
     val runsRightAfter = None
   } with GenOzCode
 
+  // phaseName = "tailcalls"
+  object tailcalls extends {
+    val global: OzmaGlobal.this.type = OzmaGlobal.this
+    val runsAfter = List[String]("ozcode")
+    val runsRightAfter = None
+  } with TailCalls
+
   // phaseName = "terminal"
   object ozmaTerminal extends {
     val global: OzmaGlobal.this.type = OzmaGlobal.this
@@ -110,6 +118,7 @@ trait OzmaGlobal extends Global with OzmaTrees {
       mixer                   -> "mixin composition",
       cleanup                 -> "platform-specific cleanups, generate reflective calls",
       ozcode                  -> "generate Oz code from AST",
+      tailcalls               -> "rewrite tail calls",
       ozmaTerminal            -> "The last phase in the compiler chain"
     )
 

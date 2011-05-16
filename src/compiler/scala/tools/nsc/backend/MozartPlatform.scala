@@ -17,7 +17,7 @@ trait MozartPlatform extends JavaPlatform {
 
   object genMozart extends {
     val global: MozartPlatform.this.global.type = MozartPlatform.this.global
-    val runsAfter = List[String]("ozcode")
+    val runsAfter = List[String]("ozcode", "tailcalls")
     val runsRightAfter = None
   } with GenMozart
 
