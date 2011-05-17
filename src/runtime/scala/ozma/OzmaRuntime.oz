@@ -39,6 +39,26 @@ define
    end
 
    fun {AsInstance Obj Class}
+      case {Value.status Obj}
+      of det(_) then
+         {ActualAsInstance Obj Class}
+      [] failed then
+         Obj
+      else
+         local
+            R
+         in
+            thread
+               try {Value.waitQuiet Obj} catch _ then skip end
+               {Value.makeNeeded R}
+            end
+            R = {ByNeedFuture fun {$} {ActualAsInstance Obj Class} end}
+            R
+         end
+      end
+   end
+
+   fun {ActualAsInstance Obj Class}
       if (Obj == null) orelse {IsInstance Obj Class} then
          Obj
       else
