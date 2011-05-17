@@ -113,7 +113,11 @@ abstract class GenMozart extends OzmaSubComponent {
             varForSymbol(local.sym).asInstanceOf[
               ast.MethodArgName] setPos local.sym.pos, None)
       }
-      val args = args0 ++ List(ast.MethodArg(None, ast.Dollar(), None))
+      val resultParam = method.resultParam match {
+        case Some(name) => ast.Variable(name)
+        case None => ast.Dollar()
+      }
+      val args = args0 ++ List(ast.MethodArg(None, resultParam, None))
       val body = method.code.asInstanceOf[ast.Phrase]
 
       val locals = method.locals filter {

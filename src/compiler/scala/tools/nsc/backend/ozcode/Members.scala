@@ -75,7 +75,7 @@ trait Members { self: OzCodes =>
    * Represents a method in OzCode.
    */
   class OzMethod(val symbol: Symbol) extends OzMember {
-    var code: Node = null
+    var code: ast.Phrase = null
     var native = false
 
     /** The list of exception handlers, ordered from innermost to outermost. */
@@ -90,11 +90,15 @@ trait Members { self: OzCodes =>
     /** method parameters */
     var params: List[Local] = Nil
 
+    var resultParam: Option[String] = None
+
     def hasCode = code != null
-    def setCode(code: Node): OzMethod = {
+    def setCode(code: ast.Phrase): OzMethod = {
       this.code = code
       this
     }
+
+    def hasExpressionBody = hasCode && resultParam.isEmpty
 
     def addLocal(l: Local): Local =
       locals find (_ == l) getOrElse {
