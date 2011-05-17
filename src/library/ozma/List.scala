@@ -11,6 +11,7 @@
 package ozma
 
 import annotation.tailrec
+import scala.ozma.tailcall
 
 sealed abstract class List[+A] {
   def isEmpty: Boolean
@@ -120,6 +121,6 @@ case object Nil extends List[Nothing] {
 
 /** A non empty list characterized by a head and a tail.
  */
-final case class ::[B](val head: B, val tail: List[B]) extends List[B] {
+final case class ::[B](@tailcall val head: B, @tailcall val tail: List[B]) extends List[B] {
   override def isEmpty: Boolean = false
 }
