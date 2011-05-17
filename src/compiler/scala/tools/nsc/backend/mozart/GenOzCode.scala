@@ -72,6 +72,10 @@ abstract class GenOzCode extends OzmaSubComponent {
     def hasSingleAssignSemantics(sym: Symbol) =
       !sym.isVariable || sym.hasAnnotation(SingleAssignmentClass)
 
+    lazy val ListClass = definitions.getClass("ozma.List")
+    lazy val ConsClass = definitions.getClass("ozma.$colon$colon")
+    lazy val List_cons = definitions.getMember(ListClass, "$colon$colon")
+
     /////////////////// Code generation ///////////////////////
 
     def gen(tree: Tree, ctx: Context): Context = tree match {
@@ -318,6 +322,15 @@ abstract class GenOzCode extends OzmaSubComponent {
           } else if (isPrimitive(sym)) {
             // primitive operation
             genPrimitiveOp(app, ctx)
+          } else if (sym == List_cons) {
+            // inline head :: tail as ::(head, tail) to help 'tailcalls' phase
+            val List(head) = args
+            val Select(tail, _) = fun
+            val arguments = List(head, tail).map(arg => genExpression(arg, ctx))
+            val ctor = ConsClass.primaryConstructor
+            genNew(ConsClass, arguments,
+                atomForSymbol(ctor) setPos fun.pos).setTailCallInfo(
+                      computeTailCallInfo(ctor))
           } else {  // normal method call
             if (settings.debug.value)
               log("Gen CALL_METHOD with sym: " + sym + " isStaticSymbol: " + sym.isStaticMember);
