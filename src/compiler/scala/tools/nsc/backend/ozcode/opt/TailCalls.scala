@@ -103,6 +103,8 @@ abstract class TailCalls extends OzmaSubComponent {
       val remaining = tailCallIndices.dropWhile { index =>
         indexedArgs(index) match {
           case _:GenericApply => false
+          case And(stats @ _*) if (stats.last.isInstanceOf[GenericApply]) =>
+            false
           case _ => true
         }
       }
