@@ -29,11 +29,11 @@ abstract class TailCalls extends OzmaSubComponent {
     def apply(method: OzMethod) {
       if (hasTailCall(method.code, method.hasExpressionBody)) {
         if (method.hasExpressionBody) {
-          method.setCode(Eq(Variable("Result"), method.code))
           method.resultParam = Some("Result")
-        }
-
-        method.setCode(processTailCalls(method.code))
+          method.setCode(processTailCalls(method.code,
+              Some(Variable("Result"))))
+        } else
+          method.setCode(processTailCalls(method.code, None))
       }
     }
 
@@ -45,7 +45,8 @@ abstract class TailCalls extends OzmaSubComponent {
       }
 
       def unapply(apply: Apply) = apply match {
-        case Apply(Variable("NewObject"), List(typeVar, classVar, message)) =>
+        case Apply(Variable("NewObject"),
+            List(typeVar:Variable, classVar:Variable, message)) =>
           Some((typeVar, classVar, message))
         case _ => None
       }
@@ -110,8 +111,101 @@ abstract class TailCalls extends OzmaSubComponent {
 
     // Process tail calls
 
-    def processTailCalls(statement: Phrase) = {
-      statement
+    def processTailCalls(phrase: Phrase, result: Option[Phrase]): Phrase = {
+      lazy val isExpression = !result.isEmpty
+
+      phrase match {
+        // Apply's
+
+        case apply @ ObjApply(cls, Tuple(label, args @ _*)) =>
+          makeTailCall(result, args, apply.tailCallIndices,
+              args => ObjApply(cls, Tuple(label, args:_*)))
+
+        case apply @ MethodApply(obj, Tuple(label, args @ _*)) =>
+          makeTailCall(result, args, apply.tailCallIndices,
+              args => MethodApply(obj, Tuple(label, args:_*)))
+
+        case apply @ NewApply(typeVar, classVar, Tuple(label, args @ _*)) =>
+          makeTailCall(result, args, apply.tailCallIndices,
+              args => NewApply(typeVar, classVar, Tuple(label, args:_*)))
+
+        case apply @ Apply(proc, args) =>
+          makeTailCall(result, args, apply.tailCallIndices,
+              args => Apply(proc, args.toList))
+
+        // Composite phrases: transfer to last component phrase
+
+        case And(stats @ _*) =>
+          val last :: others = stats.reverse.toList
+          val newLast = processTailCalls(last, result)
+          val newStats = (newLast :: others).reverse
+          And(newStats:_*)
+
+        case Eq(lhs, rhs) if (!isExpression) =>
+          if (hasTailCall(rhs, true))
+            processTailCalls(rhs, Some(lhs))
+          else
+            phrase
+
+        case IfThenElse(cond, thenStats, elseStats) =>
+          IfThenElse(cond, processTailCalls(thenStats, result),
+              processTailCalls(elseStats, result))
+
+        case Case(expr, clauses, elseClause) =>
+          val newClauses = for (CaseClause(pattern, body) <- clauses)
+            yield CaseClause(pattern, processTailCalls(body, result))
+          val newElse = processTailCalls(elseClause, result)
+          Case(expr, newClauses, newElse)
+
+        // Otherwise, considered atomic, so no tail call
+
+        case _ =>
+          eqIfNeeded(result, phrase)
+      }
+    }
+
+    def processTailCalls(optElse: OptElse, result: Option[Phrase]): OptElse = {
+      optElse match {
+        case phrase:Phrase => processTailCalls(phrase, result)
+        case NoElse() => optElse
+      }
+    }
+
+    def makeTailCall(result: Option[Phrase], args: Seq[Phrase],
+        tailCallIndices: List[Int],
+        makeApply: Seq[Phrase] => Phrase): Phrase = {
+      def tempVar = Variable("TailCallTemp")
+
+      findTailCall(args, tailCallIndices) match {
+        case None => eqIfNeeded(result, makeApply(args))
+
+        case Some(index) =>
+          var tailCall: Phrase = null
+
+          val newArgs = for ((arg, idx) <- args.zipWithIndex) yield {
+            if (idx == index) {
+              tailCall = arg
+              tempVar
+            } else
+              arg
+          }
+
+          assert(tailCall ne null)
+
+          LocalDef(
+              tempVar,
+          And( // in
+              eqIfNeeded(result, makeApply(newArgs)),
+              Eq(tempVar, tailCall)
+          ))
+      }
+    }
+
+    private def eqIfNeeded(result: Option[Phrase], phrase: Phrase) = {
+      if (result.isEmpty)
+        phrase
+      else
+        Eq(result.get, phrase)
     }
   }
 }
