@@ -61,6 +61,15 @@ sealed abstract class List[+A] {
     case head :: tail => if (x == head) true else tail.contains(x)
   }
 
+  def filter(predicate: A => Boolean): List[A] = this match {
+    case Nil => Nil
+    case head :: tail =>
+      if (predicate(head))
+        head :: tail.filter(predicate)
+      else
+        tail.filter(predicate)
+  }
+
   def take(n: Int): List[A] = {
     if (n == 0) Nil else {
       this match {
