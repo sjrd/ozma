@@ -86,6 +86,22 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
     case ARRAY(_) => ast.NullVal()
   }
 
+  lazy val tailcallAnnot = definitions.getClass("scala.ozma.tailcall")
+
+  /** Compute the tail-call info of a method for use by the tailcalls phase */
+  def computeTailCallInfo(method: Symbol): List[Int] = method.tpe match {
+    case MethodType(params, _) =>
+      val indices = for ((param, idx) <- params.view.zipWithIndex
+          if (param.hasAnnotation(tailcallAnnot)))
+        yield idx
+      indices.reverse.toList
+
+    case NullaryMethodType(resultType) =>
+      Nil
+
+    case _ => abort("Expected a method type for " + method)
+  }
+
   /* Symbol encoding */
 
   def varForSymbol(sym: Symbol): ast.Phrase with ast.EscapedFeature = {

@@ -167,6 +167,21 @@ trait ASTs { self: OzCodes =>
       result.toString
     }
 
+    // Tail-call info
+
+    trait TailCallInfo extends Phrase {
+      var tailCallIndices: List[Int] = Nil
+
+      def setTailCallInfo(indices: List[Int]): this.type = {
+        tailCallIndices = indices
+        this
+      }
+
+      def hasTailCallInfo = !tailCallIndices.isEmpty
+    }
+
+    trait GenericApply extends TailCallInfo
+
     // Actual nodes
 
     case class StepPoint(phrase: Phrase, kind: Atom) extends Phrase {
@@ -248,7 +263,8 @@ trait ASTs { self: OzCodes =>
       protected val opSyntax = " " + operator + " "
     }
 
-    case class ObjApply(superClass: Phrase, message: Phrase) extends Phrase {
+    case class ObjApply(superClass: Phrase, message: Phrase) extends Phrase
+        with GenericApply {
       def syntax(indent: String) =
         superClass.syntax(indent) + ", " + message.syntax(indent)
     }
@@ -415,6 +431,13 @@ trait ASTs { self: OzCodes =>
     object Tuple {
       def apply(label: RecordLabel, features: Phrase*) =
         Record(label, features:_*)
+
+      def unapplySeq(record: Record): Option[(RecordLabel, Seq[Phrase])] = {
+        if (record.features forall (_.isInstanceOf[Phrase]))
+          Some((record.label, record.features map (_.asInstanceOf[Phrase])))
+        else
+          None
+      }
     }
 
     case class ListLiteral(val items: Phrase*) extends Phrase with OzAST {
@@ -474,7 +497,8 @@ trait ASTs { self: OzCodes =>
       override def makeAST() = asList.makeAST()
     }
 
-    case class Apply(fun: Phrase, args: List[Phrase]) extends Phrase {
+    case class Apply(fun: Phrase, args: List[Phrase]) extends Phrase
+        with GenericApply {
       def syntax(indent: String) = args match {
         case Nil => "{" + fun.syntax() + "}"
 
@@ -488,6 +512,15 @@ trait ASTs { self: OzCodes =>
             _ + "\n" + subIndent + _.syntax(subIndent)
           } + "}"
         }
+      }
+    }
+
+    object MethodApply {
+      def apply(obj: Phrase, message: Phrase) = Apply(obj, List(message))
+
+      def unapply(apply: Apply) = apply match {
+        case Apply(obj, List(message:Record)) => Some((obj, message))
+        case _ => None
       }
     }
 

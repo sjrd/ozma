@@ -304,7 +304,8 @@ abstract class GenOzCode extends OzmaSubComponent {
 
             case rt @ REFERENCE(cls) =>
               genNew(cls, arguments,
-                  atomForSymbol(fun.symbol) setPos fun.pos)
+                  atomForSymbol(fun.symbol) setPos fun.pos).setTailCallInfo(
+                      computeTailCallInfo(fun.symbol))
           }
 
         case app @ Apply(fun, args) =>
@@ -330,7 +331,8 @@ abstract class GenOzCode extends OzmaSubComponent {
             val message = buildMessage(atomForSymbol(fun.symbol) setPos fun.pos,
                 arguments)
 
-            ast.Apply(instance, List(message))
+            ast.Apply(instance, List(message)).setTailCallInfo(
+                computeTailCallInfo(sym))
           }
 
         case This(qual) =>
