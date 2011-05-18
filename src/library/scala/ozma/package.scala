@@ -11,6 +11,8 @@ package object ozma {
   @native def byNeed[A](value: => A): A = sys.error("stub")
   @native def byNeedFuture[A](value: => A): A = sys.error("stub")
 
+  @native def sleep(ms: Int): Unit = sys.error("stub")
+
   def whileLoop[U](cond: => Boolean)(body: => U) {
     if (cond) {
       body

@@ -34,6 +34,7 @@ trait Natives { self: OzCodes =>
       register(ScalaOzma_waitNeeded)
       register(ScalaOzma_byNeed)
       register(ScalaOzma_byNeedFuture)
+      register(ScalaOzma_sleep)
 
       register(Integer_toString)
       register(Float_toString)
@@ -143,6 +144,7 @@ trait Natives { self: OzCodes =>
     def ByNeed = BuiltinFunction(Variable("ByNeed"))
     def ByNeedFuture = BuiltinFunction(Variable("ByNeedFuture"))
     def IsDet = BuiltinFunction(Variable("IsDet"))
+    def Delay = BuiltinFunction(Variable("Delay"))
     def IntToString = BuiltinFunction(Variable("IntToString"))
     def FloatToString = BuiltinFunction(Variable("FloatToString"))
     def StringToInt = BuiltinFunction(Variable("StringToInt"))
@@ -236,6 +238,18 @@ trait Natives { self: OzCodes =>
     def body = {
       val value = QuotedVar("value")
       ByNeedFuture(Fun($, Nil, value.doApply()))
+    }
+  }
+
+  object ScalaOzma_sleep extends NativeMethod(
+      "scala.ozma.package.sleep", "scala.Unit",
+      "`ms`" -> "scala.Int") {
+    def body = {
+      val ms = QuotedVar("ms")
+      And(
+          Delay(ms),
+          unit
+      )
     }
   }
 
