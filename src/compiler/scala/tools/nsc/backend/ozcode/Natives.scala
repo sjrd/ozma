@@ -357,9 +357,7 @@ trait Natives { self: OzCodes =>
               R,
           And(// in
               Thread(And(
-                  Try(Value.waitQuiet(x), Catch(List(
-                      __ ==> Skip()
-                  )), NoFinally()),
+                  WaitNeeded(x),
                   Value.makeNeeded(R)
               )),
               R === ByNeedFuture(Fun($, Nil,
@@ -401,9 +399,7 @@ trait Natives { self: OzCodes =>
               R,
           And(// in
               Thread(And(
-                  Try(Value.waitQuiet(x), Catch(List(
-                      __ ==> Skip()
-                  )), NoFinally()),
+                  WaitNeeded(x),
                   Value.makeNeeded(R)
               )),
               R === ByNeedFuture(Fun($, Nil, x.theValue())),
