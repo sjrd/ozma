@@ -56,6 +56,15 @@ sealed abstract class List[+A] {
     case head :: tail => head :: (tail ::: this)
   }
 
+  def foreach[U](f: A => U) {
+    this match {
+      case Nil => ()
+      case head :: tail =>
+        f(head)
+        tail.foreach(f)
+    }
+  }
+
   def contains(x: Any): Boolean = this match {
     case Nil => false
     case head :: tail => if (x == head) true else tail.contains(x)
