@@ -63,6 +63,8 @@ trait Natives { self: OzCodes =>
 
       register(Console_print)
       register(Console_println)
+
+      register(Port_SendProc_putOldAndGetNewTail)
     }
 
     def getBodyFor(symbol: Symbol) = {
@@ -72,7 +74,7 @@ trait Natives { self: OzCodes =>
         case Some(method) => method.body
         case None =>
           Console.println("Warning: could not find native definition for")
-          Console.println(symbol.toString)
+          Console.println(key)
           null
       }
     }
@@ -151,6 +153,8 @@ trait Natives { self: OzCodes =>
     def StringToInt = BuiltinFunction(Variable("StringToInt"))
     def StringToFloat = BuiltinFunction(Variable("StringToFloat"))
     def StringLiteral = BuiltinFunction(Variable("StringLiteral"))
+    def NewPort = BuiltinFunction(Variable("NewPort"))
+    def Send = BuiltinFunction(Variable("Send"))
 
     // System module
 
@@ -439,6 +443,21 @@ trait Natives { self: OzCodes =>
       "scala.Unit", "`s`" -> "java.lang.String") {
     def body = {
       And(System.showInfo(QuotedVar("s").toRawVS()), unit)
+    }
+  }
+
+  object Port_SendProc_putOldAndGetNewTail extends NativeMethod(
+      "ozma.Port.SendProc.putOldAndGetNewTail",
+      "ozma.List", "`old`" -> "ozma.List") {
+    def body = {
+      def tail = QuotedVar(" tail")
+      def old = QuotedVar("old")
+      def R = Variable("R")
+
+      LocalDef(R, And(
+          old === Assign(tail, R),
+          R
+      ))
     }
   }
 }
