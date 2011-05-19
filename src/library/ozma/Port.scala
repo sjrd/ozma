@@ -18,14 +18,11 @@ object Port {
     new Port(new SendProc(head))
   }
 
-  def makeHandler[A](handler: A => Unit) = {
-    def actualHandler(list: List[A]) {
-      handler(list.head)
-      actualHandler(list.tail)
-    }
+  def newPortObject[A, U](handler: A => U) =
+    make[A](_ foreach handler)
 
-    actualHandler _
-  }
+  def newPortObject[A, B](init: B, handler: (B, A) => B) =
+    make[A](_.foldLeft(init)(handler))
 
   private class SendProc[A](head: List[A]) extends Function1[A, Unit] {
     private[this] var tail = head

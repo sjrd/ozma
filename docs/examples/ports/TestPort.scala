@@ -4,7 +4,7 @@ import scala.ozma._
 object TestPort {
   def main(args: Array[String]) {
     // Create a port whose handler will display every arriving element
-    val port = Port.make(Port.makeHandler(Console.println))
+    val port = Port.newPortObject(Console.println)
 
     // Now 3 threads that send different ranges of integers to the port
     val X1: Unit
