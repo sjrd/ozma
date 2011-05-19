@@ -34,6 +34,7 @@ trait Natives { self: OzCodes =>
       register(ScalaOzma_waitNeeded)
       register(ScalaOzma_byNeed)
       register(ScalaOzma_byNeedFuture)
+      register(ScalaOzma_makeFailedValue)
       register(ScalaOzma_sleep)
 
       register(Integer_toString)
@@ -168,6 +169,7 @@ trait Natives { self: OzCodes =>
       def waitQuiet = BuiltinFunction(Value ~> 'waitQuiet)
       def status = BuiltinFunction(Value ~> 'status)
       def makeNeeded = BuiltinFunction(Value ~> 'makeNeeded)
+      def failed = BuiltinFunction(Value ~> 'failed)
     }
 
     // New constructor call
@@ -238,6 +240,14 @@ trait Natives { self: OzCodes =>
     def body = {
       val value = QuotedVar("value")
       ByNeedFuture(Fun($, Nil, value.doApply()))
+    }
+  }
+
+  object ScalaOzma_makeFailedValue extends NativeMethod(
+      "scala.ozma.package.makeFailedValue", "java.lang.Object",
+      "`throwable`" -> "java.lang.Throwable") {
+    def body = {
+      Value.failed(QuotedVar("throwable"))
     }
   }
 
