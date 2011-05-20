@@ -21,7 +21,7 @@ object Port {
   def newPortObject[A, U](handler: A => U) =
     make[A](_ foreach handler)
 
-  def newPortObject[A, B](init: B, handler: (B, A) => B) =
+  def newPortObject[A, B](init: B)(handler: (B, A) => B) =
     make[A](_.foldLeft(init)(handler))
 
   private class SendProc[A](head: List[A]) extends Function1[A, Unit] {
