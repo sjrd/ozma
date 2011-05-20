@@ -218,6 +218,17 @@ trait Natives { self: OzCodes =>
     }
   }
 
+  object ScalaOzma_waitQuiet extends NativeMethod(
+      "scala.ozma.package.waitQuiet", "scala.Unit",
+      "`value`" -> "java.lang.Object") {
+    def body = {
+      And(
+          Value.waitQuiet(QuotedVar("value")),
+          unit
+      )
+    }
+  }
+
   object ScalaOzma_waitNeeded extends NativeMethod(
       "scala.ozma.package.waitNeeded", "scala.Unit",
       "`value`" -> "java.lang.Object") {
