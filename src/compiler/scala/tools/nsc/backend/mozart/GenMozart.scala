@@ -297,7 +297,7 @@ abstract class GenMozart extends OzmaSubComponent {
     private val isOzmaRuntimeBuiltin = List(
         "NewObject", "NewArrayObject", "AsInstance", "IsInstance",
         "ArrayClassOf", "MultiArrayClassOf", "StringLiteral",
-        "AnyEqEq", "AnyRefEqEq",
+        "AnyEqEq", "AnyRefEqEq", "NewActiveObject",
         "BinNot", "BinAnd", "BinOr", "BinXor", "LSL", "LSR", "ASR") toSet
 
     private val isOzSystemModule = List("System").toSet

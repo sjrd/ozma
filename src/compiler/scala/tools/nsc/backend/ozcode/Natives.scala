@@ -31,6 +31,7 @@ trait Natives { self: OzCodes =>
       register(ScalaOzma_newUnbound)
       register(ScalaOzma_thread)
       register(ScalaOzma_waitBound)
+      register(ScalaOzma_waitQuiet)
       register(ScalaOzma_waitNeeded)
       register(ScalaOzma_byNeed)
       register(ScalaOzma_byNeedFuture)
@@ -64,6 +65,7 @@ trait Natives { self: OzCodes =>
       register(Console_print)
       register(Console_println)
 
+      register(Port_newActiveObject)
       register(Port_SendProc_putOldAndGetNewTail)
     }
 
@@ -155,6 +157,7 @@ trait Natives { self: OzCodes =>
     def StringLiteral = BuiltinFunction(Variable("StringLiteral"))
     def NewPort = BuiltinFunction(Variable("NewPort"))
     def Send = BuiltinFunction(Variable("Send"))
+    def NewActiveObject = BuiltinFunction(Variable("NewActiveObject"))
 
     // System module
 
@@ -454,6 +457,14 @@ trait Natives { self: OzCodes =>
       "scala.Unit", "`s`" -> "java.lang.String") {
     def body = {
       And(System.showInfo(QuotedVar("s").toRawVS()), unit)
+    }
+  }
+
+  object Port_newActiveObject extends NativeMethod(
+      "ozma.Port.newActiveObject",
+      "java.lang.Object", "`obj`" -> "java.lang.Object") {
+    def body = {
+      NewActiveObject(QuotedVar("obj"))
     }
   }
 

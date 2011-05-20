@@ -19,6 +19,7 @@ export
    'StringLiteral':StringLiteral
    'AnyEqEq':AnyEqEq
    'AnyRefEqEq':AnyRefEqEq
+   'NewActiveObject':NewActiveObject
 
 define
 
@@ -107,6 +108,18 @@ define
          Right == null
       else
          {Left 'equals#-1875011758'(Right $)}
+      end
+   end
+
+   fun {NewActiveObject Obj}
+      L P
+   in
+      {NewPort L P}
+      thread
+         {ForAll L proc {$ M} {Obj M} end}
+      end
+      proc {$ M}
+         {Send P M}
       end
    end
 

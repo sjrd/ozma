@@ -24,6 +24,8 @@ object Port {
   def newPortObject[A, B](init: B)(handler: (B, A) => B) =
     make[A](_.foldLeft(init)(handler))
 
+  @native def newActiveObject[A <: AnyRef](obj: A): A = sys.error("stub")
+
   private class SendProc[A](head: List[A]) extends Function1[A, Unit] {
     private[this] var tail = head
 
