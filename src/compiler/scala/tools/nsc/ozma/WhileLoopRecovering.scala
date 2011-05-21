@@ -5,12 +5,12 @@ import scala.collection.{ mutable, immutable }
 
 import transform.Transform
 
-abstract class WhileLoopRecovering extends Transform with ast.TreeDSL {
-  // inherits abstract value `global' and class `Phase' from Transform
-
-  import global._                  // the global environment
-  import definitions._             // standard classes and methods
-  import CODE._
+/** This component recovers while and do..while loops that the parser destroys
+ *  in labels and jumps. It replaces them by calls to `scala.ozma.whileLoop'
+ *  and `scala.ozma.doWhileLoop', respectively.
+ */
+abstract class WhileLoopRecovering extends Transform {
+  import global._
 
   val phaseName: String = "looprecover"
 
@@ -22,15 +22,13 @@ abstract class WhileLoopRecovering extends Transform with ast.TreeDSL {
    */
   class WhileLoopRecoverer(unit: CompilationUnit) extends Transformer {
     import symtab.Flags._
-    import lazyVals._
 
-    def inScalaOzma(name: Name, pos: Position) = {
-      Select(Select(Ident("scala") setPos pos, "ozma") setPos pos,
-          name) setPos pos
-    }
+    def scalaOzmaDot(name: Name) =
+      Select(gen.rootScalaDot("ozma"), name)
 
     /** Rewrite while-like label defs/calls as calls to
-     *  `scala.ozma.whileLoop'
+     *  `scala.ozma.whileLoop' and do-while-like label defs/calls as calls to
+     *  `scala.ozma.doWhileLoop'.
      */
     override def transform(tree: Tree): Tree = {
       tree match {
@@ -39,7 +37,7 @@ abstract class WhileLoopRecovering extends Transform with ast.TreeDSL {
             If(cond,
                 Block(List(body), Apply(Ident(lname2), Nil)),
                 Literal(_))) if (lname == lname2) =>
-          val whileLoop = inScalaOzma("whileLoop", tree.pos)
+          val whileLoop = atPos(tree.pos)(scalaOzmaDot("whileLoop"))
           val innerApply = treeCopy.Apply(tree, whileLoop, List(cond))
           val outerApply = treeCopy.Apply(tree, innerApply, List(body))
           outerApply
@@ -50,7 +48,7 @@ abstract class WhileLoopRecovering extends Transform with ast.TreeDSL {
                 If(cond,
                     Apply(Ident(lname2), Nil),
                     Literal(_)))) if (lname == lname2) =>
-          val doWhileLoop = inScalaOzma("doWhileLoop", tree.pos)
+          val doWhileLoop = atPos(tree.pos)(scalaOzmaDot("doWhileLoop"))
           val innerApply = treeCopy.Apply(tree, doWhileLoop, List(body))
           val outerApply = treeCopy.Apply(tree, innerApply, List(cond))
           outerApply
