@@ -533,6 +533,8 @@ abstract class GenOzCode extends OzmaSubComponent {
         genScalaHash(tree, receiver, ctx)
       else if (isArrayOp(code))
         genArrayOp(tree, ctx, code)
+      else if (code == SYNCHRONIZED)
+        genSynchronized(tree, ctx)
       else if (isCoercion(code))
         genCoercion(tree, receiver, ctx, code)
       else
@@ -668,6 +670,17 @@ abstract class GenOzCode extends OzmaSubComponent {
         val message = buildMessage(ast.Atom("length"), Nil)
         ast.Apply(arrayValue, List(message))
       }
+    }
+
+    private def genSynchronized(tree: Apply, ctx: Context): ast.Phrase = {
+      val Apply(Select(receiver, _), args) = tree
+      val receiverExpr = genExpression(receiver, ctx)
+      val body = genExpression(args.head, ctx)
+
+      val proc = ast.Fun(ast.Dollar(), Nil, body)
+      val message = buildMessage(ast.Atom("synchronized"), List(proc))
+
+      ast.Apply(receiverExpr, List(message))
     }
 
     private def genCoercion(tree: Apply, receiver: Tree, ctx: Context,

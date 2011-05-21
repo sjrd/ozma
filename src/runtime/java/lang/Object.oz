@@ -4,6 +4,7 @@ import
    OzmaRuntime('NewObject':NewObject
                'InitObject':InitObject
                'StringLiteral':StringLiteral) at 'x-ozma://root/scala/ozma/OzmaRuntime.ozf'
+   ObjectMonitor(newMonitor:NewMonitor) at 'x-ozma://root/java/lang/ObjectMonitor.ozf'
    `functor:java.lang.Class`('type:java.lang.Class':Class
                              'class:java.lang.Class':ClassClass) at 'x-ozma://root/java/lang/Class.ozf'
 
@@ -16,9 +17,11 @@ define
    class Object from BaseObject
       attr
          'class'
+         monitor
 
       meth !InitObject(ObjClass InitMessage)
          'class' := ObjClass
+         monitor := {ByNeed NewMonitor}
          {self InitMessage}
       end
 
@@ -63,6 +66,25 @@ define
 
       meth 'equals#-1875011758'(Other $)
          self == Other
+      end
+
+      meth synchronized(P $)
+         {@monitor.'lock' P}
+      end
+
+      meth 'wait#1763596620'($)
+         {@monitor.wait}
+         unit
+      end
+
+      meth 'notify#1763596620'($)
+         {@monitor.notify}
+         unit
+      end
+
+      meth 'notifyAll#1763596620'($)
+         {@monitor.notifyAll}
+         unit
       end
    end
 
