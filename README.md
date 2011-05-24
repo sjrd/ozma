@@ -2,12 +2,20 @@ The Ozma programming language
 =============================
 
 Ozma is a programming language based on Scala, with extensions regarding
-concurrency. It adds the general paradigm of declarative concurrency to the
-Scala language.
+concurrency. It adds three paradigms of the Oz programming language to Scala:
+declarative concurrency, lazy execution (demand-driven execution) and
+message-passing concurrency.
 
 Ozma does not compile towards the JVM nor the MSIL. Instead, it compiles towards
 the [Mozart programming system](http://www.mozart-oz.org/). This runtime
-provides built-in support for declarative concurrency.
+provides built-in support for these three concurrency models.
+
+Ozma is developed as a master thesis at the [Université Catholique de
+Louvain](http://www.uclouvain.be/), under the supervision of Pr Peter Van Roy.
+The [test of the master
+thesis](http://ks365195.kimsufi.com/~sjrd/master-thesis.pdf) details the design
+and implementation, as well as rationale for the Ozma programming language
+(work in progress).
 
 
 Usage
