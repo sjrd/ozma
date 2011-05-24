@@ -325,6 +325,11 @@ abstract class GenOzCode extends OzmaSubComponent {
                       computeTailCallInfo(fun.symbol))
           }
 
+        case Apply(fun @ _, List(dynapply:ApplyDynamic))
+        if (definitions.isUnbox(fun.symbol) &&
+            hasPrimitiveReturnType(dynapply.symbol)) =>
+          genApplyDynamic(dynapply, ctx, nobox = true)
+
         case app @ Apply(fun, args) =>
           val sym = fun.symbol
 
@@ -363,6 +368,9 @@ abstract class GenOzCode extends OzmaSubComponent {
             ast.Apply(instance, List(message)).setTailCallInfo(
                 computeTailCallInfo(sym))
           }
+
+        case ApplyDynamic(_, _) =>
+          genApplyDynamic(tree, ctx)
 
         case This(qual) =>
           assert(tree.symbol == ctx.clazz.symbol || tree.symbol.isModuleClass,
@@ -661,11 +669,7 @@ abstract class GenOzCode extends OzmaSubComponent {
       val List(arg) = args
 
       val instance = genExpression(receiver, ctx)
-
-      val module = receiver.tpe.typeSymbol.companionModule
-      val boxSymbol = definitions.getMember(module, "box")
-      val messageBox = buildMessage(atomForSymbol(boxSymbol), List(instance))
-      val boxed = ast.Apply(varForSymbol(module), List(messageBox))
+      val boxed = makeBox(instance, receiver.tpe)
 
       val messageToString = buildMessage(atomForSymbol(Object_toString), Nil)
       val stringInstance = ast.Apply(boxed, List(messageToString))
@@ -673,6 +677,19 @@ abstract class GenOzCode extends OzmaSubComponent {
       val plusMessage = buildMessage(atomForSymbol(definitions.String_+),
           List(genExpression(args.head, ctx)))
       ast.Apply(stringInstance, List(plusMessage))
+    }
+
+    private def makeBox(expr: ast.Phrase, tpe: Type) =
+      makeBoxUnbox(expr, tpe, "box")
+
+    private def makeUnbox(expr: ast.Phrase, tpe: Type) =
+      makeBoxUnbox(expr, tpe, "unbox")
+
+    private def makeBoxUnbox(expr: ast.Phrase, tpe: Type, function: String) = {
+      val module = tpe.typeSymbol.companionModule
+      val boxSymbol = definitions.getMember(module, function)
+      val messageBox = buildMessage(atomForSymbol(boxSymbol), List(expr))
+      ast.Apply(varForSymbol(module), List(messageBox))
     }
 
     private def genScalaHash(tree: Apply, receiver: Tree,
@@ -744,6 +761,63 @@ abstract class GenOzCode extends OzmaSubComponent {
           genBuiltinApply("FloatToInt", source) setPos tree.pos
 
         case _ => source
+      }
+    }
+
+    private def genApplyDynamic(tree: Tree, ctx: Context,
+        nobox: Boolean = false): ast.Phrase = {
+      val sym = tree.symbol
+      val ApplyDynamic(receiver, args) = tree
+
+      val instance = genExpression(receiver, ctx)
+      val arguments = genApplyDynamicArgs(sym, args, ctx)
+      val message = buildMessage(atomForSymbol(sym) setPos tree.pos,
+          arguments)
+
+      val apply = ast.Apply(instance, List(message)).setTailCallInfo(
+          computeTailCallInfo(sym))
+
+      val returnType = returnTypeOf(sym)
+      if (nobox || !isPrimitiveKind(toTypeKind(returnType)))
+        apply
+      else
+        makeBox(apply, returnType)
+    }
+
+    private def genApplyDynamicArgs(sym: Symbol, args: List[Tree],
+        ctx: Context) = {
+      val types = sym.tpe match {
+        case MethodType(params, _) => params map (_.tpe)
+        case NullaryMethodType(_) => Nil
+      }
+
+      args zip types map { case (arg, tpe) =>
+        if (isPrimitiveKind(toTypeKind(tpe)))
+          unboxDynamicParam(arg, tpe, ctx)
+        else
+          genExpression(arg, ctx)
+      }
+    }
+
+    private def isPrimitiveKind(kind: TypeKind) = kind match {
+      case BOOL | _:INT | _:FLOAT => true
+      case _ => false
+    }
+
+    private def returnTypeOf(sym: Symbol) = sym.tpe match {
+      case MethodType(_, tpe) => tpe
+      case NullaryMethodType(tpe) => tpe
+    }
+
+    private def hasPrimitiveReturnType(sym: Symbol) =
+      isPrimitiveKind(toTypeKind(returnTypeOf(sym)))
+
+    private def unboxDynamicParam(tree: Tree, tpe: Type,
+        ctx: Context): ast.Phrase = {
+      (tree: @unchecked) match {
+        case Apply(_, List(result)) if (definitions.isBox(tree.symbol)) =>
+          genExpression(result, ctx)
+        case _ => makeUnbox(genExpression(tree, ctx), tpe)
       }
     }
 

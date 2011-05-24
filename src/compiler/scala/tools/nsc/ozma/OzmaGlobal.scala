@@ -62,7 +62,7 @@ trait OzmaGlobal extends Global with OzmaTrees {
   // phaseName = "ozcode"
   object ozcode extends {
     val global: OzmaGlobal.this.type = OzmaGlobal.this
-    val runsAfter = List[String]("cleanup")
+    val runsAfter = List[String]("mixin")
     val runsRightAfter = None
   } with GenOzCode
 
@@ -116,7 +116,6 @@ trait OzmaGlobal extends Global with OzmaTrees {
       ozmaLambdaLift          -> "move nested functions to top level",
       constructors            -> "move field definitions into constructors",
       mixer                   -> "mixin composition",
-      cleanup                 -> "platform-specific cleanups, generate reflective calls",
       ozcode                  -> "generate Oz code from AST",
       tailcalls               -> "rewrite tail calls",
       ozmaTerminal            -> "The last phase in the compiler chain"
