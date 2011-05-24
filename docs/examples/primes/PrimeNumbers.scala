@@ -13,13 +13,13 @@ object PrimeNumbers {
   def main(args: Array[String]) {
     val count = java.lang.Integer.parseInt(args(0))
     val result = sieve(generateFrom(2))
-    displayFirstN(result, count)
+    thread(result take count) foreach println
   }
-  
+
   def generateFrom(from: Int): List[Int] = byNeedFuture {
     from :: generateFrom(from + 1)
   }
-  
+
   def sieve(list: List[Int]): List[Int] = byNeedFuture {
     list match {
       case Nil => Nil
@@ -27,7 +27,7 @@ object PrimeNumbers {
         head :: sieve(lazyFilter(tail, _ % head != 0))
     }
   }
-  
+
   def lazyFilter(list: List[Int],
       predicate: Int => Boolean): List[Int] = byNeedFuture {
     list match {
@@ -37,17 +37,6 @@ object PrimeNumbers {
           head :: lazyFilter(tail, predicate)
         else
           lazyFilter(tail, predicate)
-    }
-  }
-
-  def displayFirstN(list: List[Any], count: Int) {
-    if (count > 0) {
-      list match {
-        case Nil => ()
-        case head :: tail =>
-          Console.println(head)
-          displayFirstN(tail, count-1)
-      }
     }
   }
 }
