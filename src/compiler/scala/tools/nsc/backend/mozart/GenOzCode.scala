@@ -447,7 +447,9 @@ abstract class GenOzCode extends OzmaSubComponent {
             case NullTag =>
               ast.NullVal()
             case ClassTag =>
-              varForClass(value.value.asInstanceOf[Type].typeSymbol)
+              varForClass(value.typeValue.typeSymbol)
+            case EnumTag =>
+              varForSymbol(value.symbolValue)
           }
 
         case Block(stats, expr) =>
