@@ -18,7 +18,7 @@ object Port {
     new Port(new SendProc(head))
   }
 
-  def newPortObject[A, U](handler: A => U) =
+  def newStatelessPortObject[A, U](handler: A => U) =
     make[A](_ foreach handler)
 
   def newPortObject[A, B](init: B)(handler: (B, A) => B) =
