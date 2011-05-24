@@ -108,6 +108,8 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
       "module:" + sym.fullName
     else if (sym.isStaticMember)
       "static:" + sym.fullName
+    else if (sym.isLabel)
+      "label~" + sym.name + "~" + sym.id
     else if (sym.owner.isClass && !(sym.name.toString endsWith " "))
       " " + sym.name.toString
     else if (sym.owner.isMethod && (!sym.isParameter))

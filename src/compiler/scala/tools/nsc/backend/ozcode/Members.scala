@@ -92,6 +92,9 @@ trait Members { self: OzCodes =>
 
     var resultParam: Option[String] = None
 
+    /** Label functions */
+    var labels: List[ast.Phrase] = Nil
+
     def hasCode = code != null
     def setCode(code: ast.Phrase): OzMethod = {
       this.code = code

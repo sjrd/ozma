@@ -185,8 +185,20 @@ abstract class GenOzCode extends OzmaSubComponent {
         case LabelDef(name, params, rhs) =>
           if (settings.debug.value)
             log("Encountered a label def: " + tree)
-          val tag = ast.Eq(ast.Wildcard(), ast.Atom("LabelDef("+name+")"))
-          ast.And(tag, genExpression(rhs, ctx))
+          val sym = tree.symbol
+          ctx.method.addLocal(new Local(sym, arg = false))
+
+          val procVar = varForSymbol(sym)
+          val body = genExpression(rhs, ctx)
+          val arguments = params map { case ident @ Ident(name) =>
+            varForSymbol(ident.symbol)
+          }
+
+          val proc = ast.Fun(procVar, arguments, body)
+          val call = ast.Apply(procVar, arguments)
+
+          ctx.method.labels = proc :: ctx.method.labels
+          call
 
         case ValDef(_, nme.THIS, _, _) =>
           if (settings.debug.value)
@@ -316,9 +328,12 @@ abstract class GenOzCode extends OzmaSubComponent {
           val sym = fun.symbol
 
           if (sym.isLabel) {  // jump to a label
-            Console.println("Jump found at "+tree.pos)
-            Console.println(app)
-            abort("Cannot jump to a label in Oz")
+            Console.println("warning: jump found at "+tree.pos+
+                ", doing my best ...")
+
+            val procVar = varForSymbol(sym)
+            val arguments = args map { genExpression(_, ctx) }
+            ast.Apply(procVar, arguments)
           } else if (isPrimitive(sym)) {
             // primitive operation
             genPrimitiveOp(app, ctx)

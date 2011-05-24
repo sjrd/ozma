@@ -124,13 +124,16 @@ abstract class GenMozart extends OzmaSubComponent {
         local => !method.params.contains(local)
       }
 
-      val actualBody = if (locals.isEmpty)
+      val labels = method.labels
+
+      val actualBody = if (locals.isEmpty && labels.isEmpty)
         body
       else {
         val localVars = locals map { local =>
           varForSymbol(local.sym) setPos local.sym.pos
         }
-        ast.LocalDef(ast.And(localVars:_*), body) setPos method.symbol.pos
+        val defs = localVars ::: labels
+        ast.LocalDef(ast.And(defs:_*), body) setPos method.symbol.pos
       }
 
       ast.MethodDef(name, args, actualBody) setPos method.symbol.pos
