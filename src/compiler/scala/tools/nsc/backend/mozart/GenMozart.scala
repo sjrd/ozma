@@ -142,7 +142,9 @@ abstract class GenMozart extends OzmaSubComponent {
     /////////////////// Module assembly ///////////////////////
 
     def makeModules(classes: List[OzClass]): List[ast.Eq] = {
-      val modules = for (clazz <- classes if (clazz.symbol.isModuleClass))
+      val modules = for (clazz <- classes
+          if (clazz.symbol.isModuleClass &&
+              (clazz.symbol.companionModule != NoSymbol)))
         yield makeModule(clazz)
 
       val classConstants = for (clazz <- classes)
