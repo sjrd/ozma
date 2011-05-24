@@ -712,8 +712,8 @@ abstract class GenOzCode extends OzmaSubComponent {
 
         case ast.And(statement, _:ast.RecordLabel) => statement
 
-        case ast.And(statements @ _*) =>
-          val last :: others = statements.toList.reverse
+        case and:ast.And =>
+          val last :: others = and.phrases.toList.reverse
           val newLast = blackholeReturnedValue(last)
           val newOthers = others filterNot (_.isInstanceOf[ast.Skip])
           val newStatements = (newLast :: newOthers).reverse
