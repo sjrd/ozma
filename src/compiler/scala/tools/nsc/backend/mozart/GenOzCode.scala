@@ -430,6 +430,8 @@ abstract class GenOzCode extends OzmaSubComponent {
                   ast.StringLiteral(value.stringValue))
             case NullTag =>
               ast.NullVal()
+            case ClassTag =>
+              varForClass(value.value.asInstanceOf[Type].typeSymbol)
           }
 
         case Block(stats, expr) =>
