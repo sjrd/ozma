@@ -11,6 +11,9 @@ import
 export
    'type:java.lang.String':String
    'class:java.lang.String':StringClass
+   'type:java.lang.String$':`type:java.lang.String$`
+   'module:java.lang.String$':`module:java.lang.String$`
+   'class:java.lang.String$':`class:java.lang.String$`
 
 define
 
@@ -65,5 +68,31 @@ define
                                       [ObjectClass]
                                       _)}
                          end}
+
+   class `type:java.lang.String$` from Object
+      meth '<init>'($)
+         Object, '<init>#1063877011'(_)
+         unit
+      end
+
+      meth 'valueOf#-1324018343'(Obj $)
+         {Obj toString($)}
+      end
+   end
+
+   `module:java.lang.String$` = {ByNeed fun {$}
+                                           {NewObject `type:java.lang.String$`
+                                            `class:java.lang.String$`
+                                            '<init>'(_)}
+                                        end}
+
+   `class:java.lang.String$` = {ByNeed fun {$}
+                                          {NewObject Class ClassClass
+                                           '<init>'("java.lang.String$"
+                                                    ObjectClass
+                                                    nil
+                                                    [ObjectClass]
+                                                    _)}
+                                       end}
 
 end

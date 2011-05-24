@@ -24,7 +24,8 @@ abstract class GenOzCode extends OzmaSubComponent {
   import definitions.{
     ArrayClass, ObjectClass, ThrowableClass, StringClass, StringModule,
     NothingClass, NullClass, AnyRefClass,
-    Object_equals, Object_isInstanceOf, Object_asInstanceOf, ScalaRunTimeModule,
+    Object_equals, Object_isInstanceOf, Object_asInstanceOf, Object_toString,
+    ScalaRunTimeModule,
     BoxedNumberClass, BoxedCharacterClass,
     getMember
   }
@@ -552,6 +553,8 @@ abstract class GenOzCode extends OzmaSubComponent {
 
       if (isArithmeticOp(code) || isLogicalOp(code) || isComparisonOp(code))
         genSimpleOp(tree, receiver :: args, ctx, code)
+      else if (code == scalaPrimitives.CONCAT)
+        genStringConcat(tree, receiver, args, ctx)
       else if (code == HASH)
         genScalaHash(tree, receiver, ctx)
       else if (isArrayOp(code))
@@ -649,6 +652,25 @@ abstract class GenOzCode extends OzmaSubComponent {
 
       val function = if (mustUseAnyComparator) "AnyEqEq" else "AnyRefEqEq"
       genBuiltinApply(function, lsrc, rsrc)
+    }
+
+    private def genStringConcat(tree: Apply, receiver: Tree, args: List[Tree],
+        ctx: Context): ast.Phrase = {
+      val List(arg) = args
+
+      val instance = genExpression(receiver, ctx)
+
+      val module = receiver.tpe.typeSymbol.companionModule
+      val boxSymbol = definitions.getMember(module, "box")
+      val messageBox = buildMessage(atomForSymbol(boxSymbol), List(instance))
+      val boxed = ast.Apply(varForSymbol(module), List(messageBox))
+
+      val messageToString = buildMessage(atomForSymbol(Object_toString), Nil)
+      val stringInstance = ast.Apply(boxed, List(messageToString))
+
+      val plusMessage = buildMessage(atomForSymbol(definitions.String_+),
+          List(genExpression(args.head, ctx)))
+      ast.Apply(stringInstance, List(plusMessage))
     }
 
     private def genScalaHash(tree: Apply, receiver: Tree,
