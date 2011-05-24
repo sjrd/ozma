@@ -12,6 +12,7 @@ export
    'InitObject':InitObject
    'NewObject':NewObject
    'NewArrayObject':NewArrayObject
+   'ArrayValue':ArrayValue
    'IsInstance':IsInstance
    'AsInstance':AsInstance
    'ArrayClassOf':ArrayClassOf
@@ -29,10 +30,39 @@ define
       {New Type InitObject(Class Init)}
    end
 
-   fun {NewArrayObject ComponentClass Dims Length}
+   proc {NewArrayObject ComponentClass Dims Lengths Result}
       ActualComponentClass = {MultiArrayClassOf ComponentClass Dims-1}
    in
-      {ActualComponentClass newArrayOfThisClass(Length $)}
+      case Lengths of Length|LenTail then
+         Result = {ActualComponentClass newArrayOfThisClass(Length $)}
+         {InitializeSubArrays Result ActualComponentClass LenTail}
+      end
+   end
+
+   proc {InitializeSubArrays Array ElementClass Lengths}
+      case Lengths of Length|LenTail then
+         ComponentClass = {ElementClass componentClass($)}
+      in
+         for Index in 0..({Array length($)}-1) do
+            SubArray = {ComponentClass newArrayOfThisClass(Length $)}
+         in
+            {Array put(Index SubArray)}
+            {InitializeSubArrays SubArray ComponentClass LenTail}
+         end
+      else
+         skip
+      end
+   end
+
+   proc {ArrayValue ComponentClass Length Elements Result}
+      RawResult
+   in
+      Result = {NewArrayObject ComponentClass 1 Length}
+      RawResult = {Result toRawArray($)}
+      {List.forAllInd Elements
+       proc {$ Index Element}
+          RawResult.Index := Element
+       end}
    end
 
    fun {IsInstance Obj Class}

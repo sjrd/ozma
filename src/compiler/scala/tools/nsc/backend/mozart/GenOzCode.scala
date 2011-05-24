@@ -473,8 +473,14 @@ abstract class GenOzCode extends OzmaSubComponent {
                 genExpression(rhs, ctx))
           ast.And(assignment, ast.UnitVal())
 
-        case ArrayValue(tpt @ TypeTree(), _elems) =>
-          abort("FIXME: cannot create an array initialize")
+        case ArrayValue(tpt @ TypeTree(), elems) =>
+          val elementKind = toTypeKind(tpt.tpe)
+          val componentClass = elementKind.toType.typeSymbol
+          val length = elems.length
+          val elements = elems map (elem => genExpression(elem, ctx))
+
+          genBuiltinApply("ArrayValue", varForClass(componentClass),
+              ast.IntLiteral(length), ast.ListLiteral(elements:_*))
 
         case Match(selector, cases) =>
           if (settings.debug.value)
