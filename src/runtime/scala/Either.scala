@@ -14,7 +14,7 @@ package scala
  *   Represents a value of one of two possible
  *   types (a disjoint union). The data constructors [[scala.Left]] and
  *   [[scala.Right]] represent the two possible values.
- *   The `Either` type is often used as an alternative to
+ *   The `Either` type is often used as an alternative to 
  *   [[scala.Option]] where `Left` represents failure
  *   (by convention) and `Right` is akin to `Some`.
  *
@@ -51,7 +51,7 @@ sealed abstract class Either[+A, +B] {
     case Left(a) => Right(a)
     case Right(b) => Left(b)
   }
-
+  
   /**
    * Joins an `Either` through `Right`.
    */
@@ -59,7 +59,7 @@ sealed abstract class Either[+A, +B] {
     case Left(a)  => Left(a)
     case Right(b) => b
   }
-
+  
   /**
    * Joins an `Either` through `Left`.
    */
@@ -72,7 +72,7 @@ sealed abstract class Either[+A, +B] {
    * Returns `true` if this is a `Left`, `false` otherwise.
    */
   def isLeft: Boolean
-
+  
   /**
    * Returns `true` if this is a `Right`, `false` otherwise.
    */
@@ -85,7 +85,7 @@ sealed abstract class Either[+A, +B] {
  * @author <a href="mailto:research@workingmouse.com">Tony Morris</a>, Workingmouse
  * @version 1.0, 11/10/2008
  */
-final case class Left[+A, +B](a: A) extends Either[A, B] {
+final case class Left[+A, +B](a: A) extends Either[A, B] { 
   def isLeft = true
   def isRight = false
 }
@@ -94,8 +94,8 @@ final case class Left[+A, +B](a: A) extends Either[A, B] {
  * The right side of the disjoint union, as opposed to the `Left` side.
  *
  * @author <a href="mailto:research@workingmouse.com">Tony Morris</a>, Workingmouse
- * @version 1.0, 11/10/2008
- */
+ * @version 1.0, 11/10/2008 
+ */ 
 final case class Right[+A, +B](b: B) extends Either[A, B] {
   def isLeft = false
   def isRight = true
@@ -108,7 +108,7 @@ object Either {
       case Right(a) => a
     }
   }
-
+  
   implicit def either2mergeable[A](x: Either[A, A]): MergeableEither[A] = new MergeableEither(x)
 
   /**
@@ -193,7 +193,6 @@ object Either {
       case Right(b) => None
     }
 
-/*
     /**
      * Returns a `Seq` containing the `Left` value if it exists or an empty
      * `Seq` if this is a `Right`.
@@ -202,7 +201,6 @@ object Either {
       case Left(a) => Seq(a)
       case Right(_) => Seq.empty
     }
-*/
 
     /**
      * Returns a `Some` containing the `Left` value if it exists or a
@@ -222,7 +220,7 @@ object Either {
    */
   final case class RightProjection[+A, +B](e: Either[A, B]) {
     /**
-     * Returns the value from this `Right` or throws
+     * Returns the value from this `Right` or throws 
      * `Predef.NoSuchElementException` if this is a `Left`.
      *
      * @throws Predef.NoSuchElementException if the projection is `Left`.
@@ -296,7 +294,6 @@ object Either {
       case Right(b) => if(p(b)) Some(Right(b)) else None
     }
 
-/*
     /** Returns a `Seq` containing the `Right` value if
      *  it exists or an empty `Seq` if this is a `Left`.
      */
@@ -304,7 +301,6 @@ object Either {
       case Left(_) => Seq.empty
       case Right(b) => Seq(b)
     }
-*/
 
     /** Returns a `Some` containing the `Right` value
      *  if it exists or a `None` if this is a `Left`.
@@ -322,9 +318,9 @@ object Either {
   @deprecated("use `x.joinRight'", "2.8.0")
   def joinRight[A, B](es: Either[A, Either[A, B]]) =
     es.right.flatMap(x => x)
-
+    
   /**
-   * Takes an `Either` to its contained value within `Left` or
+   * Takes an `Either` to its contained value within `Left` or 
    * `Right`.
    */
   @deprecated("use `x.merge'", "2.8.0")
@@ -332,10 +328,10 @@ object Either {
     case Left(t) => t
     case Right(t) => t
   }
-
+   
   /** If the condition satisfies, return the given A in `Left`,
    *  otherwise, return the given B in `Right`.
    */
-  def cond[A, B](test: Boolean, right: => B, left: => A): Either[A, B] =
+  def cond[A, B](test: Boolean, right: => B, left: => A): Either[A, B] = 
     if (test) Right(right) else Left(left)
 }

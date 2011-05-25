@@ -57,11 +57,13 @@ define
    proc {ArrayValue ComponentClass Length Elements Result}
       RawResult
    in
-      Result = {NewArrayObject ComponentClass 1 Length}
+      Result = {NewArrayObject ComponentClass 1 [Length]}
       RawResult = {Result toRawArray($)}
       {List.forAllInd Elements
        proc {$ Index Element}
-          RawResult.Index := Element
+          Idx = Index-1
+       in
+          RawResult.Idx := Element
        end}
    end
 

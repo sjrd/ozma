@@ -14,7 +14,6 @@ import mutable.ArrayOps
 import generic.CanBuildFrom
 import annotation.{ elidable, implicitNotFound }
 import annotation.elidable.ASSERTION
-import _root_.ozma._
 
 /** The <code>Predef</code> object provides definitions that are
  *  accessible in all Scala compilation units without explicit
@@ -31,16 +30,14 @@ object Predef extends LowPriorityImplicits {
 
   // miscelleaneous -----------------------------------------------------
   scala.`package`                         // to force scala package object to be seen.
-  _root_.ozma.List                        // to force Nil, :: to be seen.
+  scala.collection.immutable.List         // to force Nil, :: to be seen.
 
   type Function[-A, +B] = Function1[A, B]
 
-/*
   type Map[A, +B] = immutable.Map[A, B]
   type Set[A]     = immutable.Set[A]
   val Map         = immutable.Map
   val Set         = immutable.Set
-*/
   val AnyRef      = new SpecializableCompanion {}   // a dummy used by the specialization annotation
 
   // Manifest types, companions, and incantations for summoning
@@ -60,10 +57,22 @@ object Predef extends LowPriorityImplicits {
   def implicitly[T](implicit e: T) = e    // for summoning implicit values from the nether world
   @inline def locally[T](x: T): T  = x    // to communicate intent and avoid unmoored statements
 
-/*
   // Apparently needed for the xml library
   val $scope = scala.xml.TopScope
-*/
+
+  // Deprecated
+
+  @deprecated("Use sys.error(message) instead", "2.9.0")
+  def error(message: String): Nothing = sys.error(message)
+
+  @deprecated("Use sys.exit() instead", "2.9.0")
+  def exit(): Nothing = sys.exit()
+
+  @deprecated("Use sys.exit(status) instead", "2.9.0")
+  def exit(status: Int): Nothing = sys.exit(status)
+
+  @deprecated("Use formatString.format(args: _*) or arg.formatted(formatString) instead", "2.9.0")
+  def format(text: String, xs: Any*) = augmentString(text).format(xs: _*)
 
   // errors and asserts -------------------------------------------------
 
@@ -202,7 +211,6 @@ object Predef extends LowPriorityImplicits {
 
   // views --------------------------------------------------------------
 
-/*
   implicit def exceptionWrapper(exc: Throwable) = new runtime.RichException(exc)
 
   implicit def zipped2ToTraversable[El1, El2](zz: Tuple2[_, _]#Zipped[_, El1, _, El2]): Traversable[(El1, El2)] =
@@ -239,7 +247,6 @@ object Predef extends LowPriorityImplicits {
   implicit def shortArrayOps(xs: Array[Short]): ArrayOps[Short] = new ArrayOps.ofShort(xs)
   implicit def booleanArrayOps(xs: Array[Boolean]): ArrayOps[Boolean] = new ArrayOps.ofBoolean(xs)
   implicit def unitArrayOps(xs: Array[Unit]): ArrayOps[Unit] = new ArrayOps.ofUnit(xs)
-*/
 
   // Primitive Widenings --------------------------------------------------------------
 
@@ -304,7 +311,6 @@ object Predef extends LowPriorityImplicits {
   // Strings and CharSequences --------------------------------------------------------------
 
   implicit def any2stringadd(x: Any) = new runtime.StringAdd(x)
-/*
   implicit def augmentString(x: String): StringOps = new StringOps(x)
   implicit def unaugmentString(x: StringOps): String = x.repr
 
@@ -327,7 +333,6 @@ object Predef extends LowPriorityImplicits {
     def subSequence(start: Int, end: Int): CharSequence = arrayToCharSequence(xs.slice(start, end))
     override def toString: String = xs.mkString("")
   }
-*/
 
   // Type Constraints --------------------------------------------------------------
 
