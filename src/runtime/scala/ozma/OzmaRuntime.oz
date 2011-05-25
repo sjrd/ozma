@@ -21,6 +21,13 @@ export
    'AnyEqEq':AnyEqEq
    'AnyRefEqEq':AnyRefEqEq
    'NewActiveObject':NewActiveObject
+   'BinNot':BinNot
+   'BinOr':BinOr
+   'BinXor':BinXor
+   'BinAnd':BinAnd
+   'LSL':BinLSL
+   'LSR':BinLSR
+   'ASR':BinASR
 
 define
 
@@ -152,6 +159,89 @@ define
       end
       proc {$ M}
          {Send P M}
+      end
+   end
+
+   %%%%%%%%%%%%%%%%%%%%%%
+   % Bitwise operations %
+   %%%%%%%%%%%%%%%%%%%%%%
+
+   local
+      BitCount = 64
+      MaxBit = BitCount-1
+
+      AllSet = {BitArray.new 0 MaxBit}
+
+      local
+         proc {InternalI2BA Bits Int Index}
+            if Index < BitCount andthen Int > 0 then
+               if Int mod 2 \= 0 then
+                  {BitArray.set Bits Index}
+               end
+               {InternalI2BA Bits Int div 2 Index+1}
+            end
+         end
+      in
+         proc {IntToBitArray Int ?Bits}
+            Bits = {BitArray.new 0 MaxBit}
+            {InternalI2BA Bits Int 0}
+         end
+
+         fun {BitArrayToInt Bits}
+            Sets = {BitArray.toList Bits}
+         in
+            {List.foldL Sets
+             fun {$ Prev Index}
+                Prev + {Pow 2 Index}
+             end 0}
+         end
+      end
+   in
+      for I in 0..MaxBit do
+         {BitArray.set AllSet I}
+      end
+      
+      fun {BinNot X}
+         A = {IntToBitArray X}
+      in
+         {BitArray.nimpl A AllSet}
+         {BitArrayToInt A}
+      end
+
+      fun {BinOr X Y}
+         A = {IntToBitArray X}
+         B = {IntToBitArray Y}
+      in
+         {BitArray.disj A B}
+         {BitArrayToInt A}
+      end
+
+      fun {BinXor X Y}
+         A = {IntToBitArray X}
+         B = {IntToBitArray Y}
+      in
+         {BitArray.nimpl A B}
+         {BitArrayToInt A}
+      end
+
+      fun {BinAnd X Y}
+         A = {IntToBitArray X}
+         B = {IntToBitArray Y}
+      in
+         {BitArray.conj A B}
+         {BitArrayToInt A}
+      end
+
+      fun {BinLSL X Y}
+         X * {Pow 2 Y}
+      end
+
+      fun {BinLSR X Y}
+         X div {Pow 2 Y}
+      end
+
+      fun {BinASR X Y}
+         X div {Pow 2 Y}
       end
    end
 

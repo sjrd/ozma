@@ -86,6 +86,10 @@ define
          @componentClass
       end
 
+      meth 'getComponentType#-530663260'($)
+         @componentClass
+      end
+
       meth isAncestor(Cls $)
          if (Cls == self) orelse (Cls == `class:java.lang.Object`) then
             true

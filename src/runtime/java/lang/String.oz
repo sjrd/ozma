@@ -58,6 +58,10 @@ define
             false
          end
       end
+
+      meth 'length#-1882783961'($)
+         {Length @rawString}
+      end
    end
 
    StringClass = {ByNeed fun {$}
