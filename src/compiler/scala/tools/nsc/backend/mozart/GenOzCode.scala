@@ -455,7 +455,7 @@ abstract class GenOzCode extends OzmaSubComponent {
             case NullTag =>
               ast.NullVal()
             case ClassTag =>
-              varForClass(value.typeValue.typeSymbol)
+              genClassConstant(value.typeValue.typeSymbol)
             case EnumTag =>
               varForSymbol(value.symbolValue)
           }
@@ -507,7 +507,7 @@ abstract class GenOzCode extends OzmaSubComponent {
           val length = elems.length
           val elements = elems map (elem => genExpression(elem, ctx))
 
-          genBuiltinApply("ArrayValue", varForClass(componentClass),
+          genBuiltinApply("ArrayValue", genClassConstant(componentClass),
               ast.IntLiteral(length), ast.ListLiteral(elements:_*))
 
         case Match(selector, cases) =>
@@ -873,7 +873,7 @@ abstract class GenOzCode extends OzmaSubComponent {
 
     def genCast(from: Type, to: Type, value: ast.Phrase, cast: Boolean) = {
       genBuiltinApply(if (cast) "AsInstance" else "IsInstance",
-          value, varForClass(to.typeSymbol) setPos value.pos)
+          value, genClassConstant(to.typeSymbol) setPos value.pos)
     }
 
     private def genTry(tree: Try, ctx: Context): ast.Phrase = {
@@ -886,7 +886,7 @@ abstract class GenOzCode extends OzmaSubComponent {
 
         def genCaseClause(sym: Symbol, E: ast.Phrase = ast.Variable("E")) = {
           val isObject = genBuiltinApply("IsObject", E)
-          val isInstance = genBuiltinApply("IsInstance", E, varForClass(sym))
+          val isInstance = genBuiltinApply("IsInstance", E, genClassConstant(sym))
           val pattern =
             ast.SideCondition(E, ast.Skip(), ast.AndThen(isObject, isInstance))
           ast.CaseClause(pattern, bodyAST)

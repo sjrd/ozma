@@ -48,7 +48,7 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
       atomForSymbol("<init>", paramsHash(List(clazz.fullName)))
 
     val typeVar = varForSymbol(clazz)
-    val classVar = varForClass(clazz)
+    val classVar = genClassConstant(clazz)
     val message = buildMessage(actualLabel, arguments, ast.Wildcard())
     genBuiltinApply("NewObject", typeVar, classVar, message)
   }
@@ -63,7 +63,7 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
 
     val componentClass = elementKind.toType.typeSymbol
 
-    genBuiltinApply("NewArrayObject", varForClass(componentClass),
+    genBuiltinApply("NewArrayObject", genClassConstant(componentClass),
         ast.IntLiteral(dimensions), ast.ListLiteral(arguments:_*))
   }
 
@@ -121,6 +121,17 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
       ast.QuotedVar(name + suffixFor(sym))
     else
       ast.Atom(name + suffixFor(sym))
+  }
+
+  def genClassConstant(sym: Symbol): ast.Phrase = {
+    toTypeKind(sym.tpe) match {
+      case array @ ARRAY(_) =>
+        val elementClass = varForClass(array.elementKind.toType.typeSymbol)
+        genBuiltinApply("MultiArrayClassOf", elementClass,
+            ast.IntLiteral(array.dimensions))
+
+      case _ => varForClass(sym)
+    }
   }
 
   def varForClass(sym: Symbol) = {
