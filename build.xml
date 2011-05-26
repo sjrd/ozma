@@ -147,6 +147,7 @@ ACTUAL TASKS
         parallel="true" dir="${src.dir}/runtime"
         failonerror="true">
       <globmapper from="*.scala" to="*.ozf"/>
+      <env key="JAVA_OPTS" value="${env.ANT_OPTS}"/>
       <arg value="-d"/> <arg path="${build.runtime.dir}"/> <srcfile/>
       <fileset dir="${src.dir}/javalib" includes="**/*.scala"/>
       <fileset dir="${src.dir}/scalalib" includes="**/*.scala"/>
