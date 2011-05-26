@@ -870,8 +870,13 @@ abstract class GenOzCode extends OzmaSubComponent {
     }
 
     def genCast(from: Type, to: Type, value: ast.Phrase, cast: Boolean) = {
-      genBuiltinApply(if (cast) "AsInstance" else "IsInstance",
-          value, genClassConstant(to.typeSymbol) setPos value.pos)
+      val classConstant = genClassConstant(to.typeSymbol) setPos value.pos
+      if (cast) {
+        genBuiltinApply("AsInstance", value,
+            classConstant).setTailCallInfo(List(0))
+      } else {
+        genBuiltinApply("IsInstance", value, classConstant)
+      }
     }
 
     private def genTry(tree: Try, ctx: Context): ast.Phrase = {
