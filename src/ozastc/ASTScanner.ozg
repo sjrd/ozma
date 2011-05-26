@@ -50,6 +50,10 @@ scanner ASTScanner from BaseScanner
       end
    end
 
+   meth parseErrorCoordinates($)
+      unit
+   end
+
    % -----------------
    % Token definitions
    % -----------------
@@ -72,7 +76,7 @@ scanner ASTScanner from BaseScanner
    lex atom = <{lower}{alphaNum}*> end
    lex atomQuoted = <"'"({atomChar}|{pseudoChar})*"'"> end
    lex string = <\"({stringChar}|{pseudoChar})*\"> end
-   lex int = <~?{nonzerodigit}{digit}*> end
+   lex int = <~?{digit}+> end
    lex float = <~?{digit}+"."{digit}*([eE]~?{digit}+)?> end
    
    lex <false>

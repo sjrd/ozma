@@ -53,7 +53,7 @@ parser ASTParser from BaseParser
       'float'
 
    syn program($)
-      Node($)
+      Node(TopLevel) => [TopLevel]
    end
 
    syn Node($)
