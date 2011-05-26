@@ -131,16 +131,15 @@ ACTUAL TASKS
   <target name="build.runtime" depends="build.compiler,build.ozastc">
     <!-- ozc does not like when its destination dir does not exist -->
     <mkdir dir="${build.runtime.dir}/java/lang"/>
-    <mkdir dir="${build.runtime.dir}/java/io"/>
     <mkdir dir="${build.runtime.dir}/scala/runtime"/>
-    <mkdir dir="${build.runtime.dir}/scala/ozma"/>
 
     <!-- compile native functors -->
     <apply executable="${bin.ozc}" dest="${build.runtime.dir}" parallel="false"
         failonerror="true">
       <globmapper from="*.oz" to="*.ozf"/>
       <arg value="-c"/> <srcfile/> <arg value="-o"/> <targetfile/>
-      <fileset dir="${src.dir}/runtime" includes="**/*.oz"/>
+      <fileset dir="${src.dir}/javalib" includes="**/*.oz"/>
+      <fileset dir="${src.dir}/scalalib" includes="**/*.oz"/>
     </apply>
 
     <!-- compile classes written in Ozma -->
@@ -149,8 +148,9 @@ ACTUAL TASKS
         failonerror="true">
       <globmapper from="*.scala" to="*.ozf"/>
       <arg value="-d"/> <arg path="${build.runtime.dir}"/> <srcfile/>
+      <fileset dir="${src.dir}/javalib" includes="**/*.scala"/>
+      <fileset dir="${src.dir}/scalalib" includes="**/*.scala"/>
       <fileset dir="${src.dir}/library" includes="**/*.scala"/>
-      <fileset dir="${src.dir}/runtime" includes="**/*.scala"/>
     </apply>
   </target>
 

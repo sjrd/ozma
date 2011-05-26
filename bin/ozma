@@ -20,5 +20,6 @@ OZMA_HOME=`cd "$OZMA_HOME"; pwd -P`
 OZMA_HOME=`cd "$OZMA_HOME"/..; pwd`
 
 # run the compiler
+SYSTEM_PATH="$OZMA_HOME/build/engine/"
 BOOT_CP="$OZMA_HOME/build/runtime/"
-ozengine "$OZMA_HOME/build/engine/OzmaEngine.ozf" "--bootclasspath=$BOOT_CP" "$@"
+ozengine "$OZMA_HOME/build/engine/OzmaEngine.ozf" "--systempath=$SYSTEM_PATH" "--bootclasspath=$BOOT_CP" "$@"

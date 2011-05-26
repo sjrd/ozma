@@ -3,8 +3,8 @@ functor
 import
    OzmaRuntime('NewObject':NewObject
                'InitObject':InitObject
-               'StringLiteral':StringLiteral) at 'x-ozma://root/scala/ozma/OzmaRuntime.ozf'
-   ObjectMonitor(newMonitor:NewMonitor) at 'x-ozma://root/java/lang/ObjectMonitor.ozf'
+               'StringLiteral':StringLiteral) at 'x-ozma://system/OzmaRuntime.ozf'
+   ObjectMonitor(newMonitor:NewMonitor) at 'x-ozma://system/ObjectMonitor.ozf'
    `functor:java.lang.Class`('type:java.lang.Class':Class
                              'class:java.lang.Class':ClassClass) at 'x-ozma://root/java/lang/Class.ozf'
 

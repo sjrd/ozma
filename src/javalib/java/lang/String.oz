@@ -2,7 +2,7 @@ functor
 
 import
    OzmaRuntime('NewObject':NewObject
-               'IsInstance':IsInstance) at 'x-ozma://root/scala/ozma/OzmaRuntime.ozf'
+               'IsInstance':IsInstance) at 'x-ozma://system/OzmaRuntime.ozf'
    `functor:java.lang.Object`('type:java.lang.Object':Object
                               'class:java.lang.Object':ObjectClass) at 'x-ozma://root/java/lang/Object.ozf'
    `functor:java.lang.Class`('type:java.lang.Class':Class

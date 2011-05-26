@@ -314,7 +314,7 @@ abstract class GenMozart extends OzmaSubComponent {
       def groupFor(groupName: String) =
         importsByGroup.getOrElseUpdate(groupName, new HashSet[String])
 
-      val builtinGroup = groupFor("scala.ozma.OzmaRuntime")
+      val builtinGroup: Set[String] = new HashSet
 
       def importClass(varName: String) {
         val groupName = groupNameFor(varName)
@@ -338,27 +338,28 @@ abstract class GenMozart extends OzmaSubComponent {
       val systemImportDecls = for (varName <- systemImports.toList)
         yield ImportItem(Variable(varName), Nil, NoImportAt())
 
+      val builtinImportDecls =
+        makeImportDecl(functorName, "OzmaRuntime", builtinGroup, system = true)
+
       val importDecls = for ((name, varNames) <- importsByGroup)
         yield makeImportDecl(functorName, name, varNames)
 
-      ast.Import(systemImportDecls ::: importDecls.toList)
+      ast.Import(systemImportDecls ::: builtinImportDecls :: importDecls.toList)
     }
 
     def makeImportDecl(enclFunctorName: String, functorName: String,
-        importedVarNames: Set[String]) = {
+        importedVarNames: Set[String], system: Boolean = false) = {
       val importItems = for (varName <- importedVarNames.toList) yield {
         val quoted = varName contains ':'
         AliasedFeature(if (quoted) QuotedVar(varName) else Variable(varName),
             Atom(varName))
       }
 
-      val depth = enclFunctorName.foldLeft(0) { (res, c) =>
-        if (c == '.') res+1 else res
-      }
-
-      val fileName = "x-ozma://root/" + functorName.replace('.', '/') + ".ozf"
+      val prefix = if (system) "x-ozma://system/" else "x-ozma://root/"
+      val fileName = prefix + functorName.replace('.', '/') + ".ozf"
       val importAt = ImportAt(Atom(fileName))
-      ImportItem(QuotedVar("functor:" + functorName), importItems, importAt)
+      val functorVarPrefix = if (system) "system:" else "functor:"
+      ImportItem(QuotedVar(functorVarPrefix+functorName), importItems, importAt)
     }
 
     def makeExports(name: String, classes: List[ClassDef],

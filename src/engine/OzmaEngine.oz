@@ -13,6 +13,7 @@ prepare
 
    OptSpecs = record(
                  %help(char:[&h &?] type:bool default:false)
+                 systempath(single type:string)
                  classpath(single char:"p" type:string default:"./")
                  bootclasspath(single type:string))
 
@@ -45,7 +46,7 @@ define
       FileName = {ClassNameToFileName MainObject}
       URL = 'x-ozma://root/'#FileName
       StringURL = 'x-ozma://root/java/lang/String.ozf'
-      RuntimeURL = 'x-ozma://root/scala/ozma/OzmaRuntime.ozf'
+      RuntimeURL = 'x-ozma://system/OzmaRuntime.ozf'
       [Mod StringMod RuntimeMod] = {Module.link [URL StringURL RuntimeURL]}
       ObjID = {VirtualString.toAtom 'module:'#MainObject#'$'}
       Obj OzmaArgs
@@ -79,19 +80,19 @@ define
       {System.showError {{Exception toString($)} toRawVS($)}}
    end
 
-   fun {MakeResolveHandlers ClassPath}
+   fun {MakeResolveHandlers Prefix ClassPath}
       case ClassPath of nil then
          nil
       else
          Path Tail
       in
          {String.token ClassPath &: Path Tail}
-         {MakeResolveHandler Path}|{MakeResolveHandlers Tail}
+         {MakeResolveHandler Prefix Path}|{MakeResolveHandlers Prefix Tail}
       end
    end
 
-   fun {MakeResolveHandler Path}
-      {Resolve.handler.prefix "x-ozma://root/" Path}
+   fun {MakeResolveHandler Prefix Path}
+      {Resolve.handler.prefix Prefix Path}
    end
 
    try
@@ -104,10 +105,15 @@ define
 
       % Set up classpath
       local
-         BootHandlers = {MakeResolveHandlers Args.bootclasspath}
-         Handlers = {MakeResolveHandlers Args.classpath}
+         Sys = "x-ozma://system/"
+         Root = "x-ozma://root/"
+         SystemHandlers = {MakeResolveHandlers Sys Args.systempath}
+         BootHandlers = {MakeResolveHandlers Root Args.bootclasspath}
+         Handlers = {MakeResolveHandlers Root Args.classpath}
+         AllHandlers = {Append SystemHandlers
+                        {Append Handlers BootHandlers}}
       in
-         {Resolve.pickle.setHandlers {Append Handlers BootHandlers}}
+         {Resolve.pickle.setHandlers AllHandlers}
       end
 
       % Run the program

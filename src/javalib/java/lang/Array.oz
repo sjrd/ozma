@@ -1,7 +1,7 @@
 functor
 
 import
-   OzmaRuntime('NewObject':NewObject) at 'x-ozma://root/scala/ozma/OzmaRuntime.ozf'
+   OzmaRuntime('NewObject':NewObject) at 'x-ozma://system/OzmaRuntime.ozf'
    `functor:java.lang.Object`('type:java.lang.Object':`type:java.lang.Object`
                               'class:java.lang.Object':`class:java.lang.Object`) at 'x-ozma://root/java/lang/Object.ozf'
    `functor:java.lang.Class`('type:java.lang.Class':`type:java.lang.Class`
