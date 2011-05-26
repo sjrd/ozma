@@ -143,11 +143,6 @@ ACTUAL TASKS
       <fileset dir="${src.dir}/runtime" includes="**/*.oz"/>
     </apply>
 
-    <!-- copy precompiled functors -->
-    <copy todir="${build.runtime.dir}">
-      <fileset dir="${src.dir}/runtime" includes="**/*.ozf"/>
-    </copy>
-
     <!-- compile classes written in Ozma -->
     <apply executable="${bin.ozmac}" dest="${build.runtime.dir}"
         parallel="true" dir="${src.dir}/runtime" force="true"
@@ -155,13 +150,7 @@ ACTUAL TASKS
       <globmapper from="*.scala" to="*.ozf"/>
       <arg value="-d"/> <arg path="${build.runtime.dir}"/> <srcfile/>
       <fileset dir="${src.dir}/library" includes="**/*.scala"/>
-      <fileset dir="${src.dir}/runtime">
-        <include name="**/*.scala/"/>
-        <exclude name="scala/Function1.scala"/>
-        <exclude name="scala/Function2.scala"/>
-        <exclude name="scala/runtime/AbstractFunction1.scala"/>
-        <exclude name="scala/runtime/AbstractFunction2.scala"/>
-      </fileset>
+      <fileset dir="${src.dir}/runtime" includes="**/*.scala"/>
     </apply>
   </target>
 
