@@ -125,6 +125,13 @@ define
    catch error(ap(usage Message) debug:_) then
       {System.showError Message}
       {ShowUsage 1}
+   [] error(Err debug:d(info:Info stack:Stack)) then
+      {System.show Err}
+      {System.show Info}
+      for Entry in Stack do
+         {System.show Entry}
+      end
+      {Application.exit 1}
    end
 
 end

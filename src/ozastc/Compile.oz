@@ -30,6 +30,8 @@ import
    Pickle(saveWithHeader)
    Compiler(engine interface evalExpression)
    Application(getArgs exit)
+   ASTFrontEnd(parseASTFile:ParseASTFile
+               parseASTVirtualString:ParseASTVirtualString) at './ASTFrontEnd.ozf'
 prepare
    UsageError = 'command line option error'
    BatchCompilationError = 'batch compilation error'

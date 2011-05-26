@@ -1,0 +1,76 @@
+% Parser for the Scala language
+% @author sjrd
+
+BaseParser = GumpParser.'class'
+
+% ---------
+% Utilities
+% ---------
+
+%-----------------
+% The parser class
+%-----------------
+
+parser ASTParser from BaseParser
+   feat
+      Scanner
+      Reporter
+
+   meth init('scanner': Scan reporter: Report)
+      BaseParser, init(Scan)
+
+      self.Scanner = Scan
+      self.Reporter = Report
+   end
+
+   % --------------
+   % Error handling
+   % --------------
+
+   meth error(VS)
+      {self reportError({self.Scanner parseErrorCoordinates($)}
+			'parse error' VS)}
+   end
+   
+   meth reportError(Coord Kind Msg) 
+      {self.Reporter error(coord:Coord kind:Kind msg:Msg)}
+   end
+   
+   meth reportWarning(Coord Kind Msg)
+      {self.Reporter warn(coord:Coord kind:Kind msg:Msg)}
+   end
+
+   % ------------------
+   % Grammar definition
+   % ------------------
+
+   token
+      '(' ')'
+      '[' ']'
+      'atom'
+      'string'
+      'int'
+      'float'
+
+   syn program($)
+      Node($)
+   end
+
+   syn Node($)
+      'atom'(Value) => Value
+   [] 'string'(Value) => Value
+   [] 'int'(Value) => Value
+   [] 'float'(Value) => Value
+
+   [] 'atom'(Label) '(' Nodes(Items) ')'
+      => {List.toTuple Label Items}
+
+   [] '[' Nodes(Items) ']'
+      => Items
+   end
+
+   syn Nodes($)
+      { Node($) }*
+   end
+
+end
