@@ -145,7 +145,7 @@ ACTUAL TASKS
 
     <!-- compile classes written in Ozma -->
     <apply executable="${bin.ozmac}" dest="${build.runtime.dir}"
-        parallel="true" dir="${src.dir}/runtime" force="true"
+        parallel="true" dir="${src.dir}/runtime"
         failonerror="true">
       <globmapper from="*.scala" to="*.ozf"/>
       <arg value="-d"/> <arg path="${build.runtime.dir}"/> <srcfile/>
