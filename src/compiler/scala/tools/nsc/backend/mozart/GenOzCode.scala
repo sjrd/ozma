@@ -23,7 +23,7 @@ abstract class GenOzCode extends OzmaSubComponent {
 
   import definitions.{
     ArrayClass, ObjectClass, ThrowableClass, StringClass, StringModule,
-    NothingClass, NullClass, AnyRefClass,
+    NothingClass, NullClass, AnyRefClass, ListClass, ConsClass,
     Object_equals, Object_isInstanceOf, Object_asInstanceOf, Object_toString,
     ScalaRunTimeModule,
     BoxedNumberClass, BoxedCharacterClass,
@@ -73,8 +73,6 @@ abstract class GenOzCode extends OzmaSubComponent {
     def hasSingleAssignSemantics(sym: Symbol) =
       !sym.isVariable || sym.hasAnnotation(SingleAssignmentClass)
 
-    lazy val ListClass = definitions.getClass("ozma.List")
-    lazy val ConsClass = definitions.getClass("ozma.$colon$colon")
     lazy val List_cons = definitions.getMember(ListClass, "$colon$colon")
 
     /////////////////// Code generation ///////////////////////

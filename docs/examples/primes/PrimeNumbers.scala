@@ -6,7 +6,6 @@
  * Note that all this does work because :: is tail-recursive.
  */
 
-import ozma._
 import scala.ozma._
 
 object PrimeNumbers {

@@ -470,7 +470,8 @@ trait Natives { self: OzCodes =>
 
   object Port_SendProc_putOldAndGetNewTail extends NativeMethod(
       "ozma.Port.SendProc.putOldAndGetNewTail",
-      "ozma.List", "`old`" -> "ozma.List") {
+      "scala.collection.immutable.List",
+      "`old`" -> "scala.collection.immutable.List") {
     def body = {
       def tail = QuotedVar(" tail")
       def old = QuotedVar("old")

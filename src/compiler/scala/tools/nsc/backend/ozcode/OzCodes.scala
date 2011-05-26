@@ -86,17 +86,28 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
   lazy val tailcallAnnot = definitions.getClass("scala.ozma.tailcall")
 
   /** Compute the tail-call info of a method for use by the tailcalls phase */
-  def computeTailCallInfo(method: Symbol): List[Int] = method.tpe match {
-    case MethodType(params, _) =>
-      val indices = for ((param, idx) <- params.view.zipWithIndex
-          if (param.hasAnnotation(tailcallAnnot)))
-        yield idx
-      indices.reverse.toList
+  def computeTailCallInfo(method: Symbol): List[Int] = {
+    /* We need this dirty hard-coded computation for the constructor of ::
+     * because our compiler still relies on Java classpaths. Hence when
+     * compiling an application, :: is the standard Scala :: class, which does
+     * not have the @tailcall annotations.
+     */
+    if (method eq definitions.ConsClass.primaryConstructor)
+      List(1, 0)
+    else {
+      method.tpe match {
+        case MethodType(params, _) =>
+          val indices = for ((param, idx) <- params.view.zipWithIndex
+              if (param.hasAnnotation(tailcallAnnot)))
+            yield idx
+          indices.reverse.toList
 
-    case NullaryMethodType(resultType) =>
-      Nil
+        case NullaryMethodType(resultType) =>
+          Nil
 
-    case _ => abort("Expected a method type for " + method)
+        case _ => abort("Expected a method type for " + method)
+      }
+    }
   }
 
   /* Symbol encoding */

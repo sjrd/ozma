@@ -14,12 +14,13 @@ package immutable
 import generic._
 import mutable.{Builder, ListBuffer}
 import annotation.tailrec
+import scala.ozma.tailcall
 
 /** A class for immutable linked lists representing ordered collections
- *  of elements of type. 
- *  
- *  This class comes with two implementing case classes `scala.Nil` 
- *  and `scala.::` that implement the abstract members `isEmpty`, 
+ *  of elements of type.
+ *
+ *  This class comes with two implementing case classes `scala.Nil`
+ *  and `scala.::` that implement the abstract members `isEmpty`,
  *  `head` and `tail`.
  *
  *  @author  Martin Odersky and others
@@ -37,13 +38,13 @@ import annotation.tailrec
  *    result class `That` from the current representation type `Repr`
  *    and the new element type `B`. This is usually the `canBuildFrom` value
  *    defined in object `List`.
- *  @define orderDependent 
+ *  @define orderDependent
  *  @define orderDependentFold
  *  @define mayNotTerminateInf
  *  @define willNotTerminateInf
  */
-sealed abstract class List[+A] extends LinearSeq[A] 
-                                  with Product 
+sealed abstract class List[+A] extends LinearSeq[A]
+                                  with Product
                                   with GenericTraversableTemplate[A, List]
                                   with LinearSeqOptimized[A, List[A]] {
   override def companion: GenericCompanion[List] = List
@@ -69,13 +70,13 @@ sealed abstract class List[+A] extends LinearSeq[A]
   /** Adds the elements of a given list in front of this list.
    *  @param prefix  The list elements to prepend.
    *  @return a list resulting from the concatenation of the given
-   *    list `prefix` and this list. 
+   *    list `prefix` and this list.
    *  @example `List(1, 2) ::: List(3, 4) = List(3, 4).:::(List(1, 2)) = List(1, 2, 3, 4)`
    *  @usecase def :::(prefix: List[A]): List[A]
    */
   def :::[B >: A](prefix: List[B]): List[B] =
-    if (isEmpty) prefix
-    else (new ListBuffer[B] ++= prefix).prependToList(this)
+    if (prefix.isEmpty) this
+    else prefix.head :: (prefix.tail ::: this)
 
   /** Adds the elements of a given list in reverse order in front of this list.
    *  `xs reverse_::: ys` is equivalent to
@@ -98,12 +99,12 @@ sealed abstract class List[+A] extends LinearSeq[A]
   /** Builds a new list by applying a function to all elements of this list.
    *  Like `xs map f`, but returns `xs` unchanged if function
    *  `f` maps all elements to themselves (wrt eq).
-   * 
+   *
    *  @param f      the function to apply to each element.
    *  @tparam B     the element type of the returned collection.
    *  @return       a list resulting from applying the given function
    *                `f` to each element of this list and collecting the results.
-   *  @usecase def mapConserve(f: A => A): List[A] 
+   *  @usecase def mapConserve(f: A => A): List[A]
    */
   def mapConserve[B >: A <: AnyRef](f: A => B): List[B] = {
     @tailrec
@@ -134,7 +135,7 @@ sealed abstract class List[+A] extends LinearSeq[A]
   }
 
   // Overridden methods from IterableLike and SeqLike or overloaded variants of such methods
-  
+
   override def ++[B >: A, That](that: GenTraversableOnce[B])(implicit bf: CanBuildFrom[List[A], B, That]): That = {
     val b = bf(this)
     if (b.isInstanceOf[ListBuffer[_]]) (this ::: that.seq.toList).asInstanceOf[That]
@@ -149,28 +150,19 @@ sealed abstract class List[+A] extends LinearSeq[A]
   override def toList: List[A] = this
 
   override def take(n: Int): List[A] = {
-    val b = new ListBuffer[A]
-    var i = 0
-    var these = this
-    while (!these.isEmpty && i < n) {
-      i += 1
-      b += these.head
-      these = these.tail
-    }
-    if (these.isEmpty) this
-    else b.toList
+    if (n == 0 || isEmpty)
+      Nil
+    else
+      head :: tail.take(n-1)
   }
 
   override def drop(n: Int): List[A] = {
-    var these = this
-    var count = n
-    while (!these.isEmpty && count > 0) {
-      these = these.tail
-      count -= 1
-    }
-    these
+    if (n == 0 || isEmpty)
+      this
+    else
+      tail.drop(n-1)
   }
-  
+
   override def slice(from: Int, until: Int): List[A] = {
     val lo = math.max(from, 0)
     if (until <= lo || isEmpty) Nil
@@ -185,7 +177,7 @@ sealed abstract class List[+A] extends LinearSeq[A]
     }
     loop(drop(n), this)
   }
-  
+
   // dropRight is inherited from LinearSeq
 
   override def splitAt(n: Int): (List[A], List[A]) = {
@@ -201,22 +193,17 @@ sealed abstract class List[+A] extends LinearSeq[A]
   }
 
   override def takeWhile(p: A => Boolean): List[A] = {
-    val b = new ListBuffer[A]
-    var these = this
-    while (!these.isEmpty && p(these.head)) {
-      b += these.head
-      these = these.tail
-    }
-    b.toList
+    if (isEmpty || !p(head))
+      Nil
+    else
+      head :: tail.takeWhile(p)
   }
 
   override def dropWhile(p: A => Boolean): List[A] = {
-    @tailrec
-    def loop(xs: List[A]): List[A] =
-      if (xs.isEmpty || !p(xs.head)) xs
-      else loop(xs.tail)
-
-    loop(this)
+    if (isEmpty || p(head))
+      this
+    else
+      tail.dropWhile(p)
   }
 
   override def span(p: A => Boolean): (List[A], List[A]) = {
@@ -230,26 +217,27 @@ sealed abstract class List[+A] extends LinearSeq[A]
   }
 
   override def reverse: List[A] = {
-    var result: List[A] = Nil
-    var these = this
-    while (!these.isEmpty) {
-      result = these.head :: result
-      these = these.tail
+    def loop(list: List[A], acc: List[A]): List[A] = {
+      if (list.isEmpty)
+        acc
+      else
+        loop(list.tail, list.head :: acc)
     }
-    result
+
+    loop(this, Nil)
   }
 
   override def stringPrefix = "List"
 
-  override def toStream : Stream[A] = 
+  override def toStream : Stream[A] =
     if (isEmpty) Stream.Empty
     else new Stream.Cons(head, tail.toStream)
-    
+
   /** Like <code>span</code> but with the predicate inverted.
    */
   @deprecated("use `span { x => !p(x) }` instead", "2.8.0")
   def break(p: A => Boolean): (List[A], List[A]) = span { x => !p(x) }
-  
+
   @deprecated("use `filterNot' instead", "2.8.0")
   def remove(p: A => Boolean): List[A] = filterNot(p)
 
@@ -288,7 +276,7 @@ sealed abstract class List[+A] extends LinearSeq[A]
     }
     b.toList
   }
-  
+
   @deprecated("use `distinct' instead", "2.8.0")
   def removeDuplicates: List[A] = distinct
 
@@ -387,7 +375,7 @@ case object Nil extends List[Nothing] {
  *  @since   2.8
  */
 @SerialVersionUID(0L - 8476791151983527571L)
-final case class ::[B](private var hd: B, private[scala] var tl: List[B]) extends List[B] {
+final case class ::[B](@tailcall private var hd: B, @tailcall private[scala] var tl: List[B]) extends List[B] {
   override def head : B = hd
   override def tail : List[B] = tl
   override def isEmpty: Boolean = false
@@ -421,7 +409,7 @@ final case class ::[B](private var hd: B, private[scala] var tl: List[B]) extend
  *  @define Coll List
  */
 object List extends SeqFactory[List] {
-  
+
   import scala.collection.{Iterable, Seq, IndexedSeq}
 
   /** $genericCanBuildFromInfo */
@@ -485,8 +473,8 @@ object List extends SeqFactory[List] {
    *  @return    the concatenation of all the lists
    */
   @deprecated("use `xss.flatten' instead of `List.flatten(xss)'", "2.8.0")
-  def flatten[A](xss: List[List[A]]): List[A] = { 
-    val b = new ListBuffer[A] 
+  def flatten[A](xss: List[List[A]]): List[A] = {
+    val b = new ListBuffer[A]
     for (xs <- xss) {
       var xc = xs
       while (!xc.isEmpty) {
@@ -521,7 +509,7 @@ object List extends SeqFactory[List] {
    *  @return a pair of lists.
    */
   @deprecated("use `xs.unzip' instead of `List.unzip(xs)'", "2.8.0")
-  def unzip[A,B](xs: Iterable[(A,B)]): (List[A], List[B]) = 
+  def unzip[A,B](xs: Iterable[(A,B)]): (List[A], List[B]) =
       xs.foldRight[(List[A], List[B])]((Nil, Nil)) {
         case ((x, y), (xs, ys)) => (x :: xs, y :: ys)
       }
@@ -531,17 +519,17 @@ object List extends SeqFactory[List] {
    * of `Either`s.
    */
   @deprecated("use `xs collect { case Left(x: A) => x }' instead of `List.lefts(xs)'", "2.8.0")
-  def lefts[A, B](es: Iterable[Either[A, B]]) = 
+  def lefts[A, B](es: Iterable[Either[A, B]]) =
     es.foldRight[List[A]](Nil)((e, as) => e match {
       case Left(a) => a :: as
       case Right(_) => as
-    })     
- 
+    })
+
   /**
    * Returns the `Right` values in the given`Iterable` of  `Either`s.
    */
   @deprecated("use `xs collect { case Right(x: B) => x }' instead of `List.rights(xs)'", "2.8.0")
-  def rights[A, B](es: Iterable[Either[A, B]]) = 
+  def rights[A, B](es: Iterable[Either[A, B]]) =
     es.foldRight[List[B]](Nil)((e, bs) => e match {
       case Left(_) => bs
       case Right(b) => b :: bs
@@ -595,7 +583,7 @@ object List extends SeqFactory[List] {
     }
     res
   }
-  
+
   /** Parses a string which contains substrings separated by a
    *  separator character and returns a list of all substrings.
    *
@@ -665,7 +653,7 @@ object List extends SeqFactory[List] {
    *  to corresponding elements of the argument lists.
    *
    *  @param f function to apply to each pair of elements.
-   *  @return `[f(a0,b0), ..., f(an,bn)]` if the lists are 
+   *  @return `[f(a0,b0), ..., f(an,bn)]` if the lists are
    *          `[a0, ..., ak]`, `[b0, ..., bl]` and
    *          `n = min(k,l)`
    */
@@ -708,7 +696,7 @@ object List extends SeqFactory[List] {
     b.toList
   }
 
-  /** Tests whether the given predicate `p` holds 
+  /** Tests whether the given predicate `p` holds
    *  for all corresponding elements of the argument lists.
    *
    *  @param p function to apply to each pair of elements.
