@@ -149,6 +149,52 @@ sealed abstract class List[+A] extends LinearSeq[A]
 
   override def toList: List[A] = this
 
+  override def map[B, That](f: A => B)(implicit bf: CanBuildFrom[List[A], B, That]): That = {
+    val b = bf(repr)
+    if (b.isInstanceOf[ListBuffer[_]])
+      mapList(f).asInstanceOf[That]
+    else {
+      b.sizeHint(this)
+      for (x <- this) b += f(x)
+      b.result
+    }
+  }
+
+  private def mapList[B](f: A => B): List[B] = {
+    if (isEmpty)
+      Nil
+    else
+      f(head) :: tail.mapList(f)
+  }
+
+  override def filter(p: A => Boolean): List[A] = {
+    if (isEmpty)
+      Nil
+    else if (p(head))
+      head :: tail.filter(p)
+    else
+      tail.filter(p)
+  }
+
+  override def collect[B, That](pf: PartialFunction[A, B])(implicit bf: CanBuildFrom[List[A], B, That]): That = {
+    val b = bf(repr)
+    if (b.isInstanceOf[ListBuffer[_]])
+      collectList(pf).asInstanceOf[That]
+    else {
+      for (x <- this) if (pf.isDefinedAt(x)) b += pf(x)
+      b.result
+    }
+  }
+
+  private def collectList[B](pf: PartialFunction[A, B]): List[B] = {
+    if (isEmpty)
+      Nil
+    else if (pf.isDefinedAt(head))
+      pf(head) :: tail.collectList(pf)
+    else
+      tail.collectList(pf)
+  }
+
   override def take(n: Int): List[A] = {
     if (n == 0 || isEmpty)
       Nil
