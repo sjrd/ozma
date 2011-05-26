@@ -3,6 +3,19 @@
 
 BaseScanner = GumpScanner.'class'
 
+fun {ButLast Xs}
+   case Xs of X|Xr then
+      case Xr of _|_ then X|{ButLast Xr}
+      else nil
+      end
+   else nil
+   end
+end
+
+fun {Strip C S}
+   case S of !C|Sr then {ButLast Sr} else S end
+end
+
 scanner ASTScanner from BaseScanner
    feat
       Reporter
