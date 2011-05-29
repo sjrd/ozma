@@ -16,14 +16,14 @@ package object ozma {
 
   @native def sleep(ms: Int): Unit = sys.error("stub")
 
-  def whileLoop[U](cond: => Boolean)(body: => U) {
+  def whileLoop(cond: => Boolean)(body: => Unit) {
     if (cond) {
       body
       whileLoop(cond)(body)
     }
   }
 
-  def doWhileLoop[U](body: => U)(cond: => Boolean) {
+  def doWhileLoop(body: => Unit)(cond: => Boolean) {
     body
     if (cond)
       doWhileLoop(body)(cond)
