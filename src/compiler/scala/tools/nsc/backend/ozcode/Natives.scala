@@ -62,8 +62,8 @@ trait Natives { self: OzCodes =>
       register(Float_unbox)
       register(Double_unbox)
 
-      register(Console_print)
-      register(Console_println)
+      register(StandardOutPrintStream_writeString)
+      register(StandardErrPrintStream_writeString)
 
       register(Port_newActiveObject)
       register(Port_SendProc_putOldAndGetNewTail)
@@ -166,6 +166,8 @@ trait Natives { self: OzCodes =>
 
       def printInfo = BuiltinFunction(System ~> 'printInfo)
       def showInfo = BuiltinFunction(System ~> 'showInfo)
+      def printError = BuiltinFunction(System ~> 'printError)
+      def showError = BuiltinFunction(System ~> 'showError)
     }
 
     // Value module
@@ -446,17 +448,19 @@ trait Natives { self: OzCodes =>
   object Float_unbox extends Primitive_unbox("scala.Float", "floatValue")
   object Double_unbox extends Primitive_unbox("scala.Double", "doubleValue")
 
-  object Console_print extends NativeMethod("scala.Console.print",
+  object StandardOutPrintStream_writeString extends NativeMethod(
+      "java.lang.StandardOutPrintStream.writeString",
       "scala.Unit", "`s`" -> "java.lang.String") {
     def body = {
       And(System.printInfo(QuotedVar("s").toRawVS()), unit)
     }
   }
 
-  object Console_println extends NativeMethod("scala.Console.println",
+  object StandardErrPrintStream_writeString extends NativeMethod(
+      "java.lang.StandardErrPrintStream.writeString",
       "scala.Unit", "`s`" -> "java.lang.String") {
     def body = {
-      And(System.showInfo(QuotedVar("s").toRawVS()), unit)
+      And(System.printError(QuotedVar("s").toRawVS()), unit)
     }
   }
 
