@@ -57,7 +57,7 @@ define
       in
          OzmaArgs = {MakeOzmaArgs Args StringClass StringLiteral}
          Obj = Mod.ObjID
-         {Obj 'main#1806194953'(OzmaArgs _)}
+         {Obj 'main#-1565094369'(OzmaArgs _)}
       catch E andthen {IsObject E} then
          {DumpException E}
       end

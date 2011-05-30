@@ -21,6 +21,7 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
     with TypeKinds {
   val global: OzmaGlobal
   import global._
+  import definitions.ArrayClass
 
   /** The OzCode representation of classes */
   val classes = new mutable.HashMap[global.Symbol, OzClass]
@@ -177,14 +178,19 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
   def paramsHash(sym: Symbol): Int = {
     sym.tpe match {
       case MethodType(params, resultType) =>
-        paramsHash(params.toList map (_.tpe.typeSymbol.fullName),
-            resultType.typeSymbol.fullName)
+        paramsHash(params.toList map (param => typeFullName(param.tpe)),
+            typeFullName(resultType))
 
       case NullaryMethodType(resultType) =>
-        paramsHash(Nil, resultType.typeSymbol.fullName)
+        paramsHash(Nil, typeFullName(resultType))
 
       case _ => abort("Expected a method type for " + sym)
     }
+  }
+
+  private def typeFullName(tpe: Type): String = tpe match {
+    case ArrayType(elementType) => typeFullName(elementType) + "[]"
+    case _ => tpe.typeSymbol.fullName
   }
 
   def paramsHash(paramTypeNames: List[String], resultTypeName: String): Int =
@@ -198,6 +204,15 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
 
   private def rotateLeft(value: Int, shift: Int) =
     (value << shift) | (value >>> (32-shift))
+
+  /** Extractor object to match array types
+   */
+  object ArrayType {
+    def unapply(typeRef: TypeRef) = typeRef match {
+      case TypeRef(_, ArrayClass, List(elementType)) => Some(elementType)
+      case _ => None
+    }
+  }
 
   /** A phase which works on ozcode */
   abstract class OzCodePhase(prev: Phase) extends global.GlobalPhase(prev) {
