@@ -38,6 +38,14 @@ trait OzmaGlobal extends Global with OzmaTrees {
     override val runsBefore = List[String]("namer")
   } with WhileLoopRecovering
 
+  // phaseName = "casetailcalls"
+  object caseClassTailCalls extends {
+    val global: OzmaGlobal.this.type = OzmaGlobal.this
+    val runsAfter = List[String]("parser")
+    val runsRightAfter = None
+    override val runsBefore = List[String]("namer")
+  } with CaseClassTailCalls
+
   // phaseName = "explicitouter"
   object ozmaExplicitOuter extends {
     val global: OzmaGlobal.this.type = OzmaGlobal.this
@@ -102,6 +110,7 @@ trait OzmaGlobal extends Global with OzmaTrees {
       syntaxAnalyzer          -> "parse source into ASTs, perform simple desugaring",
       singleAssignVals        -> "take care of single assignment values",
       whileLoopRecovering     -> "recover while loops",
+      caseClassTailCalls      -> "annotate case class constructors with @tailcall",
       analyzer.namerFactory   -> "resolve names, attach symbols to named trees",
       analyzer.packageObjects -> "load package objects",
       analyzer.typerFactory   -> "the meat and potatoes: type the trees",

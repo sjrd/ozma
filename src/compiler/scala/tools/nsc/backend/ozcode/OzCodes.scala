@@ -86,16 +86,38 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
 
   lazy val tailcallAnnot = definitions.getClass("scala.ozma.tailcall")
 
+  lazy val isCoreTailCallSymbol = makeCoreTailCallSymbols()
+
+  /* We need this dirty hard-coded computation for some core case classes
+   * because our compiler still relies on Java classpaths. Hence when
+   * compiling an application, :: e.g. is the standard Scala :: class, which
+   * does not have the @tailcall annotation.
+   */
+  def makeCoreTailCallSymbols() = {
+    import definitions._
+    import definitions.getClass
+
+    val classes = List(
+        ConsClass, SomeClass,
+        definitions.getClass("scala.Left"),
+        definitions.getClass("scala.Right")
+    ) ++ (TupleClass toList)
+
+    val constructors = classes map (_.primaryConstructor) toSet
+
+    val applies = classes map { clazz =>
+      getMember(clazz.companionModule, "apply")
+    } toSet
+
+    constructors ++ applies
+  }
+
   /** Compute the tail-call info of a method for use by the tailcalls phase */
   def computeTailCallInfo(method: Symbol): List[Int] = {
-    /* We need this dirty hard-coded computation for the constructor of ::
-     * because our compiler still relies on Java classpaths. Hence when
-     * compiling an application, :: is the standard Scala :: class, which does
-     * not have the @tailcall annotations.
-     */
-    if (method eq definitions.ConsClass.primaryConstructor)
-      List(1, 0)
-    else {
+    if (isCoreTailCallSymbol(method)) {
+      val MethodType(params, _) = method.tpe
+      (params.length-1 to 0 by -1) toList
+    } else {
       method.tpe match {
         case MethodType(params, _) =>
           val indices = for ((param, idx) <- params.view.zipWithIndex
