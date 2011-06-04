@@ -220,12 +220,9 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
 
   def paramsHash(paramAndResultTypeNames: List[String]) = {
     paramAndResultTypeNames.view.zipWithIndex.foldLeft(0) {
-      case (prev, (item, idx)) => prev ^ rotateLeft(item.##, idx)
+      case (prev, (item, idx)) => prev ^ Integer.rotateLeft(item.##, idx)
     }
   }
-
-  private def rotateLeft(value: Int, shift: Int) =
-    (value << shift) | (value >>> (32-shift))
 
   /** Extractor object to match array types
    */
