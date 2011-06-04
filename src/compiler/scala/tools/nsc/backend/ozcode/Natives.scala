@@ -65,8 +65,9 @@ trait Natives { self: OzCodes =>
       register(StandardOutPrintStream_writeString)
       register(StandardErrPrintStream_writeString)
 
+      register(Port_newPort)
+      register(Port_send)
       register(Port_newActiveObject)
-      register(Port_SendProc_putOldAndGetNewTail)
     }
 
     def getBodyFor(symbol: Symbol) = {
@@ -157,6 +158,7 @@ trait Natives { self: OzCodes =>
     def StringLiteral = BuiltinFunction(Variable("StringLiteral"))
     def NewPort = BuiltinFunction(Variable("NewPort"))
     def Send = BuiltinFunction(Variable("Send"))
+    def NewOzmaPort = BuiltinFunction(Variable("NewOzmaPort"))
     def NewActiveObject = BuiltinFunction(Variable("NewActiveObject"))
 
     // System module
@@ -464,27 +466,28 @@ trait Natives { self: OzCodes =>
     }
   }
 
+  object Port_newPort extends NativeMethod("ozma.Port.newPort",
+      "scala.Tuple2") {
+    def body = {
+      NewOzmaPort()
+    }
+  }
+
+  object Port_send extends NativeMethod("ozma.Port.send",
+      "scala.Unit", "`element`" -> "java.lang.Object") {
+    def body = {
+      And(
+          Send(At(QuotedVar("rawPort ")), QuotedVar("element")),
+          unit
+      )
+    }
+  }
+
   object Port_newActiveObject extends NativeMethod(
       "ozma.Port.newActiveObject",
       "java.lang.Object", "`obj`" -> "java.lang.Object") {
     def body = {
       NewActiveObject(QuotedVar("obj"))
-    }
-  }
-
-  object Port_SendProc_putOldAndGetNewTail extends NativeMethod(
-      "ozma.Port.SendProc.putOldAndGetNewTail",
-      "scala.collection.immutable.List",
-      "`old`" -> "scala.collection.immutable.List") {
-    def body = {
-      def tail = QuotedVar(" tail")
-      def old = QuotedVar("old")
-      def R = Variable("R")
-
-      LocalDef(R, And(
-          old === Assign(tail, R),
-          R
-      ))
     }
   }
 }

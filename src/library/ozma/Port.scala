@@ -2,20 +2,19 @@ package ozma
 
 import scala.ozma._
 
-class Port[-A](private val sendProc: A => Unit) {
-  def send(element: A) = sendProc(element)
+class Port[-A] private (private val rawPort: Any) {
+  @native def send(element: A): Unit = sys.error("stub")
 }
 
 object Port {
+  @native def newPort[A]: (List[A], Port[A]) = sys.error("stub")
+
   def make[A](handler: List[A] => Unit) = {
-    // must be parsable by Scala
-    @singleAssignment var head: List[A] = newUnbound
-
+    val (stream, port) = newPort[A]
     thread {
-      handler(head)
+      handler(stream)
     }
-
-    new Port(new SendProc(head))
+    port
   }
 
   def newStatelessPortObject[A, U](handler: A => U) =
@@ -25,16 +24,4 @@ object Port {
     make[A](_.foldLeft(init)(handler))
 
   @native def newActiveObject[A <: AnyRef](obj: A): A = sys.error("stub")
-
-  private class SendProc[A](head: List[A]) extends Function1[A, Unit] {
-    private[this] var tail = head
-
-    def apply(element: A) {
-      @singleAssignment var newTail: List[A] = newUnbound
-      val oldTail = element :: newTail
-      newTail = putOldAndGetNewTail(oldTail)
-    }
-
-    @native def putOldAndGetNewTail(old: List[A]): List[A] = sys.error("stub")
-  }
 }

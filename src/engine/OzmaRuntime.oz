@@ -7,6 +7,12 @@ import
    `functor:java.lang.Character`('class:java.lang.Character':`class:java.lang.Character`) at 'x-ozma://root/java/lang/Character.ozf'
    `functor:java.lang.ClassCastException`('type:java.lang.ClassCastException':`type:java.lang.ClassCastException`
                                           'class:java.lang.ClassCastException':`class:java.lang.ClassCastException`) at 'x-ozma://root/java/lang/ClassCastException.ozf'
+   `functor:scala.Tuple2`('type:scala.Tuple2':`type:scala.Tuple2`
+                          'class:scala.Tuple2':`class:scala.Tuple2`) at 'x-ozma://root/scala/Tuple2.ozf'
+   `functor:scala.collection.immutable.$colon$colon`('type:scala.collection.immutable.$colon$colon':`type:scala.collection.immutable.$colon$colon`
+                                                     'class:scala.collection.immutable.$colon$colon':`class:scala.collection.immutable.$colon$colon`) at 'x-ozma://root/scala/collection/immutable.ozf'
+   `functor:ozma.Port`('type:ozma.Port':`type:ozma.Port`
+                       'class:ozma.Port':`class:ozma.Port`) at 'x-ozma://root/ozma/Port.ozf'
 
 export
    'InitObject':InitObject
@@ -18,6 +24,7 @@ export
    'ArrayClassOf':ArrayClassOf
    'MultiArrayClassOf':MultiArrayClassOf
    'StringLiteral':StringLiteral
+   'NewOzmaPort':NewOzmaPort
    'AnyEqEq':AnyEqEq
    'AnyRefEqEq':AnyRefEqEq
    'NewActiveObject':NewActiveObject
@@ -126,6 +133,33 @@ define
       {NewObject `type:java.lang.String`
        `class:java.lang.String`
        '<init>'(RawString _)}
+   end
+
+   fun {NewOzmaPort}
+      RawStream RawPort
+      Stream Port
+   in
+      {NewPort RawStream RawPort}
+      thread {OzmaPortHandler RawStream Stream} end
+      Port = {NewObject `type:ozma.Port` `class:ozma.Port`
+              '<init>#-855160462'(RawPort _)}
+      {NewObject `type:scala.Tuple2` `class:scala.Tuple2`
+       '<init>#667154047'(!!Stream Port _)}
+   end
+
+   proc {OzmaPortHandler RawStream Stream}
+      case RawStream of Head|Tail then
+         NewStream
+      in
+         Stream = {Cons Head !!NewStream}
+         {OzmaPortHandler Tail NewStream}
+      end
+   end
+
+   fun {Cons Head Tail}
+      {NewObject `type:scala.collection.immutable.$colon$colon`
+       `class:scala.collection.immutable.$colon$colon`
+       '<init>#835746335'(Head Tail _)}
    end
 
    fun {AnyEqEq Left Right}
