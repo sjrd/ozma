@@ -7,13 +7,13 @@ object BinaryTrees {
   type Comparer[-A] = (A, A) => Boolean
 
   def insert[A](smaller: Comparer[A])(tree: Tree[A], value: A): Tree[A] = tree match {
-    case Leaf => Node(value, Leaf, Leaf)
+    case Leaf => Node(value)
 
     case Node(v, left, right) =>
       if (smaller(value, v))
-        Node(v, insert(smaller)(left, value), right)
+        Node(v, insert(smaller)(left, value), right) // this is tail-recursive
       else
-        Node(v, left, insert(smaller)(right, value))
+        Node(v, left, insert(smaller)(right, value)) // this is tail-recursive
   }
 
   def displayTree(tree: Tree[Any]) {
