@@ -174,19 +174,7 @@ abstract class GenMozart extends OzmaSubComponent {
       val fullName = ast.StringLiteral(sym.fullName + suffixFor(sym))
 
       val value = if (isPrimitiveType(sym)) {
-        val encodedArrayType = toTypeKind(sym.tpe).toType.typeSymbol match {
-          case UnitClass     => "U"
-          case BooleanClass  => "Z"
-          case CharClass     => "C"
-          case ByteClass     => "B"
-          case ShortClass    => "S"
-          case IntClass      => "I"
-          case LongClass     => "J"
-          case FloatClass    => "F"
-          case DoubleClass   => "D"
-          case x => abort("Unknown primitive type: " + x.fullName)
-        }
-
+        val encodedArrayType = toTypeKind(sym.tpe).primitiveCharCode
         val zero = genZeroOf(sym)
 
         val message = ast.Tuple(ast.Atom("<init>"),

@@ -9,23 +9,36 @@ package ozcode
 
 trait TypeKinds { self: OzCodes =>
   import global._
-  import definitions.{ ArrayClass, AnyRefClass, ObjectClass, NullClass, NothingClass, arrayType }
+  import definitions.{ UnitClass, BooleanClass, CharClass, ByteClass,
+    ShortClass, IntClass, LongClass, FloatClass, DoubleClass, ArrayClass,
+    AnyRefClass, ObjectClass, NullClass, NothingClass, arrayType }
 
   lazy val ObjectReference = REFERENCE(definitions.ObjectClass)
+
+  lazy val UnitKind = UNIT
+  lazy val BooleanKind = BOOL
+  lazy val CharKind = INT(CharClass)
+  lazy val ByteKind = INT(ByteClass)
+  lazy val ShortKind = INT(ShortClass)
+  lazy val IntKind = INT(IntClass)
+  lazy val LongKind = INT(LongClass)
+  lazy val FloatKind = FLOAT(FloatClass)
+  lazy val DoubleKind = FLOAT(DoubleClass)
+  lazy val RefKind = ObjectReference
 
   /** A map from scala primitive Types to OzCode TypeKinds */
   lazy val primitiveTypeMap: Map[Symbol, TypeKind] = {
     import definitions._
     Map(
-      UnitClass     -> UNIT,
-      BooleanClass  -> BOOL,
-      CharClass     -> INT(CharClass),
-      ByteClass     -> INT(ByteClass),
-      ShortClass    -> INT(ShortClass),
-      IntClass      -> INT(IntClass),
-      LongClass     -> INT(LongClass),
-      FloatClass    -> FLOAT(FloatClass),
-      DoubleClass   -> FLOAT(DoubleClass)
+      UnitClass     -> UnitKind,
+      BooleanClass  -> BooleanKind,
+      CharClass     -> CharKind,
+      ByteClass     -> ByteKind,
+      ShortClass    -> ShortKind,
+      IntClass      -> IntKind,
+      LongClass     -> LongKind,
+      FloatClass    -> FloatKind,
+      DoubleClass   -> DoubleKind
     )
   }
 
@@ -45,6 +58,19 @@ trait TypeKinds { self: OzCodes =>
     }
 
     def toType: Type
+
+    def primitiveCharCode = toType.typeSymbol match {
+      case UnitClass     => "V"
+      case BooleanClass  => "Z"
+      case CharClass     => "C"
+      case ByteClass     => "B"
+      case ShortClass    => "S"
+      case IntClass      => "I"
+      case LongClass     => "J"
+      case FloatClass    => "F"
+      case DoubleClass   => "D"
+      case x => abort("Unknown primitive type: " + x.fullName)
+    }
   }
 
   sealed abstract class ValueTypeKind(cls: Symbol) extends TypeKind {
