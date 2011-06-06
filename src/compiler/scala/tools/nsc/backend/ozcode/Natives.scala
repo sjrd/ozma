@@ -18,11 +18,62 @@ trait Natives { self: OzCodes =>
     def body: ast.Phrase
   }
 
+  abstract class SpecializedNativeMethod(val fullName: String,
+      val resultTypeName: String, val argDefs: Pair[String, String]*) {
+    def specializedKinds = List(UnitKind, BooleanKind, CharKind, ByteKind,
+        ShortKind, IntKind, LongKind, FloatKind, DoubleKind, RefKind)
+
+    def body(specializedKind: TypeKind): ast.Phrase
+
+    def specializations: List[NativeMethod] = {
+      for (specializedKind <- specializedKinds) yield
+        makeSpecializedMethod(specializedKind)
+    }
+
+    private def makeSpecializedMethod(specializedKind: TypeKind) = {
+      val specializedName = specializedKind.toType.typeSymbol.fullName
+      val specializedParamName =
+        if (specializedKind == UnitKind) "scala.runtime.BoxedUnit"
+        else specializedName
+
+      def mapTypeName(typeName: String, param: Boolean) = {
+        if (typeName == "A")
+          if (param) specializedParamName else specializedName
+        else
+          typeName
+      }
+
+      val name =
+        if (specializedKind.isInstanceOf[REFERENCE])
+          fullName
+        else
+          fullName + "$m" + specializedKind.primitiveCharCode + "c$sp"
+
+      val result = mapTypeName(resultTypeName, param = false)
+      val args = argDefs map {
+        case (name, typeName) => (name, mapTypeName(typeName, param = true))
+      }
+
+      new Method(specializedKind, name, result, args:_*)
+    }
+
+    private class Method(specializedKind: TypeKind, fullName: String,
+        resultTypeName: String, argDefs: Pair[String, String]*) extends
+        NativeMethod(fullName, resultTypeName, argDefs:_*) {
+      def body = SpecializedNativeMethod.this.body(specializedKind)
+    }
+  }
+
   object nativeMethods {
     private val methods = new HashMap[Pair[String, Int], NativeMethod]
 
     private[this] def register(native: NativeMethod) {
       methods += (native.fullName, native.hash) -> native
+    }
+
+    private[this] def register(native: SpecializedNativeMethod) {
+      for (specialized <- native.specializations)
+        register(specialized)
     }
 
     def init() {
@@ -133,6 +184,15 @@ trait Natives { self: OzCodes =>
       def toRawString = new MethodWrapper(phrase, "toRawString")
 
       def doApply = new MethodWrapper(phrase, "apply", "java.lang.Object")
+
+      def apply0(resultKind: TypeKind) = {
+        if (resultKind.isInstanceOf[REFERENCE])
+          doApply
+        else {
+          val name = "apply$mc" + resultKind.primitiveCharCode + "$sp"
+          new MethodWrapper(phrase, name, resultKind.toType.typeSymbol.fullName)
+        }
+      }
     }
 
     implicit def wrapPhrase(phrase: Phrase) = new PhraseWrapper(phrase)
@@ -201,23 +261,22 @@ trait Natives { self: OzCodes =>
   import astDSL.StringLiteral
 
   object ScalaOzma_newUnbound extends
-      NativeMethod("scala.ozma.package.newUnbound", "java.lang.Object") {
-    def body = __
+      SpecializedNativeMethod("scala.ozma.package.newUnbound", "A") {
+    def body(specializedKind: TypeKind) = __
   }
 
   object ScalaOzma_thread extends
-      NativeMethod("scala.ozma.package.thread", "java.lang.Object",
+      SpecializedNativeMethod("scala.ozma.package.thread", "A",
           "`stat`" -> "scala.Function0") {
-    def body = {
+    def body(specializedKind: TypeKind) = {
       val stat = QuotedVar("stat")
-      Thread(stat.doApply())
+      Thread(stat.apply0(specializedKind)())
     }
   }
 
-  object ScalaOzma_waitBound extends NativeMethod(
-      "scala.ozma.package.waitBound", "scala.Unit",
-      "`value`" -> "java.lang.Object") {
-    def body = {
+  object ScalaOzma_waitBound extends SpecializedNativeMethod(
+      "scala.ozma.package.waitBound", "scala.Unit", "`value`" -> "A") {
+    def body(specializedKind: TypeKind) = {
       And(
           Wait(QuotedVar("value")),
           unit
@@ -225,10 +284,9 @@ trait Natives { self: OzCodes =>
     }
   }
 
-  object ScalaOzma_waitQuiet extends NativeMethod(
-      "scala.ozma.package.waitQuiet", "scala.Unit",
-      "`value`" -> "java.lang.Object") {
-    def body = {
+  object ScalaOzma_waitQuiet extends SpecializedNativeMethod(
+      "scala.ozma.package.waitQuiet", "scala.Unit", "`value`" -> "A") {
+    def body(specializedKind: TypeKind) = {
       And(
           Value.waitQuiet(QuotedVar("value")),
           unit
@@ -236,10 +294,9 @@ trait Natives { self: OzCodes =>
     }
   }
 
-  object ScalaOzma_waitNeeded extends NativeMethod(
-      "scala.ozma.package.waitNeeded", "scala.Unit",
-      "`value`" -> "java.lang.Object") {
-    def body = {
+  object ScalaOzma_waitNeeded extends SpecializedNativeMethod(
+      "scala.ozma.package.waitNeeded", "scala.Unit", "`value`" -> "A") {
+    def body(specializedKind: TypeKind) = {
       And(
           WaitNeeded(QuotedVar("value")),
           unit
@@ -247,28 +304,28 @@ trait Natives { self: OzCodes =>
     }
   }
 
-  object ScalaOzma_byNeed extends NativeMethod(
-      "scala.ozma.package.byNeed", "java.lang.Object",
+  object ScalaOzma_byNeed extends SpecializedNativeMethod(
+      "scala.ozma.package.byNeed", "A",
       "`value`" -> "scala.Function0") {
-    def body = {
+    def body(specializedKind: TypeKind) = {
       val value = QuotedVar("value")
-      ByNeed(Fun($, Nil, value.doApply()))
+      ByNeed(Fun($, Nil, value.apply0(specializedKind)()))
     }
   }
 
-  object ScalaOzma_byNeedFuture extends NativeMethod(
-      "scala.ozma.package.byNeedFuture", "java.lang.Object",
+  object ScalaOzma_byNeedFuture extends SpecializedNativeMethod(
+      "scala.ozma.package.byNeedFuture", "A",
       "`value`" -> "scala.Function0") {
-    def body = {
+    def body(specializedKind: TypeKind) = {
       val value = QuotedVar("value")
-      ByNeedFuture(Fun($, Nil, value.doApply()))
+      ByNeedFuture(Fun($, Nil, value.apply0(specializedKind)()))
     }
   }
 
-  object ScalaOzma_makeFailedValue extends NativeMethod(
-      "scala.ozma.package.makeFailedValue", "java.lang.Object",
+  object ScalaOzma_makeFailedValue extends SpecializedNativeMethod(
+      "scala.ozma.package.makeFailedValue", "A",
       "`throwable`" -> "java.lang.Throwable") {
-    def body = {
+    def body(specializedKind: TypeKind) = {
       Value.failed(QuotedVar("throwable"))
     }
   }
