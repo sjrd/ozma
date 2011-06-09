@@ -11,17 +11,15 @@ object Port {
 
   def make[A](handler: List[A] => Unit) = {
     val (stream, port) = newPort[A]
-    thread {
-      handler(stream)
-    }
+    threadGC(stream)(handler)
     port
   }
 
   def newStatelessPortObject[A, U](handler: A => U) =
-    make[A](_ foreach handler)
+    make[A](_.toAgent foreach handler)
 
   def newPortObject[A, B](init: B)(handler: (B, A) => B) =
-    make[A](_.foldLeft(init)(handler))
+    make[A](_.toAgent.foldLeft(init)(handler))
 
   @native def newActiveObject[A <: AnyRef](obj: A): A = sys.error("stub")
 }
