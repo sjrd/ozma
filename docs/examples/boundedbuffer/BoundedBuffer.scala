@@ -5,7 +5,7 @@ object BoundedBuffer {
 
   def main(args: Array[String]) {
     val produced = generate(1)
-    val buffered = threadGC(produced)(boundedBuffer(_, 5))
+    val buffered = thread(boundedBuffer(produced, 5))
 
     println(buffered(0))
 

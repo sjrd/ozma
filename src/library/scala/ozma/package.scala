@@ -5,12 +5,6 @@ package object ozma {
 
   def thread[@specialized A](stat: A): A = sys.error("stub")
 
-  def threadGC[@specialized A, B](arg: B)(stat: B => A): A =
-    thread(stat(arg))
-
-  def threadGC[@specialized A, B, C](arg1: B, arg2: C)(stat: (B, C) => A): A =
-    thread(stat(arg1, arg2))
-
   @native def waitBound[@specialized A](value: A): Unit = sys.error("stub")
   @native def waitQuiet[@specialized A](value: A): Unit = sys.error("stub")
   @native def waitNeeded[@specialized A](value: A): Unit = sys.error("stub")

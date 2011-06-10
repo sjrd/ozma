@@ -11,7 +11,9 @@ object ResultPort {
 
   def make[A, R](handler: List[Item[A, R]] => Unit) = {
     val (stream, port) = newPort[A, R]
-    threadGC(stream)(handler)
+    thread {
+      handler(stream)
+    }
     port
   }
 

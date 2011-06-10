@@ -11,7 +11,7 @@ object TokenRing {
   def createTokenAgents(count: Int) {
     def loop(id: Int, input: List[Unit]): List[Unit] = {
       if (id > count) input
-      else loop(id+1, threadGC(input)(tokenAgent(id, _)))
+      else loop(id+1, thread(tokenAgent(id, input)))
     }
 
     val bootstrap: List[Unit]
