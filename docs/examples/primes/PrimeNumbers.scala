@@ -10,7 +10,7 @@ import scala.ozma._
 
 object PrimeNumbers {
   def main(args: Array[String]) {
-    val count = java.lang.Integer.parseInt(args(0))
+    val count = args(0).toInt
     val result = sieve(generateFrom(2))
     thread(result take count) foreach println
   }
