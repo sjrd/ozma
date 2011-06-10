@@ -13,6 +13,10 @@ import
                                                      'class:scala.collection.immutable.$colon$colon':`class:scala.collection.immutable.$colon$colon`) at 'x-ozma://root/scala/collection/immutable.ozf'
    `functor:ozma.Port`('type:ozma.Port':`type:ozma.Port`
                        'class:ozma.Port':`class:ozma.Port`) at 'x-ozma://root/ozma/Port.ozf'
+   `functor:ozma.ResultPort`('type:ozma.ResultPort':`type:ozma.ResultPort`
+                             'class:ozma.ResultPort':`class:ozma.ResultPort`) at 'x-ozma://root/ozma/ResultPort.ozf'
+   `functor:ozma.ResultPort.Item`('type:ozma.ResultPort.Item':`type:ozma.ResultPort.Item`
+                                  'class:ozma.ResultPort.Item':`class:ozma.ResultPort.Item`) at 'x-ozma://root/ozma/ResultPort/Item.ozf'
 
 export
    'InitObject':InitObject
@@ -25,6 +29,7 @@ export
    'MultiArrayClassOf':MultiArrayClassOf
    'StringLiteral':StringLiteral
    'NewOzmaPort':NewOzmaPort
+   'NewOzmaResultPort':NewOzmaResultPort
    'AnyEqEq':AnyEqEq
    'AnyRefEqEq':AnyRefEqEq
    'NewActiveObject':NewActiveObject
@@ -143,8 +148,7 @@ define
       thread {OzmaPortHandler RawStream Stream} end
       Port = {NewObject `type:ozma.Port` `class:ozma.Port`
               '<init>#-855160462'(RawPort _)}
-      {NewObject `type:scala.Tuple2` `class:scala.Tuple2`
-       '<init>#667154047'(!!Stream Port _)}
+      {Pair !!Stream Port}
    end
 
    proc {OzmaPortHandler RawStream Stream}
@@ -154,6 +158,33 @@ define
          Stream = {Cons Head !!NewStream}
          {OzmaPortHandler Tail NewStream}
       end
+   end
+
+   fun {NewOzmaResultPort}
+      RawStream RawPort
+      Stream Port
+   in
+      {NewPort RawStream RawPort}
+      thread {OzmaResultPortHandler RawStream Stream} end
+      Port = {NewObject `type:ozma.ResultPort` `class:ozma.ResultPort`
+              '<init>#1894474825'(RawPort _)}
+      {Pair !!Stream Port}
+   end
+
+   proc {OzmaResultPortHandler RawStream Stream}
+      case RawStream of (In#Out)|Tail then
+         NewStream
+         Item = {NewObject `type:ozma.ResultPort.Item` `class:ozma.ResultPort.Item`
+                 '<init>#1317412069'(In Out _)}
+      in
+         Stream = {Cons Item !!NewStream}
+         {OzmaResultPortHandler Tail NewStream}
+      end
+   end
+
+   fun {Pair X1 X2}
+      {NewObject `type:scala.Tuple2` `class:scala.Tuple2`
+       '<init>#667154047'(X1 X2 _)}
    end
 
    fun {Cons Head Tail}

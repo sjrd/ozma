@@ -20,6 +20,4 @@ object Port {
 
   def newPortObject[A, B](init: B)(handler: (B, A) => B) =
     make[A](_.toAgent.foldLeft(init)(handler))
-
-  @native def newActiveObject[A <: AnyRef](obj: A): A = sys.error("stub")
 }

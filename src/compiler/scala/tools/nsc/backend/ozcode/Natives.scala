@@ -118,7 +118,10 @@ trait Natives { self: OzCodes =>
 
       register(Port_newPort)
       register(Port_send)
-      register(Port_newActiveObject)
+
+      register(ResultPort_newPort)
+      register(ResultPort_send)
+      register(ResultPort_newActiveObject)
     }
 
     def getBodyFor(symbol: Symbol) = {
@@ -219,6 +222,7 @@ trait Natives { self: OzCodes =>
     def NewPort = BuiltinFunction(Variable("NewPort"))
     def Send = BuiltinFunction(Variable("Send"))
     def NewOzmaPort = BuiltinFunction(Variable("NewOzmaPort"))
+    def NewOzmaResultPort = BuiltinFunction(Variable("NewOzmaResultPort"))
     def NewActiveObject = BuiltinFunction(Variable("NewActiveObject"))
 
     // System module
@@ -540,8 +544,22 @@ trait Natives { self: OzCodes =>
     }
   }
 
-  object Port_newActiveObject extends NativeMethod(
-      "ozma.Port.newActiveObject",
+  object ResultPort_newPort extends NativeMethod("ozma.ResultPort.newPort",
+      "scala.Tuple2") {
+    def body = {
+      NewOzmaResultPort()
+    }
+  }
+
+  object ResultPort_send extends NativeMethod("ozma.ResultPort.send",
+      "java.lang.Object", "`element`" -> "java.lang.Object") {
+    def body = {
+      Send(At(QuotedVar("rawPort ")), Tuple(Atom("#"), QuotedVar("element"), $))
+    }
+  }
+
+  object ResultPort_newActiveObject extends NativeMethod(
+      "ozma.ResultPort.newActiveObject",
       "java.lang.Object", "`obj`" -> "java.lang.Object") {
     def body = {
       NewActiveObject(QuotedVar("obj"))
