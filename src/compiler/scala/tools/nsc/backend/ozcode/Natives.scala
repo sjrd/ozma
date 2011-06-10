@@ -122,6 +122,8 @@ trait Natives { self: OzCodes =>
       register(ResultPort_newPort)
       register(ResultPort_send)
       register(ResultPort_newActiveObject)
+
+      register(Random_rand)
     }
 
     def getBodyFor(symbol: Symbol) = {
@@ -245,6 +247,14 @@ trait Natives { self: OzCodes =>
       def status = BuiltinFunction(Value ~> 'status)
       def makeNeeded = BuiltinFunction(Value ~> 'makeNeeded)
       def failed = BuiltinFunction(Value ~> 'failed)
+    }
+
+    // Value module
+
+    object OS {
+      @inline private[this] def OS = Variable("OS")
+
+      def rand = BuiltinFunction(OS ~> 'rand)
     }
 
     // New constructor call
@@ -563,6 +573,12 @@ trait Natives { self: OzCodes =>
       "java.lang.Object", "`obj`" -> "java.lang.Object") {
     def body = {
       NewActiveObject(QuotedVar("obj"))
+    }
+  }
+
+  object Random_rand extends NativeMethod("ozma.Random.rand", "scala.Int") {
+    def body = {
+      OS.rand()
     }
   }
 }

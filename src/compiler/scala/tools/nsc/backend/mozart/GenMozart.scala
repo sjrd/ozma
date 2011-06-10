@@ -293,7 +293,7 @@ abstract class GenMozart extends OzmaSubComponent {
         "NewOzmaResultPort", "AnyEqEq", "AnyRefEqEq", "NewActiveObject",
         "BinNot", "BinAnd", "BinOr", "BinXor", "LSL", "LSR", "ASR") toSet
 
-    private val isOzSystemModule = List("System").toSet
+    private val isOzSystemModule = List("System", "OS").toSet
 
     def makeImports(functorName: String, definitions: Node) = {
       val systemImports = new HashSet[String]
