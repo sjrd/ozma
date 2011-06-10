@@ -12,7 +12,7 @@ object PrimeNumbers {
   def main(args: Array[String]) {
     val count = args(0).toInt
     val result = sieve(generateFrom(2))
-    thread(result take count) foreach println
+    (result.lazified take count) foreach println
   }
 
   def generateFrom(from: Int): List[Int] = byNeedFuture {
@@ -23,19 +23,7 @@ object PrimeNumbers {
     list match {
       case Nil => Nil
       case head :: tail =>
-        head :: sieve(lazyFilter(tail, _ % head != 0))
-    }
-  }
-
-  def lazyFilter(list: List[Int],
-      predicate: Int => Boolean): List[Int] = byNeedFuture {
-    list match {
-      case Nil => Nil
-      case head :: tail =>
-        if (predicate(head))
-          head :: lazyFilter(tail, predicate)
-        else
-          lazyFilter(tail, predicate)
+        head :: sieve(tail.lazified filter (_ % head != 0))
     }
   }
 }
