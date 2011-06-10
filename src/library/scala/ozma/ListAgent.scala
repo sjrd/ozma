@@ -1,5 +1,7 @@
 package scala.ozma
 
+import util.control.Breaks
+
 /**
  * This class provides GC-friendly operations on lists.
  * <p>Calling a method of List does not allow the GC to garbage collect the
@@ -10,7 +12,8 @@ package scala.ozma
  * <p>An instance of `ListAgent` can be used <i>once</i>. You may not call two
  * methods of the same instance. This would throw an `IllegalStateException`.
  */
-class ListAgent[A](@tailcall private var _list: List[A]) {
+class ListAgent[A](@tailcall private var _list: List[A])
+    extends TraversableOnce[A] {
   private def list = {
     val result = _list
     if (result eq null)
@@ -19,13 +22,75 @@ class ListAgent[A](@tailcall private var _list: List[A]) {
     result
   }
 
-  def toList = list
+  private lazy val breaks = new Breaks
+  import breaks.{ breakable, break }
+
+  def isTraversableAgain = false
+
   def foreach[U](f: A => U) = ListAgent.foreach(list)(f)
+  def isEmpty = _list.isEmpty
+  def hasDefiniteSize = false
+
+  def seq: ListAgent[A] = this
+
+  // Implementation copied from TraversableLike
+  def forall(p: A => Boolean): Boolean = {
+    var result = true
+    breakable {
+      for (x <- this)
+        if (!p(x)) { result = false; break }
+    }
+    result
+  }
+
+  // Implementation copied from TraversableLike
+  def exists(p: A => Boolean): Boolean = {
+    var result = false
+    breakable {
+      for (x <- this)
+        if (p(x)) { result = true; break }
+    }
+    result
+  }
+
+  // Implementation copied from TraversableLike
+  def find(p: A => Boolean): Option[A] = {
+    var result: Option[A] = None
+    breakable {
+      for (x <- this)
+        if (p(x)) { result = Some(x); break }
+    }
+    result
+  }
+
+  // Implementation copied from TraversableLike
+  def copyToArray[B >: A](xs: Array[B], start: Int, len: Int) {
+    var i = start
+    val end = (start + len) min xs.length
+    breakable {
+      for (x <- this) {
+        if (i >= end) break
+        xs(i) = x
+        i += 1
+      }
+    }
+  }
+
+  override def toList = list
+  def toTraversable: Traversable[A] = list
+  def toIterator: Iterator[A] = toStream.iterator
+  def toStream: Stream[A] = list.toStream
+  override def toSeq = list
+
+  override def foldLeft[B](z: B)(op: (B, A) => B) =
+    ListAgent.foldLeft(list)(z)(op)
+
   def map[B](f: A => B) = ListAgent(ListAgent.map(list)(f))
+
   def filter(p: A => Boolean) = ListAgent(ListAgent.filter(list)(p))
+
   def filterNot(p: A => Boolean) = ListAgent(ListAgent.filterNot(list)(p))
-  def foldLeft[B](z: B)(op: (B, A) => B) = ListAgent.foldLeft(list)(z)(op)
-  def /: [B](z: B)(op: (B, A) => B) = foldLeft(z)(op)
+
   def drop(n: Int): List[A] = ListAgent(ListAgent.drop(list)(n))
 }
 
