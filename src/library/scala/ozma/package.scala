@@ -52,12 +52,14 @@ package object ozma {
       doWhileLoop(body)(cond)
   }
 
-  implicit def listWrapperToAgent[A](list: List[A]) =
-    new ListWrapperToAgent(list)
+  implicit def wrapList[A](list: List[A]) = new ListWrapper(list)
 
   implicit def listUnwrapperFromAgent[A](agent: ListAgent[A]) = agent.toList
+  implicit def lazyListToList[A](lazyList: LazyList[A]) = lazyList.toList
 
-  class ListWrapperToAgent[A](list: List[A]) {
+  class ListWrapper[A](list: List[A]) {
     def toAgent = new ListAgent(list)
+
+    def lazified = new LazyList(list)
   }
 }
