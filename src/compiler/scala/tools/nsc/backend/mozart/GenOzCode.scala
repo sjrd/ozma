@@ -549,31 +549,54 @@ abstract class GenOzCode extends OzmaSubComponent {
       blackholeReturnedValue(genExpression(tree, ctx))
     }
 
-    private def isPrimitive(sym: Symbol) =
-      scalaPrimitives.isPrimitive(sym) && (sym ne definitions.String_+)
+    lazy val isThreadMethod = makeThreadMethods()
+
+    def makeThreadMethods() = {
+      import definitions.{ getClass, getMember }
+      val module = definitions.getModule("scala.ozma.package")
+
+      val suffs = for (kind <- primitiveKinds)
+        yield "$m" + kind.primitiveCharCode + "c$sp"
+      val suffixes = "" :: suffs
+
+      val methods = for (suffix <- suffixes)
+        yield getMember(module, "thread" + suffix)
+
+      methods.toSet
+    }
+
+    private def isPrimitive(sym: Symbol) = {
+      (scalaPrimitives.isPrimitive(sym) && (sym ne definitions.String_+)) || (
+          isThreadMethod(sym))
+    }
 
     private def genPrimitiveOp(tree: Apply, ctx: Context): ast.Phrase = {
-      import scalaPrimitives._
-
       val sym = tree.symbol
       val Apply(fun @ Select(receiver, _), args) = tree
-      val code = scalaPrimitives.getPrimitive(sym, receiver.tpe)
 
-      if (isArithmeticOp(code) || isLogicalOp(code) || isComparisonOp(code))
-        genSimpleOp(tree, receiver :: args, ctx, code)
-      else if (code == scalaPrimitives.CONCAT)
-        genStringConcat(tree, receiver, args, ctx)
-      else if (code == HASH)
-        genScalaHash(tree, receiver, ctx)
-      else if (isArrayOp(code))
-        genArrayOp(tree, ctx, code)
-      else if (code == SYNCHRONIZED)
-        genSynchronized(tree, ctx)
-      else if (isCoercion(code))
-        genCoercion(tree, receiver, ctx, code)
-      else
-        abort("Primitive operation not handled yet: " + sym.fullName + "(" +
-            fun.symbol.simpleName + ") " + " at: " + (tree.pos))
+      if (isThreadMethod(sym))
+        ast.Thread(genExpression(args.head, ctx))
+      else {
+        import scalaPrimitives._
+
+        val code = scalaPrimitives.getPrimitive(sym, receiver.tpe)
+
+        if (isArithmeticOp(code) || isLogicalOp(code) || isComparisonOp(code))
+          genSimpleOp(tree, receiver :: args, ctx, code)
+        else if (code == scalaPrimitives.CONCAT)
+          genStringConcat(tree, receiver, args, ctx)
+        else if (code == HASH)
+          genScalaHash(tree, receiver, ctx)
+        else if (isArrayOp(code))
+          genArrayOp(tree, ctx, code)
+        else if (code == SYNCHRONIZED)
+          genSynchronized(tree, ctx)
+        else if (isCoercion(code))
+          genCoercion(tree, receiver, ctx, code)
+        else
+          abort("Primitive operation not handled yet: " + sym.fullName + "(" +
+              fun.symbol.simpleName + ") " + " at: " + (tree.pos))
+      }
     }
 
     private def genSimpleOp(tree: Apply, args: List[Tree], ctx: Context,

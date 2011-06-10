@@ -3,29 +3,13 @@ package scala
 package object ozma {
   @native def newUnbound[@specialized A]: A = sys.error("stub")
 
-  @native def thread[@specialized A](stat: => A): A = sys.error("stub")
+  def thread[@specialized A](stat: A): A = sys.error("stub")
 
-  def threadGC[@specialized A, B >: Null](arg: B)(stat: B => A): A = {
-    var argGC = arg
-    thread {
-      val arg = argGC
-      argGC = null
-      stat(arg)
-    }
-  }
+  def threadGC[@specialized A, B](arg: B)(stat: B => A): A =
+    thread(stat(arg))
 
-  def threadGC[@specialized A, B >: Null, C >: Null](arg1: B, arg2: C)(
-      stat: (B, C) => A): A = {
-    var argGC1 = arg1
-    var argGC2 = arg2
-    thread {
-      val arg1 = argGC1
-      val arg2 = argGC2
-      argGC1 = null
-      argGC2 = null
-      stat(arg1, arg2)
-    }
-  }
+  def threadGC[@specialized A, B, C](arg1: B, arg2: C)(stat: (B, C) => A): A =
+    thread(stat(arg1, arg2))
 
   @native def waitBound[@specialized A](value: A): Unit = sys.error("stub")
   @native def waitQuiet[@specialized A](value: A): Unit = sys.error("stub")

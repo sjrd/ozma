@@ -80,7 +80,6 @@ trait Natives { self: OzCodes =>
       methods.clear()
 
       register(ScalaOzma_newUnbound)
-      register(ScalaOzma_thread)
       register(ScalaOzma_waitBound)
       register(ScalaOzma_waitQuiet)
       register(ScalaOzma_waitNeeded)
@@ -277,15 +276,6 @@ trait Natives { self: OzCodes =>
   object ScalaOzma_newUnbound extends
       SpecializedNativeMethod("scala.ozma.package.newUnbound", "A") {
     def body(specializedKind: TypeKind) = __
-  }
-
-  object ScalaOzma_thread extends
-      SpecializedNativeMethod("scala.ozma.package.thread", "A",
-          "`stat`" -> "scala.Function0") {
-    def body(specializedKind: TypeKind) = {
-      val stat = QuotedVar("stat")
-      Thread(stat.apply0(specializedKind)())
-    }
   }
 
   object ScalaOzma_waitBound extends SpecializedNativeMethod(

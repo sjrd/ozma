@@ -26,6 +26,9 @@ trait TypeKinds { self: OzCodes =>
   lazy val DoubleKind = FLOAT(DoubleClass)
   lazy val RefKind = ObjectReference
 
+  lazy val primitiveKinds = List(UnitKind, BooleanKind, CharKind, ByteKind,
+      ShortKind, IntKind, LongKind, FloatKind, DoubleKind)
+
   /** A map from scala primitive Types to OzCode TypeKinds */
   lazy val primitiveTypeMap: Map[Symbol, TypeKind] = {
     import definitions._
