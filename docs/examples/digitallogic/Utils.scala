@@ -15,6 +15,9 @@ object Utils {
   def display(signals: (Char, Signal)*) {
     def loop(signals: List[Signal]) {
       val next = for (signal <- signals) yield {
+        if (signal.isEmpty)
+          return
+
         print(signal.head + " ")
         signal.tail
       }
