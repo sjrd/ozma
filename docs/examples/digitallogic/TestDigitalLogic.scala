@@ -30,6 +30,16 @@ object TestDigitalLogic {
             'c' -> c, 's' -> s)
   }
 
+  def fullAdder(x: Signal, y: Signal, z: Signal) = {
+    val k = x && y
+    val l = y && z
+    val m = x && z
+    val c = k || l || m
+    val s = z ^^ x ^^ y
+
+    (c, s)
+  }
+
   /* Latch */
 
   def testLatch() {
@@ -41,6 +51,16 @@ object TestDigitalLogic {
     display('c' -> control,
             'i' -> input,
             'o' -> output)
+  }
+
+  def latch(control: Signal, input: Signal) = {
+    val output: Signal
+    val f = Gates.Delay(output)
+    val x = f && control
+    val z = !control
+    val y = z && input
+    output = x || y
+    output
   }
 
   /* Clock */
