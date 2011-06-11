@@ -12,20 +12,35 @@ import
 prepare
 
    OptSpecs = record(
-                 %help(char:[&h &?] type:bool default:false)
+                 help(single char:[&h &?] type:bool default:false)
+                 version(single char:[&v] type:bool default:false)
                  systempath(single type:string)
                  classpath(single char:"p" type:string default:"./")
                  bootclasspath(single type:string))
+
+   VersionString = 'Ozma code runner version 0.1 -- Copyright 2011, S. Doeraene'
 
    Usage =
    'Usage:\n'#
    '  ozma -h\n'#
    '  ozma [--classpath PATH] OBJECT\n'
 
+   HelpText = VersionString#'\n\n'#Usage
+
 define
 
    proc {ShowUsage ExitCode}
       {System.printInfo Usage}
+      {Application.exit ExitCode}
+   end
+
+   proc {ShowHelp ExitCode}
+      {System.printInfo HelpText}
+      {Application.exit ExitCode}
+   end
+
+   proc {ShowVersion ExitCode}
+      {System.showInfo VersionString}
       {Application.exit ExitCode}
    end
 
@@ -99,9 +114,11 @@ define
       % Parse command-line arguments
       Args = {Application.getArgs OptSpecs}
    in
-      %if Args.help then
-      %   {ShowUsage 0}
-      %end
+      if Args.help then
+         {ShowHelp 0}
+      elseif Args.version then
+         {ShowVersion 0}
+      end
 
       % Set up classpath
       local

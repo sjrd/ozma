@@ -8,11 +8,14 @@ import scala.tools.nsc.interactive.{ RefinedBuildManager, SimpleBuildManager }
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.{ Reporter, ConsoleReporter }
 import scala.tools.nsc.util.{ BatchSourceFile, FakePos }
-import Properties.{ versionString, copyrightString, residentPromptString }
+import Properties.residentPromptString
 
 /** The main class for ozmac, a compiler for the programming language Ozma.
  */
 object Main extends AnyRef with EvalLoop {
+  val versionString = "version 0.1"
+  val copyrightString = "Copyright 2011 S. Doeraene"
+
   val versionMsg = "Ozma compiler " +
     versionString + " -- " +
     copyrightString
