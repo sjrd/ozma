@@ -142,10 +142,12 @@ abstract class GenMozart extends OzmaSubComponent {
     /////////////////// Module assembly ///////////////////////
 
     def makeModules(classes: List[OzClass]): List[ast.Eq] = {
-      val modules = for (clazz <- classes
+      val modules0 = for (clazz <- classes
           if (clazz.symbol.isModuleClass &&
               (clazz.symbol.companionModule != NoSymbol)))
         yield makeModule(clazz)
+
+      val modules = modules0.flatten
 
       val classConstants = for (clazz <- classes)
         yield makeClassConstant(clazz)
@@ -153,18 +155,24 @@ abstract class GenMozart extends OzmaSubComponent {
       modules ::: classConstants
     }
 
-    def makeModule(clazz: OzClass) = {
+    def makeModule(clazz: OzClass): List[Eq] = {
       val sym = clazz.symbol
       val module = sym.companionModule
 
-      val atom = if (sym.isImplClass)
+      val variable = varForModuleInternal(module)
+      val typeVar = varForSymbol(sym)
+      val classVar = genClassConstant(sym)
+
+      val init = if (sym.isImplClass)
         ast.Atom("<init>#1063877011")
       else
         atomForSymbol(clazz.symbol.primaryConstructor)
 
-      val value = genNew(clazz.symbol, Nil, atom)
+      val accessor = genBuiltinApply("ModuleAccessor", variable,
+          typeVar, classVar, ast.Tuple(init, ast.Wildcard()))
 
-      ast.Eq(varForSymbol(module), makeByNeed(value))
+      List(ast.Eq(variable, ast.Wildcard()),
+          ast.Eq(varForModule(module), accessor))
     }
 
     def makeClassConstant(clazz: OzClass) = {
@@ -260,7 +268,11 @@ abstract class GenMozart extends OzmaSubComponent {
     }
 
     def groupNameFor(varName: String) = {
-      val initFullName = varName.substring(varName.indexOf(':')+1)
+      val initFullName =
+        if (varName contains ':')
+          varName.substring(varName.indexOf(':')+1)
+        else
+          varName.substring(varName.indexOf('~')+1)
 
       val fullName = if (varName startsWith "static:")
         initFullName.substring(0, initFullName.lastIndexOf('.'))
@@ -291,6 +303,7 @@ abstract class GenMozart extends OzmaSubComponent {
         "NewObject", "NewArrayObject", "ArrayValue", "AsInstance", "IsInstance",
         "ArrayClassOf", "MultiArrayClassOf", "StringLiteral", "NewOzmaPort",
         "NewOzmaResultPort", "AnyEqEq", "AnyRefEqEq", "NewActiveObject",
+        "ModuleAccessor",
         "BinNot", "BinAnd", "BinOr", "BinXor", "LSL", "LSR", "ASR") toSet
 
     private val isOzSystemModule = List("System", "OS").toSet

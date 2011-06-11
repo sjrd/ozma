@@ -27,7 +27,7 @@ trait ClassManifest[T] extends OptManifest[T] with Equals with Serializable {
   /** A class representing the type U to which T would be erased. Note
     * that there is no subtyping relationship between T and U. */
   def erasure: JClass[_]
-  
+
   private def subtype(sub: JClass[_], sup: JClass[_]): Boolean = {
     def loop(left: Set[JClass[_]], seen: Set[JClass[_]]): Boolean = {
       left.nonEmpty && {
@@ -41,18 +41,18 @@ trait ClassManifest[T] extends OptManifest[T] with Equals with Serializable {
     }
     loop(Set(sub), Set())
   }
-  
+
   private def subargs(args1: List[OptManifest[_]], args2: List[OptManifest[_]]) = (args1 corresponds args2) {
     // !!! [Martin] this is wrong, need to take variance into account
     case (x: ClassManifest[_], y: ClassManifest[_]) => x <:< y
     case (x, y)                                     => (x eq NoManifest) && (y eq NoManifest)
   }
 
-  /** Tests whether the type represented by this manifest is a subtype 
+  /** Tests whether the type represented by this manifest is a subtype
     * of the type represented by `that' manifest, subject to the limitations
     * described in the header.
     */
-  def <:<(that: ClassManifest[_]): Boolean = {    
+  def <:<(that: ClassManifest[_]): Boolean = {
     // All types which could conform to these types will override <:<.
     def cannotMatch = {
       import Manifest._
@@ -65,7 +65,7 @@ trait ClassManifest[T] extends OptManifest[T] with Equals with Serializable {
     //
     //   List[String] <: AnyRef
     //   Map[Int, Int] <: Iterable[(Int, Int)]
-    // 
+    //
     // Given the manifest for Map[A, B] how do I determine that a
     // supertype has single type argument (A, B) ? I don't see how we
     // can say whether X <:< Y when type arguments are involved except
@@ -80,19 +80,19 @@ trait ClassManifest[T] extends OptManifest[T] with Equals with Serializable {
         that.typeArguments.isEmpty && subtype(this.erasure, that.erasure)
     }
   }
-  
-  /** Tests whether the type represented by this manifest is a supertype 
+
+  /** Tests whether the type represented by this manifest is a supertype
     * of the type represented by `that' manifest, subject to the limitations
     * described in the header.
     */
   def >:>(that: ClassManifest[_]): Boolean =
     that <:< this
-  
+
   def canEqual(other: Any) = other match {
     case _: ClassManifest[_]  => true
     case _                    => false
   }
- 
+
   /** Tests whether the type represented by this manifest is equal to
     * the type represented by `that' manifest, subject to the limitations
     * described in the header.
@@ -103,10 +103,10 @@ trait ClassManifest[T] extends OptManifest[T] with Equals with Serializable {
   }
   override def hashCode = this.erasure.##
 
-  protected def arrayClass[T](tp: JClass[_]): JClass[Array[T]] = 
+  protected def arrayClass[T](tp: JClass[_]): JClass[Array[T]] =
     java.lang.reflect.Array.newInstance(tp, 0).getClass.asInstanceOf[JClass[Array[T]]]
 
-  def arrayManifest: ClassManifest[Array[T]] = 
+  def arrayManifest: ClassManifest[Array[T]] =
     ClassManifest.classType[Array[T]](arrayClass[T](erasure))
 
   def newArray(len: Int): Array[T] =
@@ -129,16 +129,16 @@ trait ClassManifest[T] extends OptManifest[T] with Equals with Serializable {
       .asInstanceOf[Array[Array[Array[Array[Array[T]]]]]]
 
   def newWrappedArray(len: Int): WrappedArray[T] =
-    // it's safe to assume T <: AnyRef here because the method is overridden for all value type manifests 
+    // it's safe to assume T <: AnyRef here because the method is overridden for all value type manifests
     new WrappedArray.ofRef[T with AnyRef](newArray(len).asInstanceOf[Array[T with AnyRef]]).asInstanceOf[WrappedArray[T]]
-  
-  def newArrayBuilder(): ArrayBuilder[T] = 
+
+  def newArrayBuilder(): ArrayBuilder[T] =
     // it's safe to assume T <: AnyRef here because the method is overridden for all value type manifests
     new ArrayBuilder.ofRef[T with AnyRef]()(this.asInstanceOf[ClassManifest[T with AnyRef]]).asInstanceOf[ArrayBuilder[T]]
 
   def typeArguments: List[OptManifest[_]] = List()
 
-  protected def argString = 
+  protected def argString =
     if (typeArguments.nonEmpty) typeArguments.mkString("[", ", ", "]")
     else if (erasure.isArray) "["+ClassManifest.fromClass(erasure.getComponentType)+"]"
     else ""
@@ -186,8 +186,12 @@ object ClassManifest {
     *       pass varargs as arrays into this, we get an infinitely recursive call
     *       to boxArray. (Besides, having a separate case is more efficient)
     */
-  def classType[T <: AnyRef](clazz: JClass[_]): ClassManifest[T] =
-    new ClassTypeManifest[T](None, clazz, Nil)
+  def classType[T <: AnyRef](clazz: JClass[_]): ClassManifest[T] = {
+    println("classType: " + clazz)
+    val result = new ClassTypeManifest[T](None, clazz, Nil)
+    println("exit classType")
+    result
+  }
 
   /** ClassManifest for the class type `clazz[args]', where `clazz' is
     * a top-level or static class and `args` are its type arguments */
@@ -204,7 +208,7 @@ object ClassManifest {
     case NoManifest => Object.asInstanceOf[ClassManifest[Array[T]]]
     case m: ClassManifest[_] => m.asInstanceOf[ClassManifest[T]].arrayManifest
   }
-  
+
   /** ClassManifest for the abstract type `prefix # name'. `upperBound' is not
     * strictly necessary as it could be obtained by reflection. It was
     * added so that erasure can be calculated without reflection. */
@@ -231,12 +235,13 @@ object ClassManifest {
 /** Manifest for the class type `clazz[args]', where `clazz' is
   * a top-level or static class. */
 private class ClassTypeManifest[T <: AnyRef](
-  prefix: Option[OptManifest[_]], 
-  val erasure: JClass[_], 
+  prefix: Option[OptManifest[_]],
+  val erasure: JClass[_],
   override val typeArguments: List[OptManifest[_]]) extends ClassManifest[T]
 {
-  override def toString = 
-    (if (prefix.isEmpty) "" else prefix.get.toString+"#") + 
+  println("created ClassTypeManifest for class " + erasure)
+  override def toString =
+    (if (prefix.isEmpty) "" else prefix.get.toString+"#") +
     (if (erasure.isArray) "Array" else erasure.getName) +
     argString
 }

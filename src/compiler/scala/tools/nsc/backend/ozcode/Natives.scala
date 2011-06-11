@@ -432,7 +432,7 @@ trait Natives { self: OzCodes =>
           "`x`" -> primitiveType) {
 
     def body = {
-      def BoxedType = QuotedVar("module:"+boxedType+"$")
+      def BoxedType = Apply(QuotedVar("module:"+boxedType+"$"), Nil)
 
       implicit def wrapForValueOf(phrase: Phrase) = new {
         def valueOf = new MethodWrapper(phrase, "valueOf",

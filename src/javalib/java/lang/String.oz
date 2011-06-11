@@ -2,7 +2,8 @@ functor
 
 import
    OzmaRuntime('NewObject':NewObject
-               'IsInstance':IsInstance) at 'x-ozma://system/OzmaRuntime.ozf'
+               'IsInstance':IsInstance
+               'ModuleAccessor':ModuleAccessor) at 'x-ozma://system/OzmaRuntime.ozf'
    `functor:java.lang.Object`('type:java.lang.Object':Object
                               'class:java.lang.Object':ObjectClass) at 'x-ozma://root/java/lang/Object.ozf'
    `functor:java.lang.Class`('type:java.lang.Class':Class
@@ -76,6 +77,7 @@ define
    class `type:java.lang.String$` from Object
       meth '<init>'($)
          Object, '<init>#1063877011'(_)
+         `modulevar~java.lang.String$` = self
          unit
       end
 
@@ -84,11 +86,11 @@ define
       end
    end
 
-   `module:java.lang.String$` = {ByNeed fun {$}
-                                           {NewObject `type:java.lang.String$`
-                                            `class:java.lang.String$`
-                                            '<init>'(_)}
-                                        end}
+   `modulevar~java.lang.String$`
+   `module:java.lang.String$` = {ModuleAccessor `modulevar~java.lang.String$`
+                                 `type:java.lang.String$`
+                                 `class:java.lang.String$`
+                                 '<init>'(_)}
 
    `class:java.lang.String$` = {ByNeed fun {$}
                                           {NewObject Class ClassClass

@@ -71,7 +71,7 @@ define
          StringLiteral = RuntimeMod.'StringLiteral'
       in
          OzmaArgs = {MakeOzmaArgs Args StringClass StringLiteral}
-         Obj = Mod.ObjID
+         Obj = {Mod.ObjID}
          {Obj 'main#-1565094369'(OzmaArgs _)}
       catch E andthen {IsObject E} then
          {DumpException E}
@@ -108,6 +108,15 @@ define
 
    fun {MakeResolveHandler Prefix Path}
       {Resolve.handler.prefix Prefix Path}
+   end
+
+   proc {DisplayDebug Debug}
+      case Debug of d(info:Info stack:Stack) then
+         {System.show Info}
+         for Entry in Stack do
+            {System.show Entry}
+         end
+      end
    end
 
    try
@@ -148,12 +157,19 @@ define
    catch error(ap(usage Message) debug:_) then
       {System.showError Message}
       {ShowUsage 1}
-   [] error(Err debug:d(info:Info stack:Stack)) then
+   [] error(Err debug:Debug) then
+      {System.show error}
       {System.show Err}
-      {System.show Info}
-      for Entry in Stack do
-         {System.show Entry}
-      end
+      {DisplayDebug Debug}
+      {Application.exit 1}
+   [] system(Err debug:Debug) then
+      {System.show system}
+      {System.show Err}
+      {DisplayDebug Debug}
+      {Application.exit 1}
+   [] failure(debug:Debug) then
+      {System.show failure}
+      {DisplayDebug Debug}
       {Application.exit 1}
    end
 

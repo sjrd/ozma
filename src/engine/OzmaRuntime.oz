@@ -1,6 +1,7 @@
 functor
 
 import
+   System
    `functor:java.lang.String`('type:java.lang.String':`type:java.lang.String`
                               'class:java.lang.String':`class:java.lang.String`) at 'x-ozma://root/java/lang/String.ozf'
    `functor:java.lang.Number`('class:java.lang.Number':`class:java.lang.Number`) at 'x-ozma://root/java/lang/Number.ozf'
@@ -33,6 +34,7 @@ export
    'AnyEqEq':AnyEqEq
    'AnyRefEqEq':AnyRefEqEq
    'NewActiveObject':NewActiveObject
+   'ModuleAccessor':ModuleAccessor
    'BinNot':BinNot
    'BinOr':BinOr
    'BinXor':BinXor
@@ -45,8 +47,19 @@ define
 
    InitObject = {NewName}
 
+   Indent = {NewCell nil}
+
    fun {NewObject Type Class Init}
-      {New Type InitObject(Class Init)}
+      Result
+   in
+      {Wait Type}
+      {System.printInfo @Indent} {System.show 'creating object of type '#Type}
+      {System.printInfo @Indent} {System.show 'with message '#Init}
+      Indent := (@Indent)#'  '
+      Result = {New Type InitObject(Class Init)}
+      Indent := (@Indent).1
+      {System.printInfo @Indent} {System.show 'crected object of type '#Type}
+      Result
    end
 
    proc {NewArrayObject ComponentClass Dims Lengths Result}
@@ -224,6 +237,19 @@ define
       end
       proc {$ M}
          {Send P M}
+      end
+   end
+
+   fun {ModuleAccessor ModuleVar Type Class Init}
+      Lock = {ByNeed NewLock}
+   in
+      fun {$}
+         lock Lock then
+            if {IsFree ModuleVar} then
+               ModuleVar = {NewObject Type Class Init}
+            end
+            ModuleVar
+         end
       end
    end
 

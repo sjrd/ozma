@@ -139,7 +139,7 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
     val name = if (sym.name.isTypeName)
       "type:" + sym.fullName
     else if (sym.isModule)
-      "module:" + sym.fullName
+      throw new AssertionError("varForSymbol for module requested")
     else if (sym.isStaticMember)
       "static:" + sym.fullName
     else if (sym.isLabel)
@@ -171,6 +171,14 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
   def varForClass(sym: Symbol) = {
     val name = "class:" + sym.fullName
     ast.QuotedVar(name + suffixFor(sym))
+  }
+
+  def varForModuleInternal(sym: Symbol) = {
+    ast.QuotedVar("modulevar~" + sym.fullName + "$")
+  }
+
+  def varForModule(sym: Symbol) = {
+    ast.QuotedVar("module:" + sym.fullName + "$")
   }
 
   def suffixFor(sym: Symbol) =

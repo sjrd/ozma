@@ -297,7 +297,24 @@ abstract class GenOzCode extends OzmaSubComponent {
           val message = buildMessage(atomForSymbol(fun.symbol) setPos fun.pos,
               arguments)
 
-          ast.ObjApply(superClass, message)
+          val superCall = ast.ObjApply(superClass, message)
+
+          def isStaticModule(sym: Symbol): Boolean =
+            (sym.isModuleClass && !sym.isImplClass && !sym.isLifted &&
+                sym.companionModule != NoSymbol)
+
+          // We initialize the module instance just after the super constructor
+          // call.
+          if (isStaticModule(ctx.clazz.symbol) && !ctx.isModuleInitialized &&
+              ctx.method.symbol.isClassConstructor) {
+            ctx.isModuleInitialized = true
+            val module = ctx.clazz.symbol.companionModule
+            val initModule = ast.Eq(varForModuleInternal(module), ast.Self())
+
+            ast.And(ast.Eq(ast.Wildcard(), superCall),
+                initModule, ast.UnitVal())
+          } else
+            superCall
 
         // 'new' constructor call
         case Apply(fun @ Select(New(tpt), nme.CONSTRUCTOR), args) =>
@@ -379,7 +396,7 @@ abstract class GenOzCode extends OzmaSubComponent {
             if (settings.debug.value)
               log("LOAD_MODULE from 'This': " + tree.symbol);
             assert(!tree.symbol.isPackageClass, "Cannot use package as value: " + tree)
-            genModule(ctx, tree.symbol, tree.pos)
+            genModule(tree.symbol, tree.pos)
           } else {
             ast.Self()
           }
@@ -393,7 +410,7 @@ abstract class GenOzCode extends OzmaSubComponent {
             log("LOAD_MODULE from Select(<emptypackage>): " + tree.symbol)
           }
           assert(!tree.symbol.isPackageClass, "Cannot use package as value: " + tree)
-          genModule(ctx, tree.symbol, tree.pos)
+          genModule(tree.symbol, tree.pos)
 
         case Select(qualifier, selector) =>
           val sym = tree.symbol
@@ -402,7 +419,7 @@ abstract class GenOzCode extends OzmaSubComponent {
             if (settings.debug.value)
               log("LOAD_MODULE from Select(qualifier, selector): " + sym)
             assert(!tree.symbol.isPackageClass, "Cannot use package as value: " + tree)
-            genModule(ctx, sym, tree.pos)
+            genModule(sym, tree.pos)
           } else {
             val symVar = varForSymbol(sym)
 
@@ -425,7 +442,7 @@ abstract class GenOzCode extends OzmaSubComponent {
               if (settings.debug.value)
                 log("LOAD_MODULE from Ident(name): " + sym)
               assert(!sym.isPackageClass, "Cannot use package as value: " + tree)
-              genModule(ctx, sym, tree.pos)
+              genModule(sym, tree.pos)
             } else {
               val value = varForSymbol(sym)
 
@@ -710,7 +727,7 @@ abstract class GenOzCode extends OzmaSubComponent {
       val module = tpe.typeSymbol.companionModule
       val boxSymbol = definitions.getMember(module, function)
       val messageBox = buildMessage(atomForSymbol(boxSymbol), List(expr))
-      ast.Apply(varForSymbol(module), List(messageBox))
+      ast.Apply(genModule(module), List(messageBox))
     }
 
     private def genScalaHash(tree: Apply, receiver: Tree,
@@ -866,11 +883,10 @@ abstract class GenOzCode extends OzmaSubComponent {
       }
     }
 
-    private def genModule(ctx: Context, sym: Symbol, pos: Position) =
-      if (sym.isModuleClass)
-        varForSymbol(sym.companionModule) setPos pos
-      else
-        varForSymbol(sym) setPos pos
+    private def genModule(sym: Symbol, pos: Position = NoPosition) = {
+      val symbol = if (sym.isModuleClass) sym.companionModule else sym
+      ast.Apply(varForModule(symbol) setPos pos, Nil) setPos pos
+    }
 
     def genConversion(from: TypeKind, to: TypeKind, value: ast.Phrase) = {
       def int0 = ast.IntLiteral(0) setPos value.pos
@@ -955,6 +971,8 @@ abstract class GenOzCode extends OzmaSubComponent {
 
       /** Current method definition. */
       var defdef: DefDef = _
+
+      var isModuleInitialized = false
 
       def this(other: Context) = {
         this()
