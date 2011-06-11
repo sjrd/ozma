@@ -11,7 +11,7 @@ import
 
 prepare
 
-   OptSpecs = record(
+   OptSpecs = record(mode:start
                  help(single char:[&h &?] type:bool default:false)
                  version(single char:[&v] type:bool default:false)
                  systempath(single type:string)
@@ -23,7 +23,7 @@ prepare
    Usage =
    'Usage:\n'#
    '  ozma -h\n'#
-   '  ozma [--classpath PATH] OBJECT\n'
+   '  ozma [--classpath PATH] OBJECT [ARGS]\n'
 
    HelpText = VersionString#'\n\n'#Usage
 
