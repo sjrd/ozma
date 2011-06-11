@@ -23,6 +23,7 @@ sealed abstract class Bit(bool: Boolean) {
 
   def ~& (right: Bit) = ~(this & right)
   def ~| (right: Bit) = ~(this | right)
+  def ~^ (right: Bit) = ~(this ^ right)
 }
 
 case object Zero extends Bit(false)

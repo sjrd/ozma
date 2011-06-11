@@ -2,15 +2,14 @@ import scala.ozma._
 import ozma._
 
 import digitallogic._
-import Gates._
 
 import Utils._
 
 object DigitalClock {
   def main(args: Array[String]) {
     val count = args.headOption map (_.toInt) getOrElse 8
-    val clock = Clock()
-    val zeros = Generator(clock)(i => Zero)
+    val clock = Signal.clock()
+    val zeros = Signal.generator(clock)(i => Zero)
 
     def makeOutputs(i: Int, carry: Signal): List[Signal] = {
       if (i == count) Nil
@@ -18,7 +17,7 @@ object DigitalClock {
         val prev: Signal
         val result = prev ^^ carry
         val nextCarry = prev && carry
-        prev = Delay(result)
+        prev = Gates.delay(result)
         result :: makeOutputs(i+1, nextCarry)
       }
     }

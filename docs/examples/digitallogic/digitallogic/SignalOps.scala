@@ -3,11 +3,12 @@ package digitallogic
 class SignalOps(signal: Signal) {
   import Gates._
 
-  def unary_!() = Not(signal)
+  def unary_!() = not(signal)
 
-  def && (right: Signal) = And(signal, right)
-  def || (right: Signal) = Or(signal, right)
-  def !&& (right: Signal) = Nand(signal, right)
-  def !|| (right: Signal) = Nor(signal, right)
-  def ^^ (right: Signal) = Xor(signal, right)
+  def && (right: Signal) = and(signal, right)
+  def || (right: Signal) = or(signal, right)
+  def !&& (right: Signal) = nand(signal, right)
+  def !|| (right: Signal) = nor(signal, right)
+  def ^^ (right: Signal) = xor(signal, right)
+  def !^^ (right: Signal) = xnor(signal, right)
 }

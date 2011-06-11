@@ -3,7 +3,7 @@ package digitallogic
 import scala.ozma._
 
 object Gates {
-  def Not(input: Signal): Signal =
+  def not(input: Signal): Signal =
     thread(input.toAgent map (~_))
 
   private def makeGate(combination: (Bit, Bit) => Bit)(
@@ -11,35 +11,16 @@ object Gates {
     thread(left.toAgent.zipMap(right)(combination))
   }
 
-  val And  = makeGate(_ & _) _
-  val Or   = makeGate(_ | _) _
-  val Nand = makeGate(_ ~& _) _
-  val Nor  = makeGate(_ ~| _) _
-  val Xor  = makeGate(_ ^ _) _
+  val and  = makeGate(_ & _) _
+  val or   = makeGate(_ | _) _
+  val nand = makeGate(_ ~& _) _
+  val nor  = makeGate(_ ~| _) _
+  val xor  = makeGate(_ ^ _) _
+  def xnor = makeGate(_ ~^ _) _
 
-  def Delay(input: Signal) = Zero :: input
+  def delay(input: Signal) = Zero :: input
 
-  def Clock(delay: Int = 1000, value: Bit = One) = {
-    def loop(): Signal = {
-      sleep(delay)
-      value :: loop()
-    }
-
-    thread(loop())
-  }
-
-  def Generator(clock: Signal)(value: Int => Bit) = {
-    def loop(clock: Signal, i: Int): Signal = {
-      waitBound(clock)
-      value(i) :: loop(clock.tail, i+1)
-    }
-
-    thread(loop(clock, 0))
-  }
-
-  def Cycle(clock: Signal, values: Bit*) = {
-    Generator(clock) {
-      i => values(i % values.length)
-    }
-  }
+  def delay(input: Signal, count: Int): Signal =
+    if (count <= 0) input
+    else delay(delay(input), count-1)
 }

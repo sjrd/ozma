@@ -7,35 +7,36 @@ import Utils._
 
 object TestDigitalLogic {
   def main(args: Array[String]) {
-    (args.headOption getOrElse "") match {
-      case "adder" => testFullAdder()
-      case "latch" => testLatch()
-      case "clock" => testClock()
-      case _ =>
-        println("Specify one of:")
-        println("  adder, latch, clock")
-    }
+    testFullAdder()
+    testLatch()
+    testClock()
   }
 
   /* Full adder */
 
   def testFullAdder() {
-    val x: Signal = List(1, 1, 0)
-    val y: Signal = List(0, 1, 0)
-    val z: Signal = List(1, 1, 1)
+    println("Full adder")
+    println()
+
+    val x = Signal(1, 1, 0)
+    val y = Signal(0, 1, 0)
+    val z = Signal(1, 1, 1)
 
     val (c, s) = fullAdder(x, y, z)
 
+    assert(c == Signal(1, 1, 0))
+    assert(s == Signal(0, 1, 1))
+
     display('x' -> x, 'y' -> y, 'z' -> z,
             'c' -> c, 's' -> s)
+
+    println()
   }
 
   def fullAdder(x: Signal, y: Signal, z: Signal) = {
-    val k = x && y
-    val l = y && z
-    val m = x && z
-    val c = k || l || m
-    val s = z ^^ x ^^ y
+    val t = x ^^ y
+    val c = (t && z) || (x && y)
+    val s = t ^^ z
 
     (c, s)
   }
@@ -43,19 +44,26 @@ object TestDigitalLogic {
   /* Latch */
 
   def testLatch() {
-    val control: Signal = List(0, 0, 1, 1, 0, 0, 1)
-    val input: Signal   = List(1, 0, 0, 1, 1, 0, 1)
+    println("Latch")
+    println()
+
+    val control = Signal(0, 0, 1, 1, 0, 0, 1)
+    val input   = Signal(1, 0, 0, 1, 1, 0, 1)
 
     val output = latch(control, input)
+
+    assert(output == Signal(1, 0, 0, 0, 1, 0, 0))
 
     display('c' -> control,
             'i' -> input,
             'o' -> output)
+
+    println()
   }
 
   def latch(control: Signal, input: Signal) = {
     val output: Signal
-    val f = Gates.Delay(output)
+    val f = Gates.delay(output)
     val x = f && control
     val z = !control
     val y = z && input
@@ -66,11 +74,12 @@ object TestDigitalLogic {
   /* Clock */
 
   def testClock() {
-    import Gates._
+    println("Clock")
+    println()
 
-    val clock = Clock()
-    val left = Cycle(clock, 1, 0, 1)
-    val right = Cycle(clock, 0, 1)
+    val clock = Signal.clock()
+    val left = Signal.cycle(clock, 1, 0, 1)
+    val right = Signal.cycle(clock, 0, 1)
     val output = left && right
 
     display('l' -> left, 'r' -> right, 'o' -> output)
