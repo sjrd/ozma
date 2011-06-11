@@ -3,6 +3,8 @@ import ozma._
 
 import digitallogic._
 
+import Utils._
+
 object TestDigitalLogic {
   def main(args: Array[String]) {
     (args.headOption getOrElse "") match {
@@ -28,16 +30,6 @@ object TestDigitalLogic {
             'c' -> c, 's' -> s)
   }
 
-  def fullAdder(x: Signal, y: Signal, z: Signal) = {
-    val k = x && y
-    val l = y && z
-    val m = x && z
-    val c = k || l || m
-    val s = z ^^ x ^^ y
-
-    (c, s)
-  }
-
   /* Latch */
 
   def testLatch() {
@@ -51,16 +43,6 @@ object TestDigitalLogic {
             'o' -> output)
   }
 
-  def latch(control: Signal, input: Signal) = {
-    val output: Signal
-    val f = Gates.Delay(output)
-    val x = f && control
-    val z = !control
-    val y = z && input
-    output = x || y
-    output
-  }
-
   /* Clock */
 
   def testClock() {
@@ -72,29 +54,5 @@ object TestDigitalLogic {
     val output = left && right
 
     display('l' -> left, 'r' -> right, 'o' -> output)
-  }
-
-  /* Display signals */
-
-  def display(signals: (Char, Signal)*) {
-    def loop(signals: List[Signal]) {
-      val next = for (signal <- signals) yield {
-        print(signal.head + " ")
-        signal.tail
-      }
-
-      println()
-      loop(next)
-    }
-
-    val sigs = signals toList
-
-    for (header <- sigs.map(_._1))
-      print(header + " ")
-
-    println()
-    println()
-
-    loop(sigs.map(_._2))
   }
 }
