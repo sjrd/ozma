@@ -17,6 +17,11 @@ class LazyList[A](@tailcall private val list: List[A]) {
   def take(n: Int) = LazyList(LazyList.take(list)(n))
 
   def drop(n: Int) = LazyList(LazyList.drop(list)(n))
+
+  def zip[B](that: List[B]) = LazyList.zip(list)(that)
+
+  def zipMap[B, C](that: List[B])(f: (A, B) => C) =
+    ListAgent.zipMap(list)(that)(f)
 }
 
 object LazyList {
@@ -47,5 +52,16 @@ object LazyList {
   def drop[A](list: List[A])(n: Int): List[A] = byNeedFuture {
     if (n <= 0 || list.isEmpty) list
     else drop(list.tail)(n-1)
+  }
+
+  def zip[A, B](list: List[A])(that: List[B]): List[(A, B)] = byNeedFuture {
+    if (list.isEmpty || that.isEmpty) Nil
+    else (list.head, that.head) :: zip(list.tail)(that.tail)
+  }
+
+  def zipMap[A, B, C](list: List[A])(that: List[B])(
+      f: (A, B) => C): List[C] = byNeedFuture {
+    if (list.isEmpty || that.isEmpty) Nil
+    else f(list.head, that.head) :: zipMap(list.tail)(that.tail)(f)
   }
 }

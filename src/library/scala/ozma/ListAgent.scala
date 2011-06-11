@@ -91,9 +91,14 @@ class ListAgent[A](@tailcall private var _list: List[A])
 
   def filterNot(p: A => Boolean) = ListAgent.filterNot(list)(p)
 
-  def take(n: Int): List[A] = ListAgent.take(list)(n)
+  def take(n: Int) = ListAgent.take(list)(n)
 
-  def drop(n: Int): List[A] = ListAgent.drop(list)(n)
+  def drop(n: Int) = ListAgent.drop(list)(n)
+
+  def zip[B](that: List[B]) = ListAgent.zip(list)(that)
+
+  def zipMap[B, C](that: List[B])(f: (A, B) => C) =
+    ListAgent.zipMap(list)(that)(f)
 }
 
 object ListAgent {
@@ -136,5 +141,15 @@ object ListAgent {
   def drop[A](list: List[A])(n: Int): List[A] = {
     if (n <= 0 || list.isEmpty) list
     else drop(list.tail)(n-1)
+  }
+
+  def zip[A, B](list: List[A])(that: List[B]): List[(A, B)] = {
+    if (list.isEmpty || that.isEmpty) Nil
+    else (list.head, that.head) :: zip(list.tail)(that.tail)
+  }
+
+  def zipMap[A, B, C](list: List[A])(that: List[B])(f: (A, B) => C): List[C] = {
+    if (list.isEmpty || that.isEmpty) Nil
+    else f(list.head, that.head) :: zipMap(list.tail)(that.tail)(f)
   }
 }
