@@ -91,6 +91,8 @@ class ListAgent[A](@tailcall private var _list: List[A])
 
   def filterNot(p: A => Boolean) = ListAgent(ListAgent.filterNot(list)(p))
 
+  def take(n: Int): List[A] = ListAgent(ListAgent.take(list)(n))
+
   def drop(n: Int): List[A] = ListAgent(ListAgent.drop(list)(n))
 }
 
@@ -124,6 +126,11 @@ object ListAgent {
   def foldLeft[A, B](list: List[A])(z: B)(op: (B, A) => B): B = {
     if (list.isEmpty) z
     else foldLeft(list.tail)(op(z, list.head))(op)
+  }
+
+  def take[A](list: List[A])(n: Int): List[A] = {
+    if (n <= 0 || list.isEmpty) Nil
+    else list.head :: take(list.tail)(n-1)
   }
 
   def drop[A](list: List[A])(n: Int): List[A] = {
