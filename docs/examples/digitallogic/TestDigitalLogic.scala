@@ -20,9 +20,9 @@ object TestDigitalLogic {
   /* Full adder */
 
   def testFullAdder() {
-    val x = 1 ++ 1 ++ 0 toSignal
-    val y = 0 ++ 1 ++ 0 toSignal
-    val z = 1 ++ 1 ++ 1 toSignal
+    val x: Signal = List(1, 1, 0)
+    val y: Signal = List(0, 1, 0)
+    val z: Signal = List(1, 1, 1)
 
     val (c, s) = fullAdder(x, y, z)
 
@@ -43,8 +43,8 @@ object TestDigitalLogic {
   /* Latch */
 
   def testLatch() {
-    val control = 0 ++ 0 ++ 1 ++ 1 ++ 0 ++ 0 ++ 1 toSignal
-    val input   = 1 ++ 0 ++ 0 ++ 1 ++ 1 ++ 0 ++ 1 toSignal
+    val control: Signal = List(0, 0, 1, 1, 0, 0, 1)
+    val input: Signal   = List(1, 0, 0, 1, 1, 0, 1)
 
     val output = latch(control, input)
 

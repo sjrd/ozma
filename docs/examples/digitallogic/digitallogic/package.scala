@@ -11,4 +11,7 @@ package object digitallogic {
   implicit def int2builder(i: Int) = bit2builder(int2bit(i))
 
   implicit def builder2signal(builder: SignalBuilder) = builder.signal
+
+  implicit def intList2signal(list: List[Int]): Signal =
+    list.toAgent map int2bit
 }
