@@ -9,8 +9,6 @@ object Utils {
    * Each given signal is a column on the standard output.
    * It begins with the header and then its values at each
    * point of time.
-   * This method never returns, as it expects signals to
-   * grow indefinitely.
    */
   def display(signals: (Char, Signal)*) {
     def loop(signals: List[Signal]) {
