@@ -85,15 +85,15 @@ class ListAgent[A](@tailcall private var _list: List[A])
   override def foldLeft[B](z: B)(op: (B, A) => B) =
     ListAgent.foldLeft(list)(z)(op)
 
-  def map[B](f: A => B) = ListAgent(ListAgent.map(list)(f))
+  def map[B](f: A => B) = ListAgent.map(list)(f)
 
-  def filter(p: A => Boolean) = ListAgent(ListAgent.filter(list)(p))
+  def filter(p: A => Boolean) = ListAgent.filter(list)(p)
 
-  def filterNot(p: A => Boolean) = ListAgent(ListAgent.filterNot(list)(p))
+  def filterNot(p: A => Boolean) = ListAgent.filterNot(list)(p)
 
-  def take(n: Int): List[A] = ListAgent(ListAgent.take(list)(n))
+  def take(n: Int): List[A] = ListAgent.take(list)(n)
 
-  def drop(n: Int): List[A] = ListAgent(ListAgent.drop(list)(n))
+  def drop(n: Int): List[A] = ListAgent.drop(list)(n)
 }
 
 object ListAgent {
