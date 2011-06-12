@@ -12,7 +12,7 @@ provides built-in support for these three concurrency models.
 
 Ozma is developed as a master thesis at the [Université Catholique de
 Louvain](http://www.uclouvain.be/), under the supervision of Pr Peter Van Roy.
-The [test of the master
+The [text of the master
 thesis](http://ks365195.kimsufi.com/~sjrd/master-thesis.pdf) details the design
 and implementation, as well as rationale for the Ozma programming language
 (work in progress).
@@ -87,6 +87,43 @@ To run a compiled object, use the program `ozma`.
 Then, you can run the Hello world program:
 
     $ ozma helloword.HelloWorld
+
+
+Examples
+--------
+
+A lot of examples can be found in the directory `docs/examples/`. In increasing
+order of complexity, they are:
+
+*   Basic Scala-valid examples
+    *   Hello world!
+    *   Echo: echo command-line arguments on the standard output
+    *   Exceptions
+*   Basic Ozma examples
+    *   Trivial thread
+*   Scala-valid examples with Ozma-specific tail recursion
+    *   Merge sort
+    *   Binary trees
+*   Streams
+    *   Prime numbers
+    *   Token ring
+    *   Bounded buffer
+*   Message-passing concurrency
+    *   Tossing the ball
+    *   Server ports
+*   Advanced examples
+    *   Digital logic simulation
+
+
+Documentation
+-------------
+
+The best source of documentation is the [text of the master
+thesis](http://ks365195.kimsufi.com/~sjrd/master-thesis.pdf).
+
+*   Chapter 3 contains a tutorial for Ozma and step-by-step construction of some
+    of the example programs
+*   Chapter 4 gives the semantics of the language
 
 
 Development

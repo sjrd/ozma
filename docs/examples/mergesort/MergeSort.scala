@@ -1,5 +1,3 @@
-import scala.ozma._
-
 object MergeSort {
   def main(args: Array[String]) {
     val list = args.toList map (_.toInt)
