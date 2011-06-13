@@ -8,6 +8,7 @@ import
    Module
    Application
    Resolve
+   Property
 
 prepare
 
@@ -73,8 +74,8 @@ define
          OzmaArgs = {MakeOzmaArgs Args StringClass StringLiteral}
          Obj = Mod.ObjID
          {Obj 'main#-1565094369'(OzmaArgs _)}
-      catch E andthen {IsObject E} then
-         {DumpException E}
+      catch error(throwable(E) debug:D) then
+         {DumpException E D}
       end
    end
 
@@ -90,9 +91,14 @@ define
        end}
    end
 
-   proc {DumpException Exception}
+   proc {DumpException Exception Debug}
       {System.showError 'Application terminated with an exception:'}
       {System.showError {{Exception toString($)} toRawVS($)}}
+      {System.showError ''}
+
+      for StackItem in Debug.stack do
+         {System.show StackItem}
+      end
    end
 
    fun {MakeResolveHandlers Prefix ClassPath}
@@ -132,6 +138,10 @@ define
       in
          {Resolve.pickle.setHandlers AllHandlers}
       end
+
+      % Set up properties
+      {Property.put 'errors.depth' 10}
+      {Property.put 'print.depth' 10}
 
       % Run the program
       case Args.1 of MainObject|AppArgs then

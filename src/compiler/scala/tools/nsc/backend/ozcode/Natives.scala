@@ -225,6 +225,7 @@ trait Natives { self: OzCodes =>
     def NewOzmaPort = BuiltinFunction(Variable("NewOzmaPort"))
     def NewOzmaResultPort = BuiltinFunction(Variable("NewOzmaResultPort"))
     def NewActiveObject = BuiltinFunction(Variable("NewActiveObject"))
+    def Throw = BuiltinFunction(Variable("Throw"))
 
     // System module
 
@@ -248,7 +249,7 @@ trait Natives { self: OzCodes =>
       def failed = BuiltinFunction(Value ~> 'failed)
     }
 
-    // Value module
+    // OS module
 
     object OS {
       @inline private[this] def OS = Variable("OS")
@@ -410,7 +411,7 @@ trait Natives { self: OzCodes =>
           tryBlock,
       Catch(List(
           'error('kernel(ErrorIdentifier, __), 'debug -> __) ==>
-              Raise(New("java.lang.NumberFormatException"))
+              And(Throw(New("java.lang.NumberFormatException")), unit)
       )), NoFinally())
     }
   }

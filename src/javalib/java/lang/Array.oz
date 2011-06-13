@@ -1,7 +1,8 @@
 functor
 
 import
-   OzmaRuntime('NewObject':NewObject) at 'x-ozma://system/OzmaRuntime.ozf'
+   OzmaRuntime('NewObject':NewObject
+               'Throw':Throw) at 'x-ozma://system/OzmaRuntime.ozf'
    `functor:java.lang.Object`('type:java.lang.Object':`type:java.lang.Object`
                               'class:java.lang.Object':`class:java.lang.Object`) at 'x-ozma://root/java/lang/Object.ozf'
    `functor:java.lang.Class`('type:java.lang.Class':`type:java.lang.Class`
@@ -57,11 +58,9 @@ define
 
       meth checkIndex(Index)
          if (Index < 0) orelse (Index >= @length) then
-            raise
-               {NewObject `type:java.lang.ArrayIndexOutOfBoundsException`
-                          `class:java.lang.ArrayIndexOutOfBoundsException`
-                          '<init>#1625905794'(_)}
-            end
+            {Throw {NewObject `type:java.lang.ArrayIndexOutOfBoundsException`
+                    `class:java.lang.ArrayIndexOutOfBoundsException`
+                    '<init>#1625905794'(_)}}
          end
       end
    end

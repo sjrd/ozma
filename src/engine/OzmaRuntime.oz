@@ -33,6 +33,7 @@ export
    'AnyEqEq':AnyEqEq
    'AnyRefEqEq':AnyRefEqEq
    'NewActiveObject':NewActiveObject
+   'Throw':Throw
    'BinNot':BinNot
    'BinOr':BinOr
    'BinXor':BinXor
@@ -114,11 +115,10 @@ define
       if (Obj == null) orelse {IsInstance Obj Class} then
          Obj
       else
-         raise
-            {NewObject `type:java.lang.ClassCastException`
-             `class:java.lang.ClassCastException`
-             '<init>'(_)}
-         end
+         {Throw {NewObject `type:java.lang.ClassCastException`
+                 `class:java.lang.ClassCastException`
+                 '<init>'(_)}}
+         Obj
       end
    end
 
@@ -225,6 +225,10 @@ define
       proc {$ M}
          {Send P M}
       end
+   end
+
+   proc {Throw Throwable}
+      {Exception.raiseError throwable(Throwable)}
    end
 
    %%%%%%%%%%%%%%%%%%%%%%
