@@ -334,8 +334,8 @@ abstract class GenOzCode extends OzmaSubComponent {
           val sym = fun.symbol
 
           if (sym.isLabel) {  // jump to a label
-            Console.println("warning: jump found at "+tree.pos+
-                ", doing my best ...")
+            if (settings.verbose.value)
+              println("warning: jump found at "+tree.pos+", doing my best ...")
 
             val procVar = varForSymbol(sym)
             val arguments = args map { genExpression(_, ctx) }
