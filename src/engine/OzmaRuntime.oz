@@ -117,7 +117,7 @@ define
       else
          {Throw {NewObject `type:java.lang.ClassCastException`
                  `class:java.lang.ClassCastException`
-                 '<init>'(_)}}
+                 '<init>#-37663348'(_)}}
          Obj
       end
    end
