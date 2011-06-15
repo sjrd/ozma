@@ -3,14 +3,13 @@ functor
 import
    `functor:java.lang.String`('type:java.lang.String':`type:java.lang.String`
                               'class:java.lang.String':`class:java.lang.String`) at 'x-ozma://root/java/lang/String.ozf'
-   `functor:java.lang.Number`('class:java.lang.Number':`class:java.lang.Number`) at 'x-ozma://root/java/lang/Number.ozf'
-   `functor:java.lang.Character`('class:java.lang.Character':`class:java.lang.Character`) at 'x-ozma://root/java/lang/Character.ozf'
    `functor:java.lang.ClassCastException`('type:java.lang.ClassCastException':`type:java.lang.ClassCastException`
                                           'class:java.lang.ClassCastException':`class:java.lang.ClassCastException`) at 'x-ozma://root/java/lang/ClassCastException.ozf'
    `functor:scala.Tuple2`('type:scala.Tuple2':`type:scala.Tuple2`
                           'class:scala.Tuple2':`class:scala.Tuple2`) at 'x-ozma://root/scala/Tuple2.ozf'
    `functor:scala.collection.immutable.$colon$colon`('type:scala.collection.immutable.$colon$colon':`type:scala.collection.immutable.$colon$colon`
                                                      'class:scala.collection.immutable.$colon$colon':`class:scala.collection.immutable.$colon$colon`) at 'x-ozma://root/scala/collection/immutable.ozf'
+   `functor:scala.runtime.BoxesRunTime`('module:scala.runtime.BoxesRunTime$':`module:scala.runtime.BoxesRunTime$`) at 'x-ozma://root/scala/runtime/BoxesRunTime.ozf'
    `functor:ozma.Port`('type:ozma.Port':`type:ozma.Port`
                        'class:ozma.Port':`class:ozma.Port`) at 'x-ozma://root/ozma/Port.ozf'
    `functor:ozma.ResultPort`('type:ozma.ResultPort':`type:ozma.ResultPort`
@@ -194,17 +193,8 @@ define
    end
 
    fun {AnyEqEq Left Right}
-      if Left == Right then
-         true
-      elseif Left == null then
-         false
-      elseif {IsInstance Left `class:java.lang.Number`} then
-         {Left 'scala_$eq$eq#-1875011758'(Right $)}
-      elseif {IsInstance Left `class:java.lang.Character`} then
-         {Left 'scala_$eq$eq#-1875011758'(Right $)}
-      else
-         {Left 'equals#-1875011758'(Right $)}
-      end
+      {`module:scala.runtime.BoxesRunTime$`
+       'equals#521295670'(Left Right $)}
    end
 
    fun {AnyRefEqEq Left Right}
