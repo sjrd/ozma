@@ -30,7 +30,7 @@ package object scala {
 
   @deprecated("instead of `@serializable class C`, use `class C extends Serializable`", "2.9.0")
   type serializable = annotation.serializable
-  
+
   type TraversableOnce[+A] = scala.collection.TraversableOnce[A]
 
   type Traversable[+A] = scala.collection.Traversable[A]
@@ -54,7 +54,7 @@ package object scala {
   val List = scala.collection.immutable.List
 
   val Nil = scala.collection.immutable.Nil
-  
+
   type ::[A] = scala.collection.immutable.::[A]
   val :: = scala.collection.immutable.::
 
@@ -64,7 +64,7 @@ package object scala {
 
   type Vector[+A] = scala.collection.immutable.Vector[A]
   val Vector = scala.collection.immutable.Vector
-  
+
   type StringBuilder = scala.collection.mutable.StringBuilder
   val StringBuilder = scala.collection.mutable.StringBuilder
 
@@ -74,36 +74,36 @@ package object scala {
   // Migrated from Predef
   @deprecated("Use Thread.currentThread instead", "2.9.0")
   def currentThread = java.lang.Thread.currentThread()
-  
+
   // Moved back into Predef to avoid unnecessary indirection by
   // way of the scala package object within the standard library,
   // but bridged for compatibility.
   @bridge def $scope = scala.xml.TopScope
 
   // Numeric types which were moved into scala.math.*
-  
+
   type BigDecimal = scala.math.BigDecimal
-  val BigDecimal = scala.math.BigDecimal
-  
+  lazy val BigDecimal = scala.math.BigDecimal
+
   type BigInt = scala.math.BigInt
-  val BigInt = scala.math.BigInt
-  
+  lazy val BigInt = scala.math.BigInt
+
   type Equiv[T] = scala.math.Equiv[T]
   val Equiv = scala.math.Equiv
-  
+
   type Fractional[T] = scala.math.Fractional[T]
   type Integral[T] = scala.math.Integral[T]
 
   type Numeric[T] = scala.math.Numeric[T]
   val Numeric = scala.math.Numeric
-  
+
   type Ordered[T] = scala.math.Ordered[T]
   val Ordered = scala.math.Ordered
-  
+
   type Ordering[T] = scala.math.Ordering[T]
   val Ordering = scala.math.Ordering
-  
-  type PartialOrdering[T] = scala.math.PartialOrdering[T]  
+
+  type PartialOrdering[T] = scala.math.PartialOrdering[T]
   type PartiallyOrdered[T] = scala.math.PartiallyOrdered[T]
 
   // Annotations which we might move to annotation.*
@@ -167,7 +167,7 @@ package object scala {
   def Tuple[A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20, A21](x1: A1, x2: A2, x3: A3, x4: A4, x5: A5, x6: A6, x7: A7, x8: A8, x9: A9, x10: A10, x11: A11, x12: A12, x13: A13, x14: A14, x15: A15, x16: A16, x17: A17, x18: A18, x19: A19, x20: A20, x21: A21) = Tuple21(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18, x19, x20, x21)
   @deprecated("Use ((x1, x2, ...)) syntax to create Tuples", "2.8.0")
   def Tuple[A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20, A21, A22](x1: A1, x2: A2, x3: A3, x4: A4, x5: A5, x6: A6, x7: A7, x8: A8, x9: A9, x10: A10, x11: A11, x12: A12, x13: A13, x14: A14, x15: A15, x16: A16, x17: A17, x18: A18, x19: A19, x20: A20, x21: A21, x22: A22) = Tuple22(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18, x19, x20, x21, x22)
-  
+
   @deprecated("use java.lang.Integer instead", "2.6.0")
   type Integer = java.lang.Integer
   @deprecated("use java.lang.Character instead", "2.6.0")
