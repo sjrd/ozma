@@ -1,17 +1,15 @@
 functor
 
 import
-   System
    `functor:java.lang.String`('type:java.lang.String':`type:java.lang.String`
                               'class:java.lang.String':`class:java.lang.String`) at 'x-ozma://root/java/lang/String.ozf'
-   `functor:java.lang.Number`('class:java.lang.Number':`class:java.lang.Number`) at 'x-ozma://root/java/lang/Number.ozf'
-   `functor:java.lang.Character`('class:java.lang.Character':`class:java.lang.Character`) at 'x-ozma://root/java/lang/Character.ozf'
    `functor:java.lang.ClassCastException`('type:java.lang.ClassCastException':`type:java.lang.ClassCastException`
                                           'class:java.lang.ClassCastException':`class:java.lang.ClassCastException`) at 'x-ozma://root/java/lang/ClassCastException.ozf'
    `functor:scala.Tuple2`('type:scala.Tuple2':`type:scala.Tuple2`
                           'class:scala.Tuple2':`class:scala.Tuple2`) at 'x-ozma://root/scala/Tuple2.ozf'
    `functor:scala.collection.immutable.$colon$colon`('type:scala.collection.immutable.$colon$colon':`type:scala.collection.immutable.$colon$colon`
                                                      'class:scala.collection.immutable.$colon$colon':`class:scala.collection.immutable.$colon$colon`) at 'x-ozma://root/scala/collection/immutable.ozf'
+   `functor:scala.runtime.BoxesRunTime`('module:scala.runtime.BoxesRunTime$':`module:scala.runtime.BoxesRunTime$`) at 'x-ozma://root/scala/runtime/BoxesRunTime.ozf'
    `functor:ozma.Port`('type:ozma.Port':`type:ozma.Port`
                        'class:ozma.Port':`class:ozma.Port`) at 'x-ozma://root/ozma/Port.ozf'
    `functor:ozma.ResultPort`('type:ozma.ResultPort':`type:ozma.ResultPort`
@@ -35,6 +33,7 @@ export
    'AnyRefEqEq':AnyRefEqEq
    'NewActiveObject':NewActiveObject
    'ModuleAccessor':ModuleAccessor
+   'Throw':Throw
    'BinNot':BinNot
    'BinOr':BinOr
    'BinXor':BinXor
@@ -47,19 +46,8 @@ define
 
    InitObject = {NewName}
 
-   Indent = {NewCell nil}
-
    fun {NewObject Type Class Init}
-      Result
-   in
-      {Wait Type}
-      {System.printInfo @Indent} {System.show 'creating object of type '#Type}
-      {System.printInfo @Indent} {System.show 'with message '#Init}
-      Indent := (@Indent)#'  '
-      Result = {New Type InitObject(Class Init)}
-      Indent := (@Indent).1
-      {System.printInfo @Indent} {System.show 'crected object of type '#Type}
-      Result
+      {New Type InitObject(Class Init)}
    end
 
    proc {NewArrayObject ComponentClass Dims Lengths Result}
@@ -127,11 +115,10 @@ define
       if (Obj == null) orelse {IsInstance Obj Class} then
          Obj
       else
-         raise
-            {NewObject `type:java.lang.ClassCastException`
-             `class:java.lang.ClassCastException`
-             '<init>'(_)}
-         end
+         {Throw {NewObject `type:java.lang.ClassCastException`
+                 `class:java.lang.ClassCastException`
+                 '<init>'(_)}}
+         Obj
       end
    end
 
@@ -207,17 +194,8 @@ define
    end
 
    fun {AnyEqEq Left Right}
-      if Left == Right then
-         true
-      elseif Left == null then
-         false
-      elseif {IsInstance Left `class:java.lang.Number`} then
-         {Left 'scala_$eq$eq#-1875011758'(Right $)}
-      elseif {IsInstance Left `class:java.lang.Character`} then
-         {Left 'scala_$eq$eq#-1875011758'(Right $)}
-      else
-         {Left 'equals#-1875011758'(Right $)}
-      end
+      {{`module:scala.runtime.BoxesRunTime$`}
+       'equals#521295670'(Left Right $)}
    end
 
    fun {AnyRefEqEq Left Right}
@@ -251,6 +229,10 @@ define
             ModuleVar
          end
       end
+   end
+
+   proc {Throw Throwable}
+      {Exception.raiseError throwable(Throwable)}
    end
 
    %%%%%%%%%%%%%%%%%%%%%%

@@ -242,7 +242,9 @@ abstract class GenOzCode extends OzmaSubComponent {
           genTry(t, ctx)
 
         case Throw(expr) =>
-          ast.Raise(genExpression(expr, ctx))
+          ast.And(
+              genBuiltinApply("Throw", genExpression(expr, ctx)),
+              ast.UnitVal())
 
         case New(tpt) =>
           abort("Unexpected New")
@@ -349,8 +351,8 @@ abstract class GenOzCode extends OzmaSubComponent {
           val sym = fun.symbol
 
           if (sym.isLabel) {  // jump to a label
-            Console.println("warning: jump found at "+tree.pos+
-                ", doing my best ...")
+            if (settings.verbose.value)
+              println("warning: jump found at "+tree.pos+", doing my best ...")
 
             val procVar = varForSymbol(sym)
             val arguments = args map { genExpression(_, ctx) }
@@ -927,10 +929,15 @@ abstract class GenOzCode extends OzmaSubComponent {
         val bodyAST = genExpression(body, ctx)
 
         def genCaseClause(sym: Symbol, E: ast.Phrase = ast.Variable("E")) = {
-          val isObject = genBuiltinApply("IsObject", E)
-          val isInstance = genBuiltinApply("IsInstance", E, genClassConstant(sym))
+          val isInstance = genBuiltinApply("IsInstance", E,
+              genClassConstant(sym))
+
+          val pat = ast.Record(ast.Atom("error"),
+              ast.Tuple(ast.Atom("throwable"), E),
+              ast.Colon(ast.Atom("debug"), ast.Wildcard()))
+
           val pattern =
-            ast.SideCondition(E, ast.Skip(), ast.AndThen(isObject, isInstance))
+            ast.SideCondition(pat, ast.Skip(), isInstance)
           ast.CaseClause(pattern, bodyAST)
         }
 
