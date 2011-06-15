@@ -95,9 +95,16 @@ define
       {System.showError 'Application terminated with an exception:'}
       {System.showError {{Exception toString($)} toRawVS($)}}
       {System.showError ''}
+      {DumpStack Debug.stack}
+   end
 
-      for StackItem in Debug.stack do
-         {System.show StackItem}
+   proc {DumpStack Stack}
+      for Entry in Stack do
+         case Entry of entry(data:Data file:FileName line:Line ...) then
+            Method = {Value.toVirtualString Data 5 5}
+         in
+            {System.showError 'at '#Method#' ('#FileName#':'#Line#')'}
+         end
       end
    end
 
