@@ -112,6 +112,28 @@ trait Natives { self: OzCodes =>
       register(Float_unbox)
       register(Double_unbox)
 
+      register(Array_newArray)
+      register(Array_multiNewArray)
+      register(Array_getLength)
+      register(Array_get)
+      register(Array_getBoolean)
+      register(Array_getByte)
+      register(Array_getChar)
+      register(Array_getShort)
+      register(Array_getInt)
+      register(Array_getLong)
+      register(Array_getFloat)
+      register(Array_getDouble)
+      register(Array_set)
+      register(Array_setBoolean)
+      register(Array_setByte)
+      register(Array_setChar)
+      register(Array_setShort)
+      register(Array_setInt)
+      register(Array_setLong)
+      register(Array_setFloat)
+      register(Array_setDouble)
+
       register(StandardOutPrintStream_writeString)
       register(StandardErrPrintStream_writeString)
 
@@ -161,9 +183,8 @@ trait Natives { self: OzCodes =>
 
     // Method
 
-    class MethodWrapper(val obj: Phrase, val name: String,
-        val paramTypes: String*) {
-      val hash = paramsHash(paramTypes.toList)
+    abstract class BaseMethodWrapper(val obj: Phrase, val name: String) {
+      protected def hash: Int
 
       def apply(args: Phrase*) = {
         val label = Atom(if (hash == 0) name else name + "#" + hash)
@@ -171,6 +192,16 @@ trait Natives { self: OzCodes =>
 
         Apply(obj, List(message))
       }
+    }
+
+    class MethodWrapper(obj: Phrase, name: String,
+        val paramTypes: String*) extends BaseMethodWrapper(obj, name) {
+      protected def hash = paramsHash(paramTypes.toList)
+    }
+
+    class NativeMethodWrapper(obj: Phrase,
+        name: String) extends BaseMethodWrapper(obj, name) {
+      protected def hash = 0
     }
 
     // Wrapper
@@ -196,6 +227,18 @@ trait Natives { self: OzCodes =>
           val name = "apply$mc" + resultKind.primitiveCharCode + "$sp"
           new MethodWrapper(phrase, name, resultKind.toType.typeSymbol.fullName)
         }
+      }
+
+      def newArrayOfThisClass = new NativeMethodWrapper(phrase,
+          "newArrayOfThisClass")
+      def multiNewArrayOfThisClass = new NativeMethodWrapper(phrase,
+          "multiNewArrayOfThisClass")
+      def length = new NativeMethodWrapper(phrase, "length")
+      def get = new NativeMethodWrapper(phrase, "get")
+
+      def put = new {
+        def apply(index: Phrase, value: Phrase) =
+          Apply(phrase, List('put(index, value)))
       }
     }
 
@@ -511,6 +554,83 @@ trait Natives { self: OzCodes =>
   object Long_unbox extends Primitive_unbox("scala.Long", "longValue")
   object Float_unbox extends Primitive_unbox("scala.Float", "floatValue")
   object Double_unbox extends Primitive_unbox("scala.Double", "doubleValue")
+
+  object Array_newArray extends NativeMethod("java.lang.reflect.Array.newArray",
+      "java.lang.Object", "`componentType`" -> "java.lang.Class",
+      "`length`" -> "scala.Int") {
+    def body = {
+      def componentType = QuotedVar("componentType")
+      def length = QuotedVar("length")
+
+      componentType.newArrayOfThisClass(length)
+    }
+  }
+
+  object Array_multiNewArray extends NativeMethod(
+      "java.lang.reflect.Array.multiNewArray",
+      "java.lang.Object", "`componentType`" -> "java.lang.Class",
+      "`dimensions`" -> "scala.Int[]") {
+    def body = {
+      def componentType = QuotedVar("componentType")
+      def dimensions = QuotedVar("dimensions")
+
+      componentType.multiNewArrayOfThisClass(dimensions)
+    }
+  }
+
+  object Array_getLength extends NativeMethod(
+      "java.lang.reflect.Array.getLength",
+      "scala.Int", "`array`" -> "java.lang.Object") {
+    def body = {
+      def array = QuotedVar("array")
+
+      array.length()
+    }
+  }
+
+  abstract class ArrayGet(name: String,
+      elementType: String) extends NativeMethod("java.lang.reflect.Array."+name,
+      elementType, "`array`" -> "java.lang.Object", "`index`" -> "scala.Int") {
+    def body = {
+      def array = QuotedVar("array")
+      def index = QuotedVar("index")
+
+      array.get(index)
+    }
+  }
+
+  object Array_get extends ArrayGet("get", "java.lang.Object")
+  object Array_getBoolean extends ArrayGet("getBoolean", "scala.Boolean")
+  object Array_getByte extends ArrayGet("getByte", "scala.Byte")
+  object Array_getChar extends ArrayGet("getChar", "scala.Char")
+  object Array_getShort extends ArrayGet("getShort", "scala.Short")
+  object Array_getInt extends ArrayGet("getInt", "scala.Int")
+  object Array_getLong extends ArrayGet("getLong", "scala.Long")
+  object Array_getFloat extends ArrayGet("getFloat", "scala.Float")
+  object Array_getDouble extends ArrayGet("getDouble", "scala.Double")
+
+  abstract class ArrayPut(name: String,
+      elementType: String) extends NativeMethod("java.lang.reflect.Array."+name,
+      "scala.Unit", "`array`" -> "java.lang.Object", "`index`" -> "scala.Int",
+      "`value`" -> elementType) {
+    def body = {
+      def array = QuotedVar("array")
+      def index = QuotedVar("index")
+      def value = QuotedVar("value")
+
+      And(array.put(index, value), unit)
+    }
+  }
+
+  object Array_set extends ArrayPut("set", "java.lang.Object")
+  object Array_setBoolean extends ArrayPut("setBoolean", "scala.Boolean")
+  object Array_setByte extends ArrayPut("setByte", "scala.Byte")
+  object Array_setChar extends ArrayPut("setChar", "scala.Char")
+  object Array_setShort extends ArrayPut("setShort", "scala.Short")
+  object Array_setInt extends ArrayPut("setInt", "scala.Int")
+  object Array_setLong extends ArrayPut("setLong", "scala.Long")
+  object Array_setFloat extends ArrayPut("setFloat", "scala.Float")
+  object Array_setDouble extends ArrayPut("setDouble", "scala.Double")
 
   object StandardOutPrintStream_writeString extends NativeMethod(
       "java.lang.StandardOutPrintStream.writeString",

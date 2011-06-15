@@ -2,6 +2,7 @@ functor
 
 import
    OzmaRuntime('NewObject':NewObject
+               'NewArrayObject':MultiNewArrayObject
                'StringLiteral':StringLiteral) at 'x-ozma://system/OzmaRuntime.ozf'
    `functor:java.lang.Object`('type:java.lang.Object':Object
                               'class:java.lang.Object':ObjectClass) at 'x-ozma://root/java/lang/Object.ozf'
@@ -80,6 +81,14 @@ define
          InitValue = {self zeroOfThisClass($)}
       in
          {NewArrayObject @arrayOfThisClass Length InitValue}
+      end
+
+      meth multiNewArrayOfThisClass(Dimensions $)
+         Rec = {Array.toRecord array {Dimensions toRawArray($)}}
+         Dims = {Record.width Rec}
+         Lengths = {Record.toList Rec}
+      in
+         {MultiNewArrayObject @arrayOfThisClass Dims Lengths}
       end
 
       meth arrayEncodedName($)
