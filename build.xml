@@ -144,7 +144,7 @@ ACTUAL TASKS
 
     <!-- compile classes written in Ozma (part 1) -->
     <apply executable="${bin.ozmac}" dest="${build.runtime.dir}"
-        parallel="true" failonerror="true">
+        parallel="false" failonerror="true">
       <globmapper from="*.scala" to="*.ozf"/>
       <env key="JAVA_OPTS" value="${env.ANT_OPTS}"/>
       <arg value="-d"/> <arg path="${build.runtime.dir}"/> <srcfile/>
