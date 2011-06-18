@@ -115,9 +115,13 @@ define
       if (Obj == null) orelse {IsInstance Obj Class} then
          Obj
       else
+         FromClassName = {{{Obj getClass($)} toString($)} toRawVS($)}
+         ToClassName = {{Class toString($)} toRawVS($)}
+         Msg = FromClassName#' cannot be cast to '#ToClassName
+      in
          {Throw {NewObject `type:java.lang.ClassCastException`
                  `class:java.lang.ClassCastException`
-                 '<init>#-37663348'(_)}}
+                 '<init>#-1128485508'({StringLiteral Msg} _)}}
          Obj
       end
    end
