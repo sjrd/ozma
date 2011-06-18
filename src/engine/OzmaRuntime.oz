@@ -34,6 +34,7 @@ export
    'NewActiveObject':NewActiveObject
    'ModuleAccessor':ModuleAccessor
    'Throw':Throw
+   'ArrayCopy':ArrayCopy
    'BinNot':BinNot
    'BinOr':BinOr
    'BinXor':BinXor
@@ -237,6 +238,15 @@ define
 
    proc {Throw Throwable}
       {Exception.raiseError throwable(Throwable)}
+   end
+
+   proc {ArrayCopy Src SrcPos Dest DestPos Length}
+      % TODO Throw errors properly
+      for I in 0..(Length-1) do
+         Value = {Src get(SrcPos+I $)}
+      in
+         {Dest put(DestPos+I Value)}
+      end
    end
 
    %%%%%%%%%%%%%%%%%%%%%%

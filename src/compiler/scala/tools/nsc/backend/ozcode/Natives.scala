@@ -112,6 +112,13 @@ trait Natives { self: OzCodes =>
       register(Float_unbox)
       register(Double_unbox)
 
+      register(System_currentTimeMillis)
+      register(System_arraycopy)
+      register(System_identityHashCode)
+
+      register(Runtime_halt0)
+      register(Runtime_gc)
+
       register(Array_newArray)
       register(Array_multiNewArray)
       register(Array_getLength)
@@ -215,8 +222,18 @@ trait Natives { self: OzCodes =>
 
       def ~>(right: Phrase) = BinaryOpApply(".", phrase, right)
 
+      def + (right: Phrase) = BinaryOpApply("+", phrase, right)
+      def - (right: Phrase) = BinaryOpApply("-", phrase, right)
+      def * (right: Phrase) = BinaryOpApply("*", phrase, right)
+      def / (right: Phrase) = BinaryOpApply("/", phrase, right)
+
+      def div(right: Phrase) = BinaryOpApply("div", phrase, right)
+      def mod(right: Phrase) = BinaryOpApply("mod", phrase, right)
+
       def toRawVS = new MethodWrapper(phrase, "toRawVS")
       def toRawString = new MethodWrapper(phrase, "toRawString")
+
+      def identity = new MethodWrapper(phrase, "identity")
 
       def doApply = new MethodWrapper(phrase, "apply", "java.lang.Object")
 
@@ -269,6 +286,7 @@ trait Natives { self: OzCodes =>
     def NewOzmaResultPort = BuiltinFunction(Variable("NewOzmaResultPort"))
     def NewActiveObject = BuiltinFunction(Variable("NewActiveObject"))
     def Throw = BuiltinFunction(Variable("Throw"))
+    def ArrayCopy = BuiltinFunction(Variable("ArrayCopy"))
 
     // System module
 
@@ -279,6 +297,8 @@ trait Natives { self: OzCodes =>
       def showInfo = BuiltinFunction(System ~> 'showInfo)
       def printError = BuiltinFunction(System ~> 'printError)
       def showError = BuiltinFunction(System ~> 'showError)
+
+      def gcDo = BuiltinFunction(System ~> 'gcDo)
     }
 
     // Value module
@@ -298,6 +318,15 @@ trait Natives { self: OzCodes =>
       @inline private[this] def OS = Variable("OS")
 
       def rand = BuiltinFunction(OS ~> 'rand)
+      def time = BuiltinFunction(OS ~> 'time)
+    }
+
+    // Application module
+
+    object Application {
+      @inline private[this] def Application = Variable("Application")
+
+      def exit = BuiltinFunction(Application ~> 'exit)
     }
 
     // New constructor call
@@ -554,6 +583,49 @@ trait Natives { self: OzCodes =>
   object Long_unbox extends Primitive_unbox("scala.Long", "longValue")
   object Float_unbox extends Primitive_unbox("scala.Float", "floatValue")
   object Double_unbox extends Primitive_unbox("scala.Double", "doubleValue")
+
+  object System_currentTimeMillis extends NativeMethod(
+      "java.lang.System.currentTimeMillis", "scala.Long") {
+    def body = {
+      OS.time() * 1000
+    }
+  }
+
+  object System_arraycopy extends NativeMethod(
+      "java.lang.System.arraycopy", "scala.Unit",
+      "src" -> "java.lang.Object", "srcPos" -> "scala.Int",
+      "dest" -> "java.lang.Object", "destPos" -> "scala.Int",
+      "length" -> "scala.Int") {
+    def body = {
+      And(ArrayCopy(QuotedVar("src"), QuotedVar("srcPos"), QuotedVar("dest"),
+          QuotedVar("destPos"), QuotedVar("length")), unit)
+    }
+  }
+
+  object System_identityHashCode extends NativeMethod(
+      "java.lang.System.identityHashCode", "scala.Int",
+      "x" -> "java.lang.Object") {
+    def body = {
+      def x = QuotedVar("x")
+
+      x.identity()
+    }
+  }
+
+  object Runtime_halt0 extends NativeMethod("java.lang.Runtime.halt0",
+      "scala.Unit", "status" -> "scala.Int") {
+    def body = {
+      def status = QuotedVar("status")
+
+      And(Application.exit(status), unit)
+    }
+  }
+
+  object Runtime_gc extends NativeMethod("java.lang.Runtime.gc", "scala.Unit") {
+    def body = {
+      And(System.gcDo(), unit)
+    }
+  }
 
   object Array_newArray extends NativeMethod("java.lang.reflect.Array.newArray",
       "java.lang.Object", "`componentType`" -> "java.lang.Class",

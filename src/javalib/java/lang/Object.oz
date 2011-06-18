@@ -14,12 +14,21 @@ export
 
 define
 
+   NextID = {NewCell 1}
+
    class Object from BaseObject
       attr
+         identity
          'class'
          monitor
 
       meth !InitObject(ObjClass InitMessage)
+         local ID Next in
+            {Exchange NextID ID Next}
+            Next = ID + 1
+            identity := ID
+         end
+
          'class' := ObjClass
          monitor := {ByNeed NewMonitor}
          {self InitMessage}
@@ -60,8 +69,12 @@ define
          {self 'toString#1195259493'($)}
       end
 
+      meth identity($)
+         @identity
+      end
+
       meth 'hashCode#-1882783961'($)
-         0
+         @identity
       end
 
       meth 'equals#-1875011758'(Other $)
