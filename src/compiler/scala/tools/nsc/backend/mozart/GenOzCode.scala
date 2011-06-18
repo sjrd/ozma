@@ -23,7 +23,7 @@ abstract class GenOzCode extends OzmaSubComponent {
 
   import definitions.{
     ArrayClass, ObjectClass, ThrowableClass, StringClass, StringModule,
-    NothingClass, NullClass, AnyRefClass, ListClass, ConsClass,
+    NothingClass, NullClass, AnyRefClass, UnitClass, ListClass, ConsClass,
     Object_equals, Object_isInstanceOf, Object_asInstanceOf, Object_toString,
     ScalaRunTimeModule,
     BoxedNumberClass, BoxedCharacterClass,
@@ -422,6 +422,8 @@ abstract class GenOzCode extends OzmaSubComponent {
               log("LOAD_MODULE from Select(qualifier, selector): " + sym)
             assert(!tree.symbol.isPackageClass, "Cannot use package as value: " + tree)
             genModule(sym, tree.pos)
+          } else if (sym.isStaticMember) {
+            genStaticMember(sym, tree.pos)
           } else {
             val symVar = varForSymbol(sym)
 
@@ -474,7 +476,7 @@ abstract class GenOzCode extends OzmaSubComponent {
             case ClassTag =>
               genClassConstant(value.typeValue.typeSymbol)
             case EnumTag =>
-              varForSymbol(value.symbolValue)
+              genStaticMember(value.symbolValue)
           }
 
         case Block(stats, expr) =>
@@ -496,7 +498,15 @@ abstract class GenOzCode extends OzmaSubComponent {
           val assignment =
             if (sym.hasAnnotation(SingleAssignmentClass))
               ast.Eq(genExpression(lhs, ctx), genExpression(rhs, ctx))
-            else if (qualifier.isInstanceOf[This] || symVar.isInstanceOf[ast.Variable])
+            else if (sym.isStaticMember) {
+              val instance = genModule(sym.owner, tree.pos)
+              val accessor = atomForSymbol(sym.name.toString + "_$eq",
+                  paramsHash(List(tree.tpe), UnitClass.tpe)) setPos tree.pos
+              val arg = genExpression(rhs, ctx)
+              val message = buildMessage(accessor, List(arg), ast.Wildcard())
+
+              ast.Apply(instance, List(message))
+            } else if (qualifier.isInstanceOf[This] || symVar.isInstanceOf[ast.Variable])
               ast.ColonEquals(symVar, genExpression(rhs, ctx))
             else {
               val instance = genExpression(qualifier, ctx)
@@ -888,6 +898,15 @@ abstract class GenOzCode extends OzmaSubComponent {
     private def genModule(sym: Symbol, pos: Position = NoPosition) = {
       val symbol = if (sym.isModuleClass) sym.companionModule else sym
       ast.Apply(varForModule(symbol) setPos pos, Nil) setPos pos
+    }
+
+    private def genStaticMember(sym: Symbol, pos: Position = NoPosition) = {
+      val instance = genModule(sym.owner, pos)
+      val accessor = atomForSymbol(sym.name.toString,
+          paramsHash(Nil, sym.tpe)) setPos pos
+      val message = buildMessage(accessor, Nil)
+
+      ast.Apply(instance, List(message))
     }
 
     def genConversion(from: TypeKind, to: TypeKind, value: ast.Phrase) = {

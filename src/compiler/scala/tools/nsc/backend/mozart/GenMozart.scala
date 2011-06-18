@@ -268,16 +268,11 @@ abstract class GenMozart extends OzmaSubComponent {
     }
 
     def groupNameFor(varName: String) = {
-      val initFullName =
+      val fullName =
         if (varName contains ':')
           varName.substring(varName.indexOf(':')+1)
         else
           varName.substring(varName.indexOf('~')+1)
-
-      val fullName = if (varName startsWith "static:")
-        initFullName.substring(0, initFullName.lastIndexOf('.'))
-      else
-        initFullName
 
       val dollar = fullName.indexOf('$')
 

@@ -142,14 +142,24 @@ ACTUAL TASKS
       <fileset dir="${src.dir}/scalalib" includes="**/*.oz"/>
     </apply>
 
-    <!-- compile classes written in Ozma -->
+    <!-- compile classes written in Ozma (part 1) -->
+    <apply executable="${bin.ozmac}" dest="${build.runtime.dir}"
+        parallel="true" failonerror="true">
+      <globmapper from="*.scala" to="*.ozf"/>
+      <env key="JAVA_OPTS" value="${env.ANT_OPTS}"/>
+      <arg value="-d"/> <arg path="${build.runtime.dir}"/> <srcfile/>
+      <fileset dir="${src.dir}/scalalib" includes="scala/runtime/BoxedUnit.scala"/>
+    </apply>
+
+    <!-- compile classes written in Ozma (part 2) -->
     <apply executable="${bin.ozmac}" dest="${build.runtime.dir}"
         parallel="true" failonerror="true">
       <globmapper from="*.scala" to="*.ozf"/>
       <env key="JAVA_OPTS" value="${env.ANT_OPTS}"/>
       <arg value="-d"/> <arg path="${build.runtime.dir}"/> <srcfile/>
       <fileset dir="${src.dir}/javalib" includes="**/*.scala"/>
-      <fileset dir="${src.dir}/scalalib" includes="**/*.scala"/>
+      <fileset dir="${src.dir}/scalalib" includes="**/*.scala"
+	  excludes="scala/runtime/BoxedUnit.scala"/>
       <fileset dir="${src.dir}/library" includes="**/*.scala"/>
     </apply>
   </target>

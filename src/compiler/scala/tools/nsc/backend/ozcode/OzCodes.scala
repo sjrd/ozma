@@ -139,9 +139,9 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
     val name = if (sym.name.isTypeName)
       "type:" + sym.fullName
     else if (sym.isModule)
-      throw new AssertionError("varForSymbol for module requested")
+      throw new AssertionError("varForSymbol for module requested" + sym)
     else if (sym.isStaticMember)
-      "static:" + sym.fullName
+      throw new AssertionError("varForSymbol for static member requested" + sym)
     else if (sym.isLabel)
       "label~" + sym.name + "~" + sym.id
     else if (sym.owner.isClass && !(sym.name.toString endsWith " "))
@@ -208,11 +208,10 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
   def paramsHash(sym: Symbol): Int = {
     sym.tpe match {
       case MethodType(params, resultType) =>
-        paramsHash(params.toList map (param => typeFullName(param.tpe)),
-            typeFullName(resultType))
+        paramsHash(params.toList map (_.tpe), resultType)
 
       case NullaryMethodType(resultType) =>
-        paramsHash(Nil, typeFullName(resultType))
+        paramsHash(Nil, resultType)
 
       case _ => abort("Expected a method type for " + sym)
     }
@@ -222,6 +221,9 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
     case ArrayType(elementType) => typeFullName(elementType) + "[]"
     case _ => tpe.typeSymbol.fullName
   }
+
+  def paramsHash(paramTypes: List[Type], resultType: Type): Int =
+    paramsHash(paramTypes map typeFullName, typeFullName(resultType))
 
   def paramsHash(paramTypeNames: List[String], resultTypeName: String): Int =
     paramsHash(paramTypeNames ::: List(resultTypeName))
