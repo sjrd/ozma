@@ -56,11 +56,11 @@ object Platform {
   @inline
   def getClassForName(name: String): Class[_] = java.lang.Class.forName(name)
 
-  val EOL = util.Properties.lineSeparator
+  lazy val EOL = util.Properties.lineSeparator
 
   /** The current time in milliseconds. The time is counted since 1 January 1970
     * UTC.
-    * 
+    *
     * Note that the operating system timer used to obtain this value may be less
     * precise than a millisecond. */
   @inline
