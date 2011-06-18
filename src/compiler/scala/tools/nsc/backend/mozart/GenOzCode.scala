@@ -474,7 +474,7 @@ abstract class GenOzCode extends OzmaSubComponent {
             case NullTag =>
               ast.NullVal()
             case ClassTag =>
-              genClassConstant(value.typeValue.typeSymbol)
+              genClassConstant(value.typeValue)
             case EnumTag =>
               genStaticMember(value.symbolValue)
           }
@@ -530,7 +530,7 @@ abstract class GenOzCode extends OzmaSubComponent {
 
         case ArrayValue(tpt @ TypeTree(), elems) =>
           val elementKind = toTypeKind(tpt.tpe)
-          val componentClass = elementKind.toType.typeSymbol
+          val componentClass = elementKind.toType
           val length = elems.length
           val elements = elems map (elem => genExpression(elem, ctx))
 
@@ -930,7 +930,7 @@ abstract class GenOzCode extends OzmaSubComponent {
     }
 
     def genCast(from: Type, to: Type, value: ast.Phrase, cast: Boolean) = {
-      val classConstant = genClassConstant(to.typeSymbol) setPos value.pos
+      val classConstant = genClassConstant(to) setPos value.pos
       if (cast) {
         genBuiltinApply("AsInstance", value,
             classConstant).setTailCallInfo(List(0))
@@ -947,9 +947,9 @@ abstract class GenOzCode extends OzmaSubComponent {
       val clauses = for (CaseDef(pat, _, body) <- catches) yield {
         val bodyAST = genExpression(body, ctx)
 
-        def genCaseClause(sym: Symbol, E: ast.Phrase = ast.Variable("E")) = {
+        def genCaseClause(tpe: Type, E: ast.Phrase = ast.Variable("E")) = {
           val isInstance = genBuiltinApply("IsInstance", E,
-              genClassConstant(sym))
+              genClassConstant(tpe))
 
           val pat = ast.Record(ast.Atom("error"),
               ast.Tuple(ast.Atom("throwable"), E),
@@ -962,11 +962,11 @@ abstract class GenOzCode extends OzmaSubComponent {
 
         pat match {
           case Typed(Ident(nme.WILDCARD), tpt) =>
-            genCaseClause(tpt.tpe.typeSymbol)
+            genCaseClause(tpt.tpe)
           case Ident(nme.WILDCARD) =>
-            genCaseClause(ThrowableClass)
+            genCaseClause(ThrowableClass.tpe)
           case Bind(name, _) =>
-            genCaseClause(pat.symbol.tpe.typeSymbol, varForSymbol(pat.symbol))
+            genCaseClause(pat.symbol.tpe, varForSymbol(pat.symbol))
         }
       }
 
