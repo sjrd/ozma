@@ -1,21 +1,21 @@
 The Ozma programming language
 =============================
 
-Ozma is a programming language based on Scala, with extensions regarding
-concurrency. It adds three paradigms of the Oz programming language to Scala:
-declarative concurrency, lazy execution (demand-driven execution) and
-message-passing concurrency.
+Ozma is a programming language based on [Scala](http://www.scala-lang.org/),
+with extensions regarding concurrency. It adds three paradigms of the Oz
+programming language to Scala: declarative concurrency, lazy execution
+(demand-driven execution) and message-passing concurrency.
 
 Ozma does not compile towards the JVM nor the MSIL. Instead, it compiles towards
 the [Mozart programming system](http://www.mozart-oz.org/). This runtime
 provides built-in support for these three concurrency models.
 
-Ozma is developed as a master thesis at the [Université Catholique de
+Ozma was initially developed as a master thesis at the [Université Catholique de
 Louvain](http://www.uclouvain.be/), under the supervision of Pr Peter Van Roy.
 The [text of the master
 thesis](http://ks365195.kimsufi.com/~sjrd/master-thesis.pdf) details the design
-and implementation, as well as rationale for the Ozma programming language
-(work in progress).
+and implementation, as well as rationale for the Ozma programming language. It
+also discusses most of the example programs.
 
 
 Usage
@@ -30,9 +30,30 @@ installed on your computer:
 *   Mozart >= 1.4.0
 *   Ant >= 1.6
 
+Ozma is tested only on Linux by its original author. It is also supposed to work
+fine on any POSIX environment supporting both Scala and Mozart (e.g. Mac OS).
+
+Windows users are likely to run into trouble, though it has been reported that
+it can be made working. Contributions to make Ozma run smoothly on Windows are
+welcome!
+
 ### Build instructions
 
-The entire Ozma compiler and library can be built with Ant:
+Due to a limitation of the Gump parser generator of Mozart, users of Windows or
+of any 64-bit system cannot build one module of Ozma, called `ozastc`. For those
+users, we provide binaries of `ozastc`. Simply download the appropriate archive
+and unzip its contents into the directory `build/ozastc/`.
+
+*   [`ozastc` for Linux](http://ks365195.kimsufi.com/~ozma/download/ozma-build-ozastc-linux.tgz)
+*   [`ozastc` for Mac](http://ks365195.kimsufi.com/~ozma/download/ozma-build-ozastc-darwin.tgz)
+*   [`ozastc` for Windows](http://ks365195.kimsufi.com/~ozma/download/ozma-build-ozastc-windows.zip)
+
+We understand that this is quite annoying. We plan to move to a Gump-free
+solution relatively soon. The `ozastc` module is fortunately very stable, so
+that it is unlikely that this operation will be needed twice.
+
+Once this is done (or immediately if you run a 32-bit POSIX environment), the
+entire Ozma compiler and library can be built with Ant:
 
     $ ant
 
@@ -82,9 +103,9 @@ subdirectory.
 
 To run a compiled object, use the program `ozma`.
 
-    $ ozma package.subpack.ObjectName [ARGS...]
+    $ ozma pack.subpack.ObjectName [ARGS...]
 
-Then, you can run the Hello world program:
+Thus, you can run the Hello world program like this:
 
     $ ozma helloword.HelloWorld
 
@@ -114,6 +135,9 @@ order of complexity, they are:
 *   Advanced examples
     *   Digital logic simulation
 
+Another advanced example is available in a dedicated repositiory:
+[Capture the Flag](https://github.com/sjrd/capture-the-flag)
+
 
 Documentation
 -------------
@@ -121,9 +145,9 @@ Documentation
 The best source of documentation is the [text of the master
 thesis](http://ks365195.kimsufi.com/~sjrd/master-thesis.pdf).
 
-*   Chapter 3 contains a tutorial for Ozma and step-by-step construction of some
-    of the example programs
-*   Chapter 4 gives the semantics of the language
+*   Chapter 3 contains a tutorial for Ozma
+*   Chapter 4 gives step-by-step construction of some of the example programs
+*   Chapter 5 gives the semantics of the language
 
 
 Development
