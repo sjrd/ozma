@@ -23,8 +23,8 @@ Get Ozma
 
 ### Software requirements
 
-In order to build the Ozma compiler and library, you need the following software
-installed on your computer:
+In order to run the Ozma compiler and Ozma programs, you need the following
+software installed on your computer:
 
 *   Scala >= 2.9.0
 *   Mozart >= 1.4.0
