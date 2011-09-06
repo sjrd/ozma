@@ -403,7 +403,8 @@ trait Natives { self: OzCodes =>
       "scala.ozma.package.makeFailedValue", "A",
       "`throwable`" -> "java.lang.Throwable") {
     def body(specializedKind: TypeKind) = {
-      Value.failed(QuotedVar("throwable"))
+      Value.failed(
+          'error('throwable(QuotedVar("throwable")), 'debug -> unit))
     }
   }
 
