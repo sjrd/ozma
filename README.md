@@ -10,12 +10,12 @@ Ozma does not compile towards the JVM nor the MSIL. Instead, it compiles towards
 the [Mozart programming system](http://www.mozart-oz.org/). This runtime
 provides built-in support for these three concurrency models.
 
-Ozma was initially developed as a master thesis at the [Université Catholique de
+Ozma was initially developed as a master's thesis at the [Université Catholique de
 Louvain](http://www.uclouvain.be/), under the supervision of Pr Peter Van Roy.
-The [text of the master
-thesis](http://ks365195.kimsufi.com/~sjrd/master-thesis.pdf) details the design
-and implementation, as well as rationale for the Ozma programming language. It
-also discusses most of the example programs.
+The [text of the master's
+thesis](http://www.info.ucl.ac.be/~pvr/MemoireSebastienDoeraene.pdf) details the
+design and implementation, as well as rationale for the Ozma programming
+language. It also discusses most of the example programs.
 
 
 Get Ozma
@@ -183,8 +183,8 @@ Another advanced example is available in a dedicated repositiory:
 Documentation
 -------------
 
-The best source of documentation is the [text of the master
-thesis](http://ks365195.kimsufi.com/~sjrd/master-thesis.pdf).
+The best source of documentation is the [text of the master's
+thesis](http://www.info.ucl.ac.be/~pvr/MemoireSebastienDoeraene.pdf).
 
 *   Chapter 3 contains a tutorial for Ozma
 *   Chapter 4 gives step-by-step construction of some of the example programs
