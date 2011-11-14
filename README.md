@@ -80,7 +80,7 @@ and unzip its contents into the directory `build/ozastc/`.
 
 *   [`ozastc` for Linux](http://35541hpv124015.ikoula.com/~ozma/download/ozma-build-ozastc-linux.tgz)
 *   [`ozastc` for Mac](http://35541hpv124015.ikoula.com/~ozma/download/ozma-build-ozastc-darwin.tgz)
-*   [`ozastc` for Windows](35541hpv124015.ikoula.com/~ozma/download/ozma-build-ozastc-windows.zip)
+*   [`ozastc` for Windows](http://35541hpv124015.ikoula.com/~ozma/download/ozma-build-ozastc-windows.zip)
 
 After unzipping, make sure you `touch` the unzipped files so that their
 timestamp is greater than the timestamp of source files. This will tell Ant not
