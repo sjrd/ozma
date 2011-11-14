@@ -52,9 +52,9 @@ often.
 
 Pre-compiled binaries are provided for Linux, Mac and Windows:
 
-*   [Ozma for Linux](http://ks365195.kimsufi.com/~ozma/download/ozma-complete-linux.tgz)
-*   [Ozma for Mac](http://ks365195.kimsufi.com/~ozma/download/ozma-complete-darwin.tgz)
-*   [Ozma for Windows](http://ks365195.kimsufi.com/~ozma/download/ozma-complete-windows.zip)
+*   [Ozma for Linux](http://35541hpv124015.ikoula.com/~ozma/download/ozma-complete-linux.tgz)
+*   [Ozma for Mac](http://35541hpv124015.ikoula.com/~ozma/download/ozma-complete-darwin.tgz)
+*   [Ozma for Windows](http://35541hpv124015.ikoula.com/~ozma/download/ozma-complete-windows.zip)
 
 Unzip them wherever you want. Executables are available in the `bin/` directory.
 It is recommanded that you add this directory to your PATH, for convenience.
@@ -78,9 +78,9 @@ of any 64-bit system cannot build one module of Ozma, called `ozastc`. For those
 users, we provide binaries of `ozastc`. Simply download the appropriate archive
 and unzip its contents into the directory `build/ozastc/`.
 
-*   [`ozastc` for Linux](http://ks365195.kimsufi.com/~ozma/download/ozma-build-ozastc-linux.tgz)
-*   [`ozastc` for Mac](http://ks365195.kimsufi.com/~ozma/download/ozma-build-ozastc-darwin.tgz)
-*   [`ozastc` for Windows](http://ks365195.kimsufi.com/~ozma/download/ozma-build-ozastc-windows.zip)
+*   [`ozastc` for Linux](http://35541hpv124015.ikoula.com/~ozma/download/ozma-build-ozastc-linux.tgz)
+*   [`ozastc` for Mac](http://35541hpv124015.ikoula.com/~ozma/download/ozma-build-ozastc-darwin.tgz)
+*   [`ozastc` for Windows](35541hpv124015.ikoula.com/~ozma/download/ozma-build-ozastc-windows.zip)
 
 After unzipping, make sure you `touch` the unzipped files so that their
 timestamp is greater than the timestamp of source files. This will tell Ant not
