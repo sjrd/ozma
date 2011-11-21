@@ -172,12 +172,7 @@ thesis](http://www.info.ucl.ac.be/~pvr/MemoireSebastienDoeraene.pdf).
 Development
 -----------
 
-Ozma is developed using Eclipse, with the Scala plugin for Eclipse. You will
-need to define the variable `SCALA_HOME` to point to your actual Scala
-installation.
-
-This can be set up in the preferences, under Java > Build path > Classpath
-Variables.
+Ozma is developed using Eclipse, with the Scala IDE plugin.
 
 
 Author
