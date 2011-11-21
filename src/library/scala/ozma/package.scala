@@ -34,10 +34,4 @@ package object ozma {
 
   implicit def listUnwrapperFromAgent[A](agent: ListAgent[A]) = agent.toList
   implicit def lazyListToList[A](lazyList: LazyList[A]) = lazyList.toList
-
-  class ListWrapper[A](list: List[A]) {
-    def toAgent = new ListAgent(list)
-
-    def lazified = new LazyList(list)
-  }
 }

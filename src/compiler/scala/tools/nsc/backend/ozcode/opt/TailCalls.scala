@@ -108,7 +108,7 @@ abstract class TailCalls extends OzmaSubComponent {
           case _ => true
         }
       }
-      remaining.firstOption
+      remaining.headOption
     }
 
     // Process tail calls
