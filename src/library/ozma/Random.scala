@@ -1,7 +1,7 @@
 package ozma
 
 object Random {
-  @native def rand(): Int
+  @native def rand(): Int = sys.error("stub")
 
   def rand(upper: Int): Int = rand() % upper
 
