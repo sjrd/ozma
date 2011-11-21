@@ -285,7 +285,7 @@ define
       fun {ChangeExtensionSub S NewExt}
 	 case S of ".oz" then NewExt
 	 elseof ".ozg" then NewExt
-	 elseof ".ast.oz" then NewExt
+	 elseof ".ozast" then NewExt
 	 elseof C|Cr then
 	    C|{ChangeExtensionSub Cr NewExt}
 	 [] nil then NewExt

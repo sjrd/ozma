@@ -11,7 +11,7 @@ import scala.collection.mutable.{ HashMap, ListBuffer, Set, HashSet }
 import ozma._
 
 import io.AbstractFile
-import java.io.{FileOutputStream, OutputStreamWriter}
+import java.io.{FileOutputStream, OutputStreamWriter, DataOutputStream}
 
 /** This is the compiler component that produces Mozart modules from Oz code
  *
@@ -387,8 +387,8 @@ abstract class GenMozart extends OzmaSubComponent {
     }
 
     def writeFunctorAST(functor: Functor) {
-      val outfile = getFileFor(functor, ".ast.oz")
-      val outstream = new OutputStreamWriter(outfile.bufferedOutput, "US-ASCII")
+      val outfile = getFileFor(functor, ".ozast")
+      val outstream = new DataOutputStream(outfile.bufferedOutput)
       val ast = functor.makeAST()
       ast.save(outstream)
       outstream.close()

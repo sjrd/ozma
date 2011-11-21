@@ -8,7 +8,7 @@ package scala.tools.nsc
 package backend
 package ozcode
 
-import java.io.OutputStreamWriter
+import java.io.DataOutputStream
 import util.{Position, NoPosition}
 
 
@@ -116,7 +116,7 @@ trait ASTs { self: OzCodes =>
   private case class ASTNode(node: OzAST)
 
   trait OzAST extends ast.Phrase {
-    def save(output: OutputStreamWriter): Unit
+    def save(output: DataOutputStream): Unit
   }
 
   object ast {
@@ -144,11 +144,7 @@ trait ASTs { self: OzCodes =>
     trait OptImportAt extends Node
     trait ClassDescriptor extends Node
 
-    trait Constant extends Phrase with OzAST {
-      def save(output: OutputStreamWriter) {
-        output.write(syntax())
-      }
-    }
+    trait Constant extends Phrase with OzAST
 
     trait RecordLabel extends Phrase {
       def apply(features: RecordArgument*) =
@@ -165,6 +161,31 @@ trait ASTs { self: OzCodes =>
         result append c
       }
       result.toString
+    }
+
+    // Output format
+
+    private object OutputFormat {
+      val TypeInt = 1
+      val TypeFloat = 2
+      val TypeAtom = 3
+      val TypeString = 4
+      val TypeTuple = 5
+      val TypeList = 6
+      val TypeUnit = 7
+      val TypeTrue = 8
+      val TypeFalse = 9
+
+      def writeType(output: DataOutputStream, tpe: Int) =
+        output.writeByte(tpe)
+
+      def writeLength(output: DataOutputStream, length: Int) =
+        output.writeShort(length)
+
+      def writeString(output: DataOutputStream, string: String) {
+        writeLength(output, string.length)
+        output.writeBytes(string)
+      }
     }
 
     // Tail-call info
@@ -287,6 +308,12 @@ trait ASTs { self: OzCodes =>
     case class Atom(atom: String) extends Constant with FeatureNoVar
         with RecordLabel with MethodName {
       def syntax(indent: String) = "'" + escapePseudoChars(atom, '\'') + "'"
+
+      def save(output: DataOutputStream) {
+        import OutputFormat._
+        writeType(output, TypeAtom)
+        writeString(output, atom)
+      }
     }
 
     object NullVal {
@@ -294,20 +321,25 @@ trait ASTs { self: OzCodes =>
       def unapply(atom: Atom) = atom.atom == "null"
     }
 
-    abstract class BuiltinName(tag: String) extends Constant with RecordLabel {
+    abstract class BuiltinName(tag: String,
+        tpe: Int) extends Constant with RecordLabel {
       override val astLabel = "fAtom"
 
       def syntax(indent: String) = tag
 
       override def makeASTArguments() =
         List(this.clone.asInstanceOf[BuiltinName])
+
+      def save(output: DataOutputStream) {
+        OutputFormat.writeType(output, tpe)
+      }
     }
 
-    case class UnitVal() extends BuiltinName("unit")
+    case class UnitVal() extends BuiltinName("unit", OutputFormat.TypeUnit)
 
-    case class True() extends BuiltinName("true")
+    case class True() extends BuiltinName("true", OutputFormat.TypeTrue)
 
-    case class False() extends BuiltinName("false")
+    case class False() extends BuiltinName("false", OutputFormat.TypeFalse)
 
     object Bool {
       def apply(value: Boolean) = if (value) True() else False()
@@ -364,12 +396,24 @@ trait ASTs { self: OzCodes =>
       override val astLabel = "fInt"
 
       def syntax(indent: String) = value.toString.replace('-', '~')
+
+      def save(output: DataOutputStream) {
+        import OutputFormat._
+        writeType(output, TypeInt)
+        writeString(output, syntax())
+      }
     }
 
     case class FloatLiteral(value: Double) extends Constant {
       override val astLabel = "fFloat"
 
       def syntax(indent: String) = value.toString.replace('-', '~')
+
+      def save(output: DataOutputStream) {
+        import OutputFormat._
+        writeType(output, TypeFloat)
+        writeString(output, syntax())
+      }
     }
 
     case class Record(val label: RecordLabel,
@@ -399,26 +443,14 @@ trait ASTs { self: OzCodes =>
         }
       }
 
-      def save(output: OutputStreamWriter) {
-        output.write(label.syntax())
+      def save(output: DataOutputStream) {
+        import OutputFormat._
+        writeType(output, TypeTuple)
+        writeString(output, label.asInstanceOf[Atom].atom)
+        writeLength(output, features.size)
 
-        if (!features.isEmpty) {
-          output.write("(")
-          for (feature <- features) {
-            feature match {
-              case Colon(feat, phrase:OzAST) =>
-                output.write(feat.syntax())
-                output.write(":")
-                phrase.save(output)
-
-              case phrase:OzAST =>
-                phrase.save(output)
-            }
-
-            output.write(" ")
-          }
-          output.write(")")
-        }
+        for (feature <- features)
+          feature.asInstanceOf[OzAST].save(output)
       }
     }
 
@@ -460,20 +492,13 @@ trait ASTs { self: OzCodes =>
         }
       }
 
-      def save(output: OutputStreamWriter) {
-        if (items.isEmpty)
-          output.write("nil")
-        else {
-          output.write("[")
-          for (item <- items) {
-            item match {
-              case phrase:OzAST =>
-                phrase.save(output)
-                output.write(" ")
-            }
-          }
-          output.write("]")
-        }
+      def save(output: DataOutputStream) {
+        import OutputFormat._
+        writeType(output, TypeList)
+        writeLength(output, items.size)
+
+        for (item <- items)
+          item.asInstanceOf[OzAST].save(output)
       }
 
       override def makeAST() = toListTuple.makeAST()
