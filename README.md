@@ -26,7 +26,7 @@ Get Ozma
 In order to run the Ozma compiler and Ozma programs, you need the following
 software installed on your computer:
 
-*   Scala >= 2.9.0
+*   Scala >= 2.9.0 < 2.9.1
 *   Mozart >= 1.4.0
 
 Binaries for Scala and Mozart are required to be available in the PATH. The
@@ -50,11 +50,8 @@ often.
 
 ### Pre-compiled binaries
 
-Pre-compiled binaries are provided for Linux, Mac and Windows:
-
-*   [Ozma for Linux](http://35541hpv124015.ikoula.com/~ozma/download/ozma-complete-linux.tgz)
-*   [Ozma for Mac](http://35541hpv124015.ikoula.com/~ozma/download/ozma-complete-darwin.tgz)
-*   [Ozma for Windows](http://35541hpv124015.ikoula.com/~ozma/download/ozma-complete-windows.zip)
+*   [Download as .tgz](http://35541hpv124015.ikoula.com/~ozma/download/ozma-complete.tgz)
+*   [Download as .zip](http://35541hpv124015.ikoula.com/~ozma/download/ozma-complete.zip)
 
 Unzip them wherever you want. Executables are available in the `bin/` directory.
 It is recommanded that you add this directory to your PATH, for convenience.
@@ -70,25 +67,6 @@ In order to build Ozma from source, you need:
 You also need to define the environment variable `SCALA_HOME` so that it points
 to your local Scala installation. Note that installers for Scala (such as the
 Typesafe Stack) automatically configure this environment variable.
-
-#### Binaries for `ozastc`
-
-Due to a limitation of the Gump parser generator of Mozart, users of Windows or
-of any 64-bit system cannot build one module of Ozma, called `ozastc`. For those
-users, we provide binaries of `ozastc`. Simply download the appropriate archive
-and unzip its contents into the directory `build/ozastc/`.
-
-*   [`ozastc` for Linux](http://35541hpv124015.ikoula.com/~ozma/download/ozma-build-ozastc-linux.tgz)
-*   [`ozastc` for Mac](http://35541hpv124015.ikoula.com/~ozma/download/ozma-build-ozastc-darwin.tgz)
-*   [`ozastc` for Windows](http://35541hpv124015.ikoula.com/~ozma/download/ozma-build-ozastc-windows.zip)
-
-After unzipping, make sure you `touch` the unzipped files so that their
-timestamp is greater than the timestamp of source files. This will tell Ant not
-to compile them.
-
-We understand that this is quite annoying. We plan to move to a Gump-free
-solution relatively soon. The `ozastc` module is fortunately very stable, so
-that it is unlikely that this operation will be needed twice.
 
 #### Actual build
 
