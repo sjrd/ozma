@@ -17,13 +17,13 @@ define
       attr
          ' elem'
 
-      meth '<init>#-428814466'(Value $)
+      meth '<init>(java.lang.Object):scala.runtime.ObjectRef'(Value $)
          ' elem' := Value
-         `type:java.lang.Object`, '<init>#1063877011'($)
+         `type:java.lang.Object`, '<init>():java.lang.Object'($)
       end
 
-      meth 'toString#1195259493'($)
-         {@' elem' toString($)}
+      meth 'toString():java.lang.String'($)
+         {@' elem' 'toString():java.lang.String'($)}
       end
    end
 

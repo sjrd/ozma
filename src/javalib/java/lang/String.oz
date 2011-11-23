@@ -24,13 +24,13 @@ define
          rawString
 
       meth '<init>'(RawVS $)
-         Object, '<init>#1063877011'(_)
+         Object, '<init>():java.lang.Object'(_)
          rawVS := RawVS
          rawString := {ByNeed fun {$} {VirtualString.toString RawVS} end}
          unit
       end
 
-      meth 'toString#1195259493'($)
+      meth 'toString():java.lang.String'($)
          self
       end
 
@@ -42,17 +42,17 @@ define
          @rawString
       end
 
-      meth '$plus#-918398289'(Right $)
+      meth '$plus(java.lang.String):java.lang.String'(Right $)
          Raw = (@rawVS)#{Right toRawVS($)}
       in
          {NewObject String StringClass '<init>'(Raw _)}
       end
 
-      meth '$plus#-1324018343'(Right $)
-         {self '$plus#-918398289'({Right toString($)} $)}
+      meth '$plus(java.lang.Object):java.lang.String'(Right $)
+         {self '$plus(java.lang.String):java.lang.String'({Right toString($)} $)}
       end
 
-      meth 'equals#-1875011758'(Other $)
+      meth 'equals(java.lang.Object):scala.Boolean'(Other $)
          if {IsInstance Other StringClass} then
             @rawString == {Other toRawString($)}
          else
@@ -60,7 +60,7 @@ define
          end
       end
 
-      meth 'length#-1882783961'($)
+      meth 'length():scala.Int'($)
          {Length @rawString}
       end
    end
@@ -76,12 +76,12 @@ define
 
    class `type:java.lang.String$` from Object
       meth '<init>'($)
-         Object, '<init>#1063877011'(_)
+         Object, '<init>():java.lang.Object'(_)
          `modulevar~java.lang.String$` = self
          unit
       end
 
-      meth 'valueOf#-1324018343'(Obj $)
+      meth 'valueOf(java.lang.Object):java.lang.String'(Obj $)
          {Obj toString($)}
       end
    end

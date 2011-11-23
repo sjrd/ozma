@@ -11,6 +11,5 @@ export
 define
    Type Class
 in
-   {ValueRef.makeValueRefClass "scala.runtime.CharRef"
-    '<init>#6116320' 'toString#-412450860' Module Type Class}
+   {ValueRef.makeValueRefClass "Char" false Module Type Class}
 end

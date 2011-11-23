@@ -164,7 +164,7 @@ abstract class GenMozart extends OzmaSubComponent {
       val classVar = varForClass(sym)
 
       val init = if (sym.isImplClass)
-        ast.Atom("<init>#1063877011")
+        ast.Atom("<init>():java.lang.Object")
       else
         atomForSymbol(clazz.symbol.primaryConstructor)
 

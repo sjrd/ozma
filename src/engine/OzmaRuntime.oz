@@ -89,7 +89,7 @@ define
    end
 
    fun {IsInstance Obj Class}
-      {Class 'isInstance#-1875011758'(Obj $)}
+      {Class 'isInstance(java.lang.Object):scala.Boolean'(Obj $)}
    end
 
    fun {AsInstance Obj Class}
@@ -122,7 +122,7 @@ define
       in
          {Throw {NewObject `type:java.lang.ClassCastException`
                  `class:java.lang.ClassCastException`
-                 '<init>#-1128485508'({StringLiteral Msg} _)}}
+                 '<init>(java.lang.String):java.lang.ClassCastException'({StringLiteral Msg} _)}}
          Obj
       end
    end
@@ -152,7 +152,7 @@ define
       {NewPort RawStream RawPort}
       thread {OzmaPortHandler RawStream Stream} end
       Port = {NewObject `type:ozma.Port` `class:ozma.Port`
-              '<init>#-855160462'(RawPort _)}
+              '<init>(java.lang.Object):ozma.Port'(RawPort _)}
       {Pair !!Stream Port}
    end
 
@@ -172,7 +172,7 @@ define
       {NewPort RawStream RawPort}
       thread {OzmaResultPortHandler RawStream Stream} end
       Port = {NewObject `type:ozma.ResultPort` `class:ozma.ResultPort`
-              '<init>#1894474825'(RawPort _)}
+              '<init>(java.lang.Object):ozma.ResultPort'(RawPort _)}
       {Pair !!Stream Port}
    end
 
@@ -180,7 +180,7 @@ define
       case RawStream of (In#Out)|Tail then
          NewStream
          Item = {NewObject `type:ozma.ResultPort.Item` `class:ozma.ResultPort.Item`
-                 '<init>#1317412069'(In Out _)}
+                 '<init>(java.lang.Object,java.lang.Object):ozma.ResultPort.Item'(In Out _)}
       in
          Stream = {Cons Item !!NewStream}
          {OzmaResultPortHandler Tail NewStream}
@@ -189,25 +189,25 @@ define
 
    fun {Pair X1 X2}
       {NewObject `type:scala.Tuple2` `class:scala.Tuple2`
-       '<init>#667154047'(X1 X2 _)}
+       '<init>(java.lang.Object,java.lang.Object):scala.Tuple2'(X1 X2 _)}
    end
 
    fun {Cons Head Tail}
       {NewObject `type:scala.collection.immutable.$colon$colon`
        `class:scala.collection.immutable.$colon$colon`
-       '<init>#835746335'(Head Tail _)}
+       '<init>(java.lang.Object,scala.collection.immutable.List):scala.collection.immutable.$colon$colon'(Head Tail _)}
    end
 
    fun {AnyEqEq Left Right}
       {{`module:scala.runtime.BoxesRunTime$`}
-       'equals#521295670'(Left Right $)}
+       'equals(java.lang.Object,java.lang.Object):scala.Boolean'(Left Right $)}
    end
 
    fun {AnyRefEqEq Left Right}
       if Left == null then
          Right == null
       else
-         {Left 'equals#-1875011758'(Right $)}
+         {Left 'equals(java.lang.Object):scala.Boolean'(Right $)}
       end
    end
 

@@ -500,8 +500,9 @@ abstract class GenOzCode extends OzmaSubComponent {
               ast.Eq(genExpression(lhs, ctx), genExpression(rhs, ctx))
             else if (sym.isStaticMember) {
               val instance = genModule(sym.owner, tree.pos)
-              val accessor = atomForSymbol(sym.name.toString + "_$eq",
-                  paramsHash(List(tree.tpe), UnitClass.tpe)) setPos tree.pos
+              val accessor = ast.Atom(methodEncodedName(
+                  sym.name.toString + "_$eq",
+                  List(tree.tpe), UnitClass.tpe)) setPos tree.pos
               val arg = genExpression(rhs, ctx)
               val message = buildMessage(accessor, List(arg), ast.Wildcard())
 
@@ -902,8 +903,8 @@ abstract class GenOzCode extends OzmaSubComponent {
 
     private def genStaticMember(sym: Symbol, pos: Position = NoPosition) = {
       val instance = genModule(sym.owner, pos)
-      val accessor = atomForSymbol(sym.name.toString,
-          paramsHash(Nil, sym.tpe)) setPos pos
+      val accessor = ast.Atom(methodEncodedName(sym.name.toString,
+          Nil, sym.tpe)) setPos pos
       val message = buildMessage(accessor, Nil)
 
       ast.Apply(instance, List(message))

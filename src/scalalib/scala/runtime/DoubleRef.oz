@@ -11,6 +11,5 @@ export
 define
    Type Class
 in
-   {ValueRef.makeValueRefClass "scala.runtime.DoubleRef"
-    '<init>#1466755793' 'toString#-209566381' Module Type Class}
+   {ValueRef.makeValueRefClass "Double" false Module Type Class}
 end

@@ -25,7 +25,7 @@ define
          arrayOfThisClass
 
       meth '<init>'(ARawName ASuperClass AMixins AAncestors $)
-         Object, '<init>#1063877011'(_)
+         Object, '<init>():java.lang.Object'(_)
          name := {StringLiteral ARawName}
          superClass := ASuperClass
          mixins := AMixins
@@ -36,7 +36,7 @@ define
          unit
       end
 
-      meth 'getName#1195259493'($)
+      meth 'getName():java.lang.String'($)
          @name
       end
 
@@ -45,19 +45,19 @@ define
          @name
       end
 
-      meth 'toString#1195259493'($)
+      meth 'toString():java.lang.String'($)
          @name
       end
 
-      meth 'isInstance#-1875011758'(Obj $)
+      meth 'isInstance(java.lang.Object):scala.Boolean'(Obj $)
          if Obj == null then
             false
          else
-            {self 'isAssignableFrom#1326077541'({Obj getClass($)} $)}
+            {self 'isAssignableFrom(java.lang.Class):scala.Boolean'({Obj getClass($)} $)}
          end
       end
 
-      meth 'isAssignableFrom#1326077541'(SubClass $)
+      meth 'isAssignableFrom(java.lang.Class):scala.Boolean'(SubClass $)
          {SubClass isAncestor(self $)}
       end
 
@@ -65,11 +65,11 @@ define
          (Cls == self) orelse {Member Cls @ancestors}
       end
 
-      meth 'isPrimitive#-676694176'($)
+      meth 'isPrimitive():scala.Boolean'($)
          false
       end
 
-      meth 'isArray#-676694176'($)
+      meth 'isArray():scala.Boolean'($)
          false
       end
 
@@ -129,7 +129,7 @@ define
          @zeroOfThisClass
       end
 
-      meth 'isPrimitive#-676694176'($)
+      meth 'isPrimitive():scala.Boolean'($)
          true
       end
    end

@@ -12,17 +12,29 @@ export
 
 define
 
-   proc {MakeValueRefClass Name InitName ToStringName Module ?Type ?Class}
+   proc {MakeValueRefClass TypeName IsVolatile Module ?Type ?Class}
+      TypeFullName = {Append "scala." TypeName}
+
+      VolatilePrefix = if IsVolatile then "Volatile" else nil end
+      FullName = {VirtualString.toString
+                  "scala.runtime."#VolatilePrefix#TypeName#"Ref"}
+
+      InitNameVS = '<init>('#TypeFullName#'):'#FullName
+      InitName = {String.toAtom {VirtualString.toString InitNameVS}}
+
+      ToStringNameVS = 'toString('#TypeFullName#'):java.lang.String'
+      ToStringName = {String.toAtom {VirtualString.toString ToStringNameVS}}
+   in
       class Type from `type:java.lang.Object`
          attr
             ' elem'
 
          meth !InitName(Value $)
             ' elem' := Value
-            `type:java.lang.Object`, '<init>#1063877011'($)
+            `type:java.lang.Object`, '<init>():java.lang.Object'($)
          end
 
-         meth 'toString#1195259493'($)
+         meth 'toString():java.lang.String'($)
             {Module ToStringName(@' elem' $)}
          end
       end
@@ -30,7 +42,7 @@ define
       Class = {ByNeed fun {$}
                          {NewObject `type:java.lang.Class`
                           `class:java.lang.Class`
-                          '<init>'(Name
+                          '<init>'(FullName
                                    `class:java.lang.Object`
                                    nil
                                    [`class:java.lang.Object`]

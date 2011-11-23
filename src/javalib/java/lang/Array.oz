@@ -60,7 +60,7 @@ define
          if (Index < 0) orelse (Index >= @length) then
             {Throw {NewObject `type:java.lang.ArrayIndexOutOfBoundsException`
                     `class:java.lang.ArrayIndexOutOfBoundsException`
-                    '<init>#1625905794'(_)}}
+                    '<init>():java.lang.ArrayIndexOutOfBoundsException'(_)}}
          end
       end
    end
@@ -85,25 +85,25 @@ define
          @componentClass
       end
 
-      meth 'getComponentType#-530663260'($)
+      meth 'getComponentType():java.lang.Class'($)
          @componentClass
       end
 
       meth isAncestor(Cls $)
          if (Cls == self) orelse (Cls == `class:java.lang.Object`) then
             true
-         elseif {Cls 'isArray#-676694176'($)} then
+         elseif {Cls 'isArray():scala.Boolean'($)} then
             local
                ClsComp = {Cls componentClass($)}
             in
-               {ClsComp 'isAssignableFrom#1326077541'(@componentClass $)}
+               {ClsComp 'isAssignableFrom(java.lang.Class):scala.Boolean'(@componentClass $)}
             end
          else
             false
          end
       end
 
-      meth 'isArray#-676694176'($)
+      meth 'isArray():scala.Boolean'($)
          true
       end
 

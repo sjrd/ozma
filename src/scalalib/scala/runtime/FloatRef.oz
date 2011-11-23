@@ -11,6 +11,5 @@ export
 define
    Type Class
 in
-   {ValueRef.makeValueRefClass "scala.runtime.FloatRef"
-    '<init>#-1119606529' 'toString#933558110' Module Type Class}
+   {ValueRef.makeValueRefClass "Float" false Module Type Class}
 end

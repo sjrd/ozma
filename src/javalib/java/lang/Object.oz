@@ -34,7 +34,7 @@ define
          {self InitMessage}
       end
 
-      meth '<init>#1063877011'($)
+      meth '<init>():java.lang.Object'($)
          unit
       end
 
@@ -46,38 +46,38 @@ define
          Field := Value
       end
 
-      meth 'getClass#-530663260'($)
+      meth 'getClass():java.lang.Class'($)
          @'class'
       end
 
       % For convenience in other Oz functors
       meth getClass($)
-         {self 'getClass#-530663260'($)}
+         {self 'getClass():java.lang.Class'($)}
       end
 
       % In the JavaDoc, defined as:
       %   getClass().getName() + '@' + Integer.toHexString(hashCode())
-      meth 'toString#1195259493'($)
-         ClassName = {{@'class' 'getName#1195259493'($)} toRawString($)}
-         HashCode = {self 'hashCode#-1882783961'($)}
+      meth 'toString():java.lang.String'($)
+         ClassName = {{@'class' 'getName():java.lang.String'($)} toRawString($)}
+         HashCode = {self 'hashCode():scala.Int'($)}
       in
          {StringLiteral ClassName#'@'#HashCode}
       end
 
       % For convenience in other Oz functors
       meth toString($)
-         {self 'toString#1195259493'($)}
+         {self 'toString():java.lang.String'($)}
       end
 
       meth identity($)
          @identity
       end
 
-      meth 'hashCode#-1882783961'($)
+      meth 'hashCode():scala.Int'($)
          @identity
       end
 
-      meth 'equals#-1875011758'(Other $)
+      meth 'equals(java.lang.Object):scala.Boolean'(Other $)
          self == Other
       end
 
@@ -85,17 +85,17 @@ define
          {@monitor.'lock' P}
       end
 
-      meth 'wait#1763596620'($)
+      meth 'wait():scala.Unit'($)
          {@monitor.wait}
          unit
       end
 
-      meth 'notify#1763596620'($)
+      meth 'notify():scala.Unit'($)
          {@monitor.notify}
          unit
       end
 
-      meth 'notifyAll#1763596620'($)
+      meth 'notifyAll():scala.Unit'($)
          {@monitor.notifyAll}
          unit
       end

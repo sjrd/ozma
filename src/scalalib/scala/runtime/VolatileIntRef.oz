@@ -11,6 +11,5 @@ export
 define
    Type Class
 in
-   {ValueRef.makeValueRefClass "scala.runtime.VolatileIntRef"
-    '<init>#448456154' 'toString#29004781' Module Type Class}
+   {ValueRef.makeValueRefClass "Int" true Module Type Class}
 end

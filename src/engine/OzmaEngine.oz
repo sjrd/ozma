@@ -73,7 +73,7 @@ define
       in
          OzmaArgs = {MakeOzmaArgs Args StringClass StringLiteral}
          Obj = {Mod.ObjID}
-         {Obj 'main#-1565094369'(OzmaArgs _)}
+         {Obj 'main(java.lang.String[]):scala.Unit'(OzmaArgs _)}
       catch error(throwable(E) debug:D) then
          {DumpException E D}
       end

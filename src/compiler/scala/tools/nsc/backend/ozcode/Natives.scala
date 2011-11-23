@@ -8,18 +8,51 @@ trait Natives { self: OzCodes =>
   import global.{ Symbol, definitions, stringToTermName }
   import ast._
 
-  abstract class NativeMethod(val fullName: String, val resultTypeName: String,
-      val argDefs: Pair[String, String]*) {
-    def this(fullName: String, argDefs: Pair[String, String]*) =
-      this(fullName, null:String, argDefs:_*)
+  class MethodSignature(val paramTypeNames: List[String],
+      val resultTypeName: String) {
+    def encodeName(name: String) =
+      methodEncodedName(name, paramTypeNames, resultTypeName)
+  }
 
-    val hash = paramsHash(argDefs.toList map (_._2), resultTypeName)
+  object MethodSignature {
+    class Builder(paramTypeNames: List[String]) {
+      def -> (resultTypeName: String) =
+        new MethodSignature(paramTypeNames, resultTypeName)
+    }
+
+    implicit def builderWithZeroParam(unit: Unit) =
+      new Builder(Nil)
+
+    implicit def builderWithOneParam(param: String) =
+      new Builder(List(param))
+
+    implicit def builderWithTwoParams(params: (String, String)) =
+      new Builder(List(params._1, params._2))
+
+    implicit def builderWithThreeParams(
+        params: (String, String, String)) =
+      new Builder(List(params._1, params._2, params._3))
+
+    implicit def builderWithFourParams(
+        params: (String, String, String, String)) =
+      new Builder(List(params._1, params._2, params._3, params._4))
+
+    implicit def builderWithFiveParams(
+        params: (String, String, String, String, String)) =
+      new Builder(List(params._1, params._2, params._3, params._4, params._5))
+  }
+
+  import MethodSignature._
+
+  abstract class NativeMethod(val fullName: String,
+      val signature: MethodSignature) {
+    val encodedName = signature.encodeName(fullName)
 
     def body: ast.Phrase
   }
 
   abstract class SpecializedNativeMethod(val fullName: String,
-      val resultTypeName: String, val argDefs: Pair[String, String]*) {
+      val signature: MethodSignature) {
     def specializedKinds = List(UnitKind, BooleanKind, CharKind, ByteKind,
         ShortKind, IntKind, LongKind, FloatKind, DoubleKind, RefKind)
 
@@ -49,26 +82,26 @@ trait Natives { self: OzCodes =>
         else
           fullName + "$m" + specializedKind.primitiveCharCode + "c$sp"
 
-      val result = mapTypeName(resultTypeName, param = false)
-      val args = argDefs map {
-        case (name, typeName) => (name, mapTypeName(typeName, param = true))
+      val args = signature.paramTypeNames map {
+        typeName => mapTypeName(typeName, param = true)
       }
+      val result = mapTypeName(signature.resultTypeName, param = false)
 
-      new Method(specializedKind, name, result, args:_*)
+      new Method(specializedKind, name, new MethodSignature(args, result))
     }
 
     private class Method(specializedKind: TypeKind, fullName: String,
-        resultTypeName: String, argDefs: Pair[String, String]*) extends
-        NativeMethod(fullName, resultTypeName, argDefs:_*) {
+        signature: MethodSignature) extends
+        NativeMethod(fullName, signature) {
       def body = SpecializedNativeMethod.this.body(specializedKind)
     }
   }
 
   object nativeMethods {
-    private val methods = new HashMap[Pair[String, Int], NativeMethod]
+    private val methods = new HashMap[String, NativeMethod]
 
     private[this] def register(native: NativeMethod) {
-      methods += (native.fullName, native.hash) -> native
+      methods += ((native.encodedName, native))
     }
 
     private[this] def register(native: SpecializedNativeMethod) {
@@ -155,7 +188,7 @@ trait Natives { self: OzCodes =>
     }
 
     def getBodyFor(symbol: Symbol) = {
-      val key = (symbol.fullName, paramsHash(symbol))
+      val key = methodEncodedFullName(symbol)
 
       methods.get(key) match {
         case Some(method) => method.body
@@ -191,10 +224,10 @@ trait Natives { self: OzCodes =>
     // Method
 
     abstract class BaseMethodWrapper(val obj: Phrase, val name: String) {
-      protected def hash: Int
+      protected def encodedName: String
 
       def apply(args: Phrase*) = {
-        val label = Atom(if (hash == 0) name else name + "#" + hash)
+        val label = Atom(encodedName)
         val message = buildMessage(label, args.toList)
 
         Apply(obj, List(message))
@@ -202,13 +235,14 @@ trait Natives { self: OzCodes =>
     }
 
     class MethodWrapper(obj: Phrase, name: String,
-        val paramTypes: String*) extends BaseMethodWrapper(obj, name) {
-      protected def hash = paramsHash(paramTypes.toList)
+        signature: MethodSignature) extends BaseMethodWrapper(obj, name) {
+      protected def encodedName = methodEncodedName(name,
+          signature.paramTypeNames, signature.resultTypeName)
     }
 
     class NativeMethodWrapper(obj: Phrase,
         name: String) extends BaseMethodWrapper(obj, name) {
-      protected def hash = 0
+      protected def encodedName = name
     }
 
     // Wrapper
@@ -230,19 +264,20 @@ trait Natives { self: OzCodes =>
       def div(right: Phrase) = BinaryOpApply("div", phrase, right)
       def mod(right: Phrase) = BinaryOpApply("mod", phrase, right)
 
-      def toRawVS = new MethodWrapper(phrase, "toRawVS")
-      def toRawString = new MethodWrapper(phrase, "toRawString")
+      def toRawVS = new NativeMethodWrapper(phrase, "toRawVS")
+      def toRawString = new NativeMethodWrapper(phrase, "toRawString")
 
-      def identity = new MethodWrapper(phrase, "identity")
+      def identity = new NativeMethodWrapper(phrase, "identity")
 
-      def doApply = new MethodWrapper(phrase, "apply", "java.lang.Object")
+      def doApply = new MethodWrapper(phrase, "apply", () -> "java.lang.Object")
 
       def apply0(resultKind: TypeKind) = {
         if (resultKind.isInstanceOf[REFERENCE])
           doApply
         else {
           val name = "apply$mc" + resultKind.primitiveCharCode + "$sp"
-          new MethodWrapper(phrase, name, resultKind.toType.typeSymbol.fullName)
+          new MethodWrapper(phrase, name,
+              () -> resultKind.toType.typeSymbol.fullName)
         }
       }
 
@@ -335,8 +370,8 @@ trait Natives { self: OzCodes =>
       val arguments1 = arguments.toList
       val actualArgs = arguments1 map (_._1)
       val paramTypeNames = arguments1 map (_._2)
-      genNew(clazz, actualArgs,
-          atomForSymbol("<init>", paramsHash(paramTypeNames, clazz.fullName)))
+      genNew(clazz, actualArgs, ast.Atom(methodEncodedName("<init>",
+          paramTypeNames, clazz.fullName)))
     }
 
     def New(className: String, arguments: Pair[Phrase, String]*): Phrase =
@@ -347,12 +382,12 @@ trait Natives { self: OzCodes =>
   import astDSL.StringLiteral
 
   object ScalaOzma_newUnbound extends
-      SpecializedNativeMethod("scala.ozma.package.newUnbound", "A") {
+      SpecializedNativeMethod("scala.ozma.package.newUnbound", () -> "A") {
     def body(specializedKind: TypeKind) = __
   }
 
   object ScalaOzma_waitBound extends SpecializedNativeMethod(
-      "scala.ozma.package.waitBound", "scala.Unit", "`value`" -> "A") {
+      "scala.ozma.package.waitBound", "A" -> "scala.Unit") {
     def body(specializedKind: TypeKind) = {
       And(
           Wait(QuotedVar("value")),
@@ -362,7 +397,7 @@ trait Natives { self: OzCodes =>
   }
 
   object ScalaOzma_waitQuiet extends SpecializedNativeMethod(
-      "scala.ozma.package.waitQuiet", "scala.Unit", "`value`" -> "A") {
+      "scala.ozma.package.waitQuiet", "A" -> "scala.Unit") {
     def body(specializedKind: TypeKind) = {
       And(
           Value.waitQuiet(QuotedVar("value")),
@@ -372,7 +407,7 @@ trait Natives { self: OzCodes =>
   }
 
   object ScalaOzma_waitNeeded extends SpecializedNativeMethod(
-      "scala.ozma.package.waitNeeded", "scala.Unit", "`value`" -> "A") {
+      "scala.ozma.package.waitNeeded", "A" -> "scala.Unit") {
     def body(specializedKind: TypeKind) = {
       And(
           WaitNeeded(QuotedVar("value")),
@@ -382,8 +417,7 @@ trait Natives { self: OzCodes =>
   }
 
   object ScalaOzma_byNeed extends SpecializedNativeMethod(
-      "scala.ozma.package.byNeed", "A",
-      "`value`" -> "scala.Function0") {
+      "scala.ozma.package.byNeed", "scala.Function0" -> "A") {
     def body(specializedKind: TypeKind) = {
       val value = QuotedVar("value")
       ByNeed(Fun($, Nil, value.apply0(specializedKind)()))
@@ -391,8 +425,7 @@ trait Natives { self: OzCodes =>
   }
 
   object ScalaOzma_byNeedFuture extends SpecializedNativeMethod(
-      "scala.ozma.package.byNeedFuture", "A",
-      "`value`" -> "scala.Function0") {
+      "scala.ozma.package.byNeedFuture", "scala.Function0" -> "A") {
     def body(specializedKind: TypeKind) = {
       val value = QuotedVar("value")
       ByNeedFuture(Fun($, Nil, value.apply0(specializedKind)()))
@@ -400,8 +433,7 @@ trait Natives { self: OzCodes =>
   }
 
   object ScalaOzma_makeFailedValue extends SpecializedNativeMethod(
-      "scala.ozma.package.makeFailedValue", "A",
-      "`throwable`" -> "java.lang.Throwable") {
+      "scala.ozma.package.makeFailedValue", "java.lang.Throwable" -> "A") {
     def body(specializedKind: TypeKind) = {
       Value.failed(
           'error('throwable(QuotedVar("throwable")), 'debug -> unit))
@@ -409,8 +441,7 @@ trait Natives { self: OzCodes =>
   }
 
   object ScalaOzma_sleep extends NativeMethod(
-      "scala.ozma.package.sleep", "scala.Unit",
-      "`ms`" -> "scala.Int") {
+      "scala.ozma.package.sleep", "scala.Int" -> "scala.Unit") {
     def body = {
       val ms = QuotedVar("ms")
       And(
@@ -421,7 +452,7 @@ trait Natives { self: OzCodes =>
   }
 
   abstract class Number_toString(fullName: String) extends
-      NativeMethod(fullName, "java.lang.String") {
+      NativeMethod(fullName, () -> "java.lang.String") {
     def ValueToString: BuiltinFunction
 
     def body = {
@@ -452,7 +483,7 @@ trait Natives { self: OzCodes =>
   }
 
   object Character_toString extends NativeMethod(
-      "java.lang.Character.toString", "java.lang.String") {
+      "java.lang.Character.toString", () -> "java.lang.String") {
     def body = {
       val ValueField = QuotedVar(" value")
 
@@ -461,7 +492,7 @@ trait Natives { self: OzCodes =>
   }
 
   abstract class Number_parse(fullName: String, resultType: String)
-      extends NativeMethod(fullName, resultType, "`s`" -> "java.lang.String") {
+      extends NativeMethod(fullName, "java.lang.String" -> resultType) {
     def StringToValue: BuiltinFunction
     def ErrorIdentifier: Atom
 
@@ -502,15 +533,14 @@ trait Natives { self: OzCodes =>
   }
 
   abstract class Primitive_box(primitiveType: String, boxedType: String)
-      extends NativeMethod(primitiveType+".box", boxedType,
-          "`x`" -> primitiveType) {
+      extends NativeMethod(primitiveType+".box", primitiveType -> boxedType) {
 
     def body = {
       def BoxedType = Apply(QuotedVar("module:"+boxedType+"$"), Nil)
 
       implicit def wrapForValueOf(phrase: Phrase) = new {
         def valueOf = new MethodWrapper(phrase, "valueOf",
-            primitiveType, boxedType)
+            primitiveType -> boxedType)
       }
 
       def x = QuotedVar("x")
@@ -547,12 +577,13 @@ trait Natives { self: OzCodes =>
 
   abstract class Primitive_unbox(primitiveType: String,
       theValueMethod: String)
-      extends NativeMethod(primitiveType+".unbox", primitiveType,
-          "`x`" -> "java.lang.Object") {
+      extends NativeMethod(primitiveType+".unbox",
+          "java.lang.Object" -> primitiveType) {
 
     def body = {
       implicit def wrapForTheValue(phrase: Phrase) = new {
-        def theValue = new MethodWrapper(phrase, theValueMethod, primitiveType)
+        def theValue = new MethodWrapper(phrase, theValueMethod,
+            () -> primitiveType)
       }
 
       def x = QuotedVar("x")
@@ -586,17 +617,16 @@ trait Natives { self: OzCodes =>
   object Double_unbox extends Primitive_unbox("scala.Double", "doubleValue")
 
   object System_currentTimeMillis extends NativeMethod(
-      "java.lang.System.currentTimeMillis", "scala.Long") {
+      "java.lang.System.currentTimeMillis", () -> "scala.Long") {
     def body = {
       OS.time() * 1000
     }
   }
 
   object System_arraycopy extends NativeMethod(
-      "java.lang.System.arraycopy", "scala.Unit",
-      "src" -> "java.lang.Object", "srcPos" -> "scala.Int",
-      "dest" -> "java.lang.Object", "destPos" -> "scala.Int",
-      "length" -> "scala.Int") {
+      "java.lang.System.arraycopy",
+      ("java.lang.Object", "scala.Int", "java.lang.Object",
+          "scala.Int", "scala.Int") -> "scala.Unit") {
     def body = {
       And(ArrayCopy(QuotedVar("src"), QuotedVar("srcPos"), QuotedVar("dest"),
           QuotedVar("destPos"), QuotedVar("length")), unit)
@@ -604,8 +634,7 @@ trait Natives { self: OzCodes =>
   }
 
   object System_identityHashCode extends NativeMethod(
-      "java.lang.System.identityHashCode", "scala.Int",
-      "x" -> "java.lang.Object") {
+      "java.lang.System.identityHashCode", "java.lang.Object" -> "scala.Int") {
     def body = {
       def x = QuotedVar("x")
 
@@ -614,7 +643,7 @@ trait Natives { self: OzCodes =>
   }
 
   object Runtime_halt0 extends NativeMethod("java.lang.Runtime.halt0",
-      "scala.Unit", "status" -> "scala.Int") {
+      "scala.Int" -> "scala.Unit") {
     def body = {
       def status = QuotedVar("status")
 
@@ -622,15 +651,15 @@ trait Natives { self: OzCodes =>
     }
   }
 
-  object Runtime_gc extends NativeMethod("java.lang.Runtime.gc", "scala.Unit") {
+  object Runtime_gc extends NativeMethod("java.lang.Runtime.gc",
+      () -> "scala.Unit") {
     def body = {
       And(System.gcDo(), unit)
     }
   }
 
   object Array_newArray extends NativeMethod("java.lang.reflect.Array.newArray",
-      "java.lang.Object", "`componentType`" -> "java.lang.Class",
-      "`length`" -> "scala.Int") {
+      ("java.lang.Class", "scala.Int") -> "java.lang.Object") {
     def body = {
       def componentType = QuotedVar("componentType")
       def length = QuotedVar("length")
@@ -641,8 +670,7 @@ trait Natives { self: OzCodes =>
 
   object Array_multiNewArray extends NativeMethod(
       "java.lang.reflect.Array.multiNewArray",
-      "java.lang.Object", "`componentType`" -> "java.lang.Class",
-      "`dimensions`" -> "scala.Int[]") {
+      ("java.lang.Class", "scala.Int[]") -> "java.lang.Object") {
     def body = {
       def componentType = QuotedVar("componentType")
       def dimensions = QuotedVar("dimensions")
@@ -652,8 +680,7 @@ trait Natives { self: OzCodes =>
   }
 
   object Array_getLength extends NativeMethod(
-      "java.lang.reflect.Array.getLength",
-      "scala.Int", "`array`" -> "java.lang.Object") {
+      "java.lang.reflect.Array.getLength", "java.lang.Object" -> "scala.Int") {
     def body = {
       def array = QuotedVar("array")
 
@@ -663,7 +690,7 @@ trait Natives { self: OzCodes =>
 
   abstract class ArrayGet(name: String,
       elementType: String) extends NativeMethod("java.lang.reflect.Array."+name,
-      elementType, "`array`" -> "java.lang.Object", "`index`" -> "scala.Int") {
+          ("java.lang.Object", "scala.Int") -> elementType) {
     def body = {
       def array = QuotedVar("array")
       def index = QuotedVar("index")
@@ -684,8 +711,7 @@ trait Natives { self: OzCodes =>
 
   abstract class ArrayPut(name: String,
       elementType: String) extends NativeMethod("java.lang.reflect.Array."+name,
-      "scala.Unit", "`array`" -> "java.lang.Object", "`index`" -> "scala.Int",
-      "`value`" -> elementType) {
+          ("java.lang.Object", "scala.Int", elementType) -> "scala.Unit") {
     def body = {
       def array = QuotedVar("array")
       def index = QuotedVar("index")
@@ -707,7 +733,7 @@ trait Natives { self: OzCodes =>
 
   object StandardOutPrintStream_writeString extends NativeMethod(
       "java.lang.StandardOutPrintStream.writeString",
-      "scala.Unit", "`s`" -> "java.lang.String") {
+      "java.lang.String" -> "scala.Unit") {
     def body = {
       And(System.printInfo(QuotedVar("s").toRawVS()), unit)
     }
@@ -715,21 +741,21 @@ trait Natives { self: OzCodes =>
 
   object StandardErrPrintStream_writeString extends NativeMethod(
       "java.lang.StandardErrPrintStream.writeString",
-      "scala.Unit", "`s`" -> "java.lang.String") {
+      "java.lang.String" -> "scala.Unit") {
     def body = {
       And(System.printError(QuotedVar("s").toRawVS()), unit)
     }
   }
 
   object Port_newPort extends NativeMethod("ozma.Port.newPort",
-      "scala.Tuple2") {
+      () -> "scala.Tuple2") {
     def body = {
       NewOzmaPort()
     }
   }
 
   object Port_send extends NativeMethod("ozma.Port.send",
-      "scala.Unit", "`element`" -> "java.lang.Object") {
+      "java.lang.Object" -> "scala.Unit") {
     def body = {
       And(
           Send(At(QuotedVar("rawPort ")), QuotedVar("element")),
@@ -739,14 +765,14 @@ trait Natives { self: OzCodes =>
   }
 
   object ResultPort_newPort extends NativeMethod("ozma.ResultPort.newPort",
-      "scala.Tuple2") {
+      () -> "scala.Tuple2") {
     def body = {
       NewOzmaResultPort()
     }
   }
 
   object ResultPort_send extends NativeMethod("ozma.ResultPort.send",
-      "java.lang.Object", "`element`" -> "java.lang.Object") {
+      "java.lang.Object" -> "java.lang.Object") {
     def body = {
       Send(At(QuotedVar("rawPort ")), Tuple(Atom("#"), QuotedVar("element"), $))
     }
@@ -754,13 +780,14 @@ trait Natives { self: OzCodes =>
 
   object ResultPort_newActiveObject extends NativeMethod(
       "ozma.ResultPort.newActiveObject",
-      "java.lang.Object", "`obj`" -> "java.lang.Object") {
+      "java.lang.Object" -> "java.lang.Object") {
     def body = {
       NewActiveObject(QuotedVar("obj"))
     }
   }
 
-  object Random_rand extends NativeMethod("ozma.Random.rand", "scala.Int") {
+  object Random_rand extends NativeMethod("ozma.Random.rand",
+      () -> "scala.Int") {
     def body = {
       OS.rand()
     }

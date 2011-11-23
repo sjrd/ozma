@@ -46,7 +46,7 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
     val actualLabel = if (label ne null)
       label
     else
-      atomForSymbol("<init>", paramsHash(List(clazz.fullName)))
+      ast.Atom(methodEncodedName("<init>", Nil, clazz.fullName))
 
     val typeVar = varForSymbol(clazz)
     val classVar = varForClass(clazz)
@@ -184,34 +184,31 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
   def suffixFor(sym: Symbol) =
     if (sym.hasModuleFlag && !sym.isMethod && !sym.isImplClass) "$" else ""
 
-  def atomForSymbol(sym: Symbol): ast.Atom = {
-    val name = sym.name.toString
-    val hash = if (sym.isMethod) paramsHash(sym) else 0
-    atomForSymbol(name, hash)
-  }
+  def atomForSymbol(sym: Symbol) =
+    if (sym.isMethod) ast.Atom(methodEncodedName(sym))
+    else ast.Atom(sym.name.toString)
 
-  def atomForSymbol(name: String, hash: Int) =
-    ast.Atom(if (hash != 0) name + "#" + hash else name)
+  def methodEncodedName(sym: Symbol) =
+    sym.name.toString + makeParamsString(sym)
 
-  /** In order to support method overloading on the Mozart platform, we give
-   *  every method a hash code that is appended to its name on the back-end.
-   *  <p>This method computes the hash of a method.
-   *  <p>Two methods should have the same hash if and only if they would
-   *  <i>match</i> (as defined by the Scala reference, definition 5.1.4)
-   *  if they had the same name. This ensures that proper overriding applies
-   *  when running on Mozart.
-   *  <p>As currently implemented, we only guarantee that two matching methods
-   *  will have the same hash. We do not guarantee that two non-matching
-   *  methods will have different hashes, though we try to achieve this on a
-   *  best-effort basis.
-   */
-  def paramsHash(sym: Symbol): Int = {
+  def methodEncodedFullName(sym: Symbol) =
+    sym.fullName + makeParamsString(sym)
+
+  def methodEncodedName(name: String, paramTypes: List[Type],
+      resultType: Type) =
+    name + makeParamsString(paramTypes, resultType)
+
+  def methodEncodedName(name: String, paramTypeNames: List[String],
+      resultTypeName: String) =
+    name + makeParamsString(paramTypeNames, resultTypeName)
+
+  private def makeParamsString(sym: Symbol): String = {
     sym.tpe match {
       case MethodType(params, resultType) =>
-        paramsHash(params.toList map (_.tpe), resultType)
+        makeParamsString(params.toList map (_.tpe), resultType)
 
       case NullaryMethodType(resultType) =>
-        paramsHash(Nil, resultType)
+        makeParamsString(Nil, resultType)
 
       case _ => abort("Expected a method type for " + sym)
     }
@@ -222,17 +219,11 @@ abstract class OzCodes extends AnyRef with Members with ASTs with Natives
     case _ => tpe.typeSymbol.fullName
   }
 
-  def paramsHash(paramTypes: List[Type], resultType: Type): Int =
-    paramsHash(paramTypes map typeFullName, typeFullName(resultType))
+  private def makeParamsString(paramTypes: List[Type], resultType: Type): String =
+    makeParamsString(paramTypes map typeFullName, typeFullName(resultType))
 
-  def paramsHash(paramTypeNames: List[String], resultTypeName: String): Int =
-    paramsHash(paramTypeNames ::: List(resultTypeName))
-
-  def paramsHash(paramAndResultTypeNames: List[String]) = {
-    paramAndResultTypeNames.view.zipWithIndex.foldLeft(0) {
-      case (prev, (item, idx)) => prev ^ Integer.rotateLeft(item.##, idx)
-    }
-  }
+  private def makeParamsString(paramTypeNames: List[String], resultTypeName: String) =
+    paramTypeNames.mkString("(", ",", ")") + ":" + resultTypeName
 
   /** Extractor object to match array types
    */
